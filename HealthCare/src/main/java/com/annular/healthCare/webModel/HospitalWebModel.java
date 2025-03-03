@@ -9,29 +9,26 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+
 @Builder
 @Getter
 @Setter
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserWebModel {
+public class HospitalWebModel {
 
-	private Integer userId;
+	private Integer hospitalId;
 	private String emailId;
 	private String password;
-	private String userType;
 	private String phoneNumber;
-	private Boolean userIsActive;
+	private Boolean hospitalIsActive;
 	private String currentAddress;
 	private Integer createdBy;
-	private Date userCreatedOn;
-	private Integer userUpdatedBy;
-	private Date userUpdatedOn;
+	private Date hospitalCreatedOn;
+	private Integer hospitalUpdatedBy;
+	private Date hospitalUpdatedOn;
+	private String hospitalName;
 	private String userName;
-	private String empId;
-	private String gender;
-	private Integer hospitalId;
-	private String token;
 
 }

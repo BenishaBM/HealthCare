@@ -1,7 +1,6 @@
 package com.annular.healthCare.model;
 
 import java.util.Date;
-import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -22,19 +21,19 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Table(name = "users")
+@Table(name = "hospitalList")
 @Builder
 @Getter
 @Setter
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-public class User {
+public class HospitalList {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id")
-	private Integer userId;
+	@Column(name = "hospital_id")
+	private Integer hospitalId;
 
 	@Column(name = "emailId")
 	private String emailId;
@@ -43,14 +42,11 @@ public class User {
 	@Column(name = "password")
 	private String password;
 
-	@Column(name = "user_type")
-	private String userType;
-
 	@Column(name = "phone_number")
 	private String phoneNumber;
 
-	@Column(name = "userIsActive")
-	private Boolean userIsActive;
+	@Column(name = "hospitalIsActive")
+	private Boolean hospitalIsActive;
 
 	@Column(name = "current_address")
 	private String currentAddress;
@@ -59,25 +55,20 @@ public class User {
 	private Integer createdBy;
 
 	@CreationTimestamp
-	@Column(name = "user_created_on")
-	private Date userCreatedOn;
+	@Column(name = "hospital_created_on")
+	private Date hospitalCreatedOn;
 
-	@Column(name = "user_updated_by")
-	private Integer userUpdatedBy;
+	@Column(name = "hospital_updated_by")
+	private Integer hospitalUpdatedBy;
 
-	@Column(name = "user_updated_on")
+	@Column(name = "hospital_updated_on")
 	@CreationTimestamp
-	private Date userUpdatedOn;
+	private Date hospitalUpdatedOn;
+
+	@Column(name = "hospitalName")
+	private String hospitalName;
 
 	@Column(name = "userName")
 	private String userName;
 
-	@Column(name = "empId")
-	private String empId;
-
-	@Column(name = "gender")
-	private String gender;
-	
-	@Column(name = "hospitalId")
-	private Integer hospitalId;//foreignKey in Hospital Table
 }
