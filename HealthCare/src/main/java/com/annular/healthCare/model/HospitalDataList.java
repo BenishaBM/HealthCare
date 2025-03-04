@@ -21,32 +21,43 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Table(name = "hospitalList")
+@Table(name = "hospitalDataList")
 @Builder
 @Getter
 @Setter
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-public class HospitalList {
-
+public class HospitalDataList {
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "hospital_id")
+	@Column(name = "hospitalDataId")
+	private Integer hospitalDataId;
+	
+	@Column(name = "hospitalId")//map the hospitalId in user Table
 	private Integer hospitalId;
-
+	
+	@Column(name = "userName")
+	private String userName;
+	
+	
 	@Column(name = "emailId")
 	private String emailId;
 
 	@JsonIgnore
 	@Column(name = "password")
 	private String password;
+	
+	@Column(name = "userType")
+	private String userType;
 
 	@Column(name = "phone_number")
 	private String phoneNumber;
 
-	@Column(name = "hospitalIsActive")
-	private Boolean hospitalIsActive;
+	
+	@Column(name = "userIsActive")
+	private Boolean userIsActive;
 
 	@Column(name = "current_address")
 	private String currentAddress;
@@ -55,20 +66,23 @@ public class HospitalList {
 	private Integer createdBy;
 
 	@CreationTimestamp
-	@Column(name = "hospital_created_on")
-	private Date hospitalCreatedOn;
+	@Column(name = "user_created_on")
+	private Date userCreatedOn;
 
-	@Column(name = "hospital_updated_by")
-	private Integer hospitalUpdatedBy;
+	@Column(name = "user_updated_by")
+	private Integer userUpdatedBy;
 
-	@Column(name = "hospital_updated_on")
+	@Column(name = "user_updated_on")
 	@CreationTimestamp
-	private Date hospitalUpdatedOn;
+	private Date userUpdatedOn;
 
-	@Column(name = "hospitalName")
-	private String hospitalName;
+	@Column(name = "empId")
+	private String empId;
 
-	@Column(name = "userName")
-	private String userName;
+	@Column(name = "gender")
+	private String gender;
+
+
+
 
 }

@@ -15,4 +15,6 @@ public interface AuthService {
 
 	Response verifyExpiration(RefreshToken refreshToken);
 
+	ResponseEntity<?> getUserDetailsByUserType(String userType);
+
 }

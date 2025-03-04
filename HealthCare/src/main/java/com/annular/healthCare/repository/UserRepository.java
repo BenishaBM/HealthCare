@@ -1,5 +1,6 @@
 package com.annular.healthCare.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,5 +20,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
 	@Query("SELECT u FROM User u WHERE u.emailId = :emailId AND u.userIsActive = true")
 	Optional<User> findByEmailIds(String emailId);
+
+	@Query("SELECT u FROM User u WHERE u.userType = :userType AND u.userIsActive = true")
+	List<User> findByUserType(String userType);
 
 }

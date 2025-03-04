@@ -14,9 +14,11 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.annular.healthCare.service.AuthService;
@@ -36,22 +38,22 @@ import com.annular.healthCare.security.UserDetailsImpl;
 public class AuthenticationController {
 
 	public static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
-	
+
 	@Autowired
 	AuthService authService;
-	
+
 	@Autowired
 	JwtUtils jwtUtils;
-	
+
 	@Autowired
 	UserStatusConfig loginConstants;
-	
+
 	@Autowired
 	RefreshTokenRepository refreshTokenRepository;
-	
+
 	@Autowired
 	AuthenticationManager authenticationManager;
-	
+
 	@Autowired
 	UserRepository userRepository;
 
@@ -68,74 +70,74 @@ public class AuthenticationController {
 		}
 
 	}
-	
 
 	@PostMapping("login")
 	public ResponseEntity<?> login(@RequestBody UserWebModel userWebModel) {
-	    try {
-	        Optional<User> checkUser = userRepository.findByEmailIds(userWebModel.getEmailId());
+		try {
+			Optional<User> checkUser = userRepository.findByEmailIds(userWebModel.getEmailId());
 
-	        if (checkUser.isPresent()) {
-	            User user = checkUser.get();
-	            
-	            // Authenticate user with email and password
-	            Authentication authentication = authenticationManager.authenticate(
-	                    new UsernamePasswordAuthenticationToken(userWebModel.getEmailId(), userWebModel.getPassword())
-	            );
+			if (checkUser.isPresent()) {
+				User user = checkUser.get();
 
-	            SecurityContextHolder.getContext().setAuthentication(authentication);
-	            
-	            // Generate refresh token
-	            RefreshToken refreshToken = authService.createRefreshToken(user);
+				// Authenticate user with email and password
+				Authentication authentication = authenticationManager.authenticate(
+						new UsernamePasswordAuthenticationToken(userWebModel.getEmailId(), userWebModel.getPassword()));
 
-	            // Generate JWT token
-	            String jwt = jwtUtils.generateJwtToken(authentication);
-	            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+				SecurityContextHolder.getContext().setAuthentication(authentication);
 
-	            logger.info("Login successful for user: {}", user.getEmailId());
-	            
-	            
+				// Generate refresh token
+				RefreshToken refreshToken = authService.createRefreshToken(user);
 
-	            // Return response with JWT and refresh token
-	            return ResponseEntity.ok(new JwtResponse(
-	                    jwt, 
-	                    userDetails.getId(),
-	                    1, // Assuming this is a status or role value
-	                    refreshToken.getToken(),
-	                    userDetails.getUserType(),userDetails.getUserEmailId()
-	            ));
-	        } else {
-	            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Invalid email or password"));
-	        }
-	    } catch (BadCredentialsException e) {
-	        logger.error("Login failed: Invalid credentials");
-	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new Response(-1, "Fail", "Invalid email or password"));
-	    } catch (Exception e) {
-	        logger.error("Error at login() -> {}", e.getMessage(), e);
-	        return ResponseEntity.internalServerError().body(new Response(-1, "Fail", "An error occurred during login"));
-	    }
+				// Generate JWT token
+				String jwt = jwtUtils.generateJwtToken(authentication);
+				UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+				logger.info("Login successful for user: {}", user.getEmailId());
+
+				// Return response with JWT and refresh token
+				return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(), 1, // Assuming this is a status or
+																						// role value
+						refreshToken.getToken(), userDetails.getUserType(), userDetails.getUserEmailId()));
+			} else {
+				return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Invalid email or password"));
+			}
+		} catch (BadCredentialsException e) {
+			logger.error("Login failed: Invalid credentials");
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+					.body(new Response(-1, "Fail", "Invalid email or password"));
+		} catch (Exception e) {
+			logger.error("Error at login() -> {}", e.getMessage(), e);
+			return ResponseEntity.internalServerError()
+					.body(new Response(-1, "Fail", "An error occurred during login"));
+		}
 	}
 
-    @PostMapping("refreshToken")
-    public ResponseEntity<?> refreshToken(@RequestBody UserWebModel userWebModel) {
-        Optional<RefreshToken> data = refreshTokenRepository.findByToken(userWebModel.getToken());
-        if (data.isPresent()) {
-            Response token = authService.verifyExpiration(data.get());
-            Optional<User> userData = userRepository.findById(data.get().getUserId());
-            String jwt = jwtUtils.generateJwtTokenForRefreshToken(userData.get());
-            RefreshToken refreshToken = data.get();
-            refreshToken.setExpiryToken(LocalTime.now().plusMinutes(17));
-            refreshTokenRepository.save(refreshToken);
-            return ResponseEntity.ok(new JwtResponse(jwt,userData.get().getUserId(),
-                
-                   
-                    1,
-                    token.getData().toString(),
-                    userData.get().getUserType(),userData.get().getEmailId()
-                   ));
-        }
-        return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Refresh Token Failed"));
-    }
+	@PostMapping("refreshToken")
+	public ResponseEntity<?> refreshToken(@RequestBody UserWebModel userWebModel) {
+		Optional<RefreshToken> data = refreshTokenRepository.findByToken(userWebModel.getToken());
+		if (data.isPresent()) {
+			Response token = authService.verifyExpiration(data.get());
+			Optional<User> userData = userRepository.findById(data.get().getUserId());
+			String jwt = jwtUtils.generateJwtTokenForRefreshToken(userData.get());
+			RefreshToken refreshToken = data.get();
+			refreshToken.setExpiryToken(LocalTime.now().plusMinutes(17));
+			refreshTokenRepository.save(refreshToken);
+			return ResponseEntity.ok(new JwtResponse(jwt, userData.get().getUserId(),
 
+					1, token.getData().toString(), userData.get().getUserType(), userData.get().getEmailId()));
+		}
+		return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Refresh Token Failed"));
+	}
 
+	@GetMapping("getUserDetailsByUserType")
+	public ResponseEntity<?> getUserDetailsByUserType(@RequestParam("userType") String userType) {
+		try {
+			logger.info("getUserDetailsByUserType request for userType: {}", userType);
+			return authService.getUserDetailsByUserType(userType);
+		} catch (Exception e) {
+			logger.error("getUserDetailsByUserType Method Exception: {}", e.getMessage(), e);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(new Response(-1, "Fail", e.getMessage()));
+		}
+	}
 }

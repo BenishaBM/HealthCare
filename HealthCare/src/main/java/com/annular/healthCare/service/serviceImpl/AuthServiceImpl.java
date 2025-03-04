@@ -1,9 +1,15 @@
 package com.annular.healthCare.service.serviceImpl;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
-
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +26,7 @@ import com.annular.healthCare.repository.RefreshTokenRepository;
 import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.AuthService;
 import com.annular.healthCare.webModel.UserWebModel;
+
 
 
 @Service
@@ -120,4 +127,42 @@ public class AuthServiceImpl implements AuthService {
 		return new Response(-1, "Fail", "RefreshToken expired");
 	}
 
+
+	@Override
+	public ResponseEntity<Response> getUserDetailsByUserType(String userType) {
+	    logger.info("Fetching user details for userType: {}", userType);
+
+	    List<User> usersList = userRepository.findByUserType(userType);
+
+	    if (usersList.isEmpty()) {
+	        logger.warn("No users found for userType: {}", userType);
+	        return ResponseEntity.ok(new Response(0, "No user found for given userType", new ArrayList<>()));
+	    }
+
+
+
+	    List<Map<String, Object>> usersResponseList = usersList.stream().map(user -> {
+	        Map<String, Object> userMap = new HashMap<>();
+	        userMap.put("userId", user.getUserId());
+	        userMap.put("userName", user.getUserName());
+	        userMap.put("emailId", user.getEmailId());
+	        userMap.put("phoneNumber", user.getPhoneNumber());
+	        userMap.put("address", user.getCurrentAddress());
+	        userMap.put("hospitalName", user.getHospitalName());
+	        userMap.put("userType", user.getUserType());
+	        userMap.put("userIsActive", user.getUserIsActive());
+	        userMap.put("empId", user.getEmpId());
+	        userMap.put("gender", user.getGender());
+
+	        return userMap;
+	    }).collect(Collectors.toList());
+
+	    HashMap<String, Object> responseMap = new HashMap<>();
+	    responseMap.put("users", usersResponseList);
+
+	    logger.info("Users retrieved successfully for userType: {}", userType);
+	    return ResponseEntity.ok(new Response(1, "Users retrieved successfully", responseMap));
+	}
+	
+	
 }

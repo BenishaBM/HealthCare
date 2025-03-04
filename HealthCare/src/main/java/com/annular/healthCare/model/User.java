@@ -80,4 +80,6 @@ public class User {
 
 	@Column(name = "hospitalName")
 	private String hospitalName;
+	
+
 }
