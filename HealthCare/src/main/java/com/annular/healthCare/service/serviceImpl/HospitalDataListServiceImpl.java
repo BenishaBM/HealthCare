@@ -152,37 +152,36 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	        logger.info("Fetching hospital data for userType: " + userType + " and hospitalId: " + hospitalId);
 
 	        // Query the repository for the matching data
-	        Optional<HospitalDataList> hospitalDataOptional = userRepository.findByUserTypeAndHospitalId(userType, hospitalId);
+	        List<HospitalDataList> hospitalDataList = userRepository.findByUserTypeAndHospitalId(userType, hospitalId);
 
 	        // Check if data exists
-	        if (!hospitalDataOptional.isPresent()) {
-	           // response.put("message", "No hospital data found for the given userType and hospitalId");
-	            //return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-	            // You can pass an empty collection or an empty map for the 'data'
+	        if (hospitalDataList.isEmpty()) {
 	            return ResponseEntity.ok(new Response(1, "No hospital data found for the given userType and hospitalId", new ArrayList<>()));
 	        }
 
 	        // Extract the hospital data
-	        HospitalDataList hospitalData = hospitalDataOptional.get();
+	        List<HashMap<String, Object>> dataList = new ArrayList<>();
+	        for (HospitalDataList hospitalData : hospitalDataList) {
+	            HashMap<String, Object> data = new HashMap<>();
+	            data.put("hospitalDataId", hospitalData.getHospitalDataId());
+	            data.put("hospitalId", hospitalData.getHospitalId());
+	            data.put("userName", hospitalData.getUserName());
+	            data.put("emailId", hospitalData.getEmailId());
+	            data.put("userType", hospitalData.getUserType());
+	            data.put("phoneNumber", hospitalData.getPhoneNumber());
+	            data.put("currentAddress", hospitalData.getCurrentAddress());
+	            data.put("empId", hospitalData.getEmpId());
+	            data.put("gender", hospitalData.getGender());
+	            data.put("userIsActive", hospitalData.getUserIsActive());
 
-	        // Create a HashMap to store selected fields
-	        HashMap<String, Object> data = new HashMap<>();
-	        data.put("hospitalDataId", hospitalData.getHospitalDataId());
-	        data.put("hospitalId", hospitalData.getHospitalId());
-	        data.put("userName", hospitalData.getUserName());
-	        data.put("emailId", hospitalData.getEmailId());
-	        data.put("userType", hospitalData.getUserType());
-	        data.put("phoneNumber", hospitalData.getPhoneNumber());
-	        data.put("currentAddress", hospitalData.getCurrentAddress());
-	        data.put("empId", hospitalData.getEmpId());
-	        data.put("gender", hospitalData.getGender());
-	        data.put("userIsActive", hospitalData.getUserIsActive());
+	            // Add the data to the list
+	            dataList.add(data);
+	        }
 
 	        // Add the data to the response map
-	        response.put("data", data);
-	        
-	        // Return successful response with proper response object (assuming you have a Response class)
-        return ResponseEntity.ok(new Response(1, "Success", response));
+	        response.put("data", dataList);
+
+	        return ResponseEntity.ok(new Response(1, "Success", response));
 
 	    } catch (Exception e) {
 	        logger.error("Error retrieving hospital data: " + e.getMessage(), e);
@@ -190,6 +189,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 	    }
 	}
+
 	@Override
 	public ResponseEntity<?> getHospitalDataByUserId(Integer hospitalDataId) {
 	    HashMap<String, Object> response = new HashMap<>();
