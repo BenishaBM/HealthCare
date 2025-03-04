@@ -61,6 +61,7 @@ public class AuthServiceImpl implements AuthService {
 	                .gender(userWebModel.getGender())
 	                .createdBy(userWebModel.getCreatedBy())
 	                .userName(userWebModel.getUserName())
+	                .hospitalName(userWebModel.getHospitalName())
 	                .build();
 
 	        // Save user

@@ -33,5 +33,6 @@ public class UserWebModel {
 	private String gender;
 	private Integer hospitalId;
 	private String token;
+	private String hospitalName;
 
 }

@@ -77,7 +77,7 @@ public class User {
 
 	@Column(name = "gender")
 	private String gender;
-	
-	@Column(name = "hospitalId")
-	private Integer hospitalId;//foreignKey in Hospital Table
+
+	@Column(name = "hospitalName")
+	private String hospitalName;
 }

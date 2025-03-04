@@ -13,11 +13,11 @@ import com.annular.healthCare.model.User;
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {
 
-	@Query("SELECT u FROM User u WHERE u.emailId = :email AND u.userType = :userType")
+	@Query("SELECT u FROM User u WHERE u.emailId = :email AND u.userType = :userType AND u.userIsActive = true")
 	Optional<User> findByEmailId(@Param("email") String email, @Param("userType") String userType);
 
 
-	@Query("SELECT u FROM User u WHERE u.emailId = :emailId")
+	@Query("SELECT u FROM User u WHERE u.emailId = :emailId AND u.userIsActive = true")
 	Optional<User> findByEmailIds(String emailId);
 
 }
