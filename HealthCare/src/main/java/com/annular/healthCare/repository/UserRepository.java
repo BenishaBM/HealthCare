@@ -23,5 +23,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
 	@Query("SELECT u FROM User u WHERE u.userType = :userType AND u.userIsActive = true")
 	List<User> findByUserType(String userType);
+	
+	
 
 }

@@ -4,7 +4,7 @@ import java.io.IOException;
 
 
 import java.util.ArrayList;
-
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -23,8 +23,10 @@ import com.annular.healthCare.Util.Base64FileUpload;
 import com.annular.healthCare.Util.HealthCareConstant;
 import com.annular.healthCare.model.HospitalDataList;
 import com.annular.healthCare.model.MediaFile;
+import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.HospitalDataListRepository;
 import com.annular.healthCare.repository.MediaFileRepository;
+import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.HospitalDataListService;
 import com.annular.healthCare.webModel.FileInputWebModel;
 import com.annular.healthCare.webModel.HospitalDataListWebModel;
@@ -43,6 +45,9 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	
 	@Autowired
 	private PasswordEncoder passwordEncoder;
+	
+	@Autowired
+	UserRepository usersRepository;
 	
 	@Autowired
 	MediaFileRepository mediaFileRepository;
@@ -238,6 +243,180 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	    }
 	}
 
+	@Override
+	public ResponseEntity<?> updateHospitalDataByUserId(HospitalDataListWebModel userWebModel) {
+	    HashMap<String, Object> response = new HashMap<>();
+	    try {
+	        logger.info("Updating hospital data for hospitalDataId: " + userWebModel.getHospitalDataId());
+
+	        // Step 1: Retrieve the existing hospital data by hospitalDataId
+	        Optional<HospitalDataList> hospitalDataOptional = userRepository.findById(userWebModel.getHospitalDataId());
+
+	        // Check if the hospital data exists
+	        if (!hospitalDataOptional.isPresent()) {
+	            response.put("message", "Hospital data not found");
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Response(0, "Fail", "Hospital data not found"));
+	        }
+
+	        // Step 2: Get the existing hospital data entity
+	        HospitalDataList existingHospitalData = hospitalDataOptional.get();
+
+	        // Step 3: Update only the fields that are provided (non-null values)
+	        if (userWebModel.getUserName() != null) {
+	            existingHospitalData.setUserName(userWebModel.getUserName());
+	        }
+	        if (userWebModel.getEmailId() != null) {
+	            existingHospitalData.setEmailId(userWebModel.getEmailId());
+	        }
+	        if (userWebModel.getPhoneNumber() != null) {
+	            existingHospitalData.setPhoneNumber(userWebModel.getPhoneNumber());
+	        }
+	        if (userWebModel.getUserIsActive() != null) {
+	            existingHospitalData.setUserIsActive(userWebModel.getUserIsActive());
+	        }
+	        if (userWebModel.getCurrentAddress() != null) {
+	            existingHospitalData.setCurrentAddress(userWebModel.getCurrentAddress());
+	        }
+	        if (userWebModel.getEmpId() != null) {
+	            existingHospitalData.setEmpId(userWebModel.getEmpId());
+	        }
+	        if (userWebModel.getGender() != null) {
+	            existingHospitalData.setGender(userWebModel.getGender());
+	        }
+	        if (userWebModel.getDateOfBirth() != null) {
+	            existingHospitalData.setDateOfBirth(userWebModel.getDateOfBirth());
+	        }
+	        
+	        // Assuming the updater's ID is passed in 'createdBy' (could be renamed to 'updatedBy')
+	        if (userWebModel.getCreatedBy() != null) {
+	            existingHospitalData.setUserUpdatedBy(userWebModel.getCreatedBy()); // Assuming 'createdBy' is the user who is updating
+	        }
+
+	        // Update the 'userUpdatedOn' field to current time
+	        existingHospitalData.setUserUpdatedOn(new Date());
+
+	        // Step 4: Save the updated hospital data entity back to the database
+	        HospitalDataList updatedHospitalData = userRepository.save(existingHospitalData);
+
+	        // Step 5: Handle media file deletion if it exists
+	        if (userWebModel.getFileId() != null) {
+	            Optional<MediaFile> mediaFileOptional = mediaFileRepository.findByFileId(userWebModel.getFileId());
+	            if (mediaFileOptional.isPresent()) {
+	                MediaFile mediaFile = mediaFileOptional.get();
+	                // Delete the old file from the server
+	                Base64FileUpload.deleteFile(imageLocation + "/ProfilePic", mediaFile.getFileName());
+	                // Delete the media record from the database
+	                mediaFileRepository.deleteById(mediaFile.getFileId());
+	            }
+	        }
+
+	        // Step 6: Handle file uploads (if any)
+	        if (userWebModel.getFilesInputWebModel() != null && !userWebModel.getFilesInputWebModel().isEmpty()) {
+	            // Handle file uploads here
+	            handleFileUploads(updatedHospitalData, userWebModel.getFilesInputWebModel());
+	        }
+
+	        // Step 7: Prepare and return the success response
+	        response.put("message", "Hospital data updated successfully");
+	        response.put("data", updatedHospitalData);
+	        
+	        return ResponseEntity.ok(new Response(1, "Hospital data updated successfully", response));
+
+	    } catch (Exception e) {
+	        logger.error("Error updating hospital data: " + e.getMessage(), e);
+	        response.put("message", "Error updating hospital data");
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(0, "Fail", "Error updating hospital data"));
+	    }
+	}
+
+	@Override
+	public ResponseEntity<?> deleteHospitalDataByUserId(Integer hospitalDataId) {
+	    HashMap<String, Object> response = new HashMap<>();
+	    try {
+	        logger.info("Soft deleting hospital data for hospitalDataId: " + hospitalDataId);
+
+	        // Step 1: Retrieve the existing hospital data by hospitalDataId
+	        Optional<HospitalDataList> hospitalDataOptional = userRepository.findById(hospitalDataId);
+
+	        // Step 2: Check if hospital data exists
+	        if (!hospitalDataOptional.isPresent()) {
+	            response.put("message", "Hospital data not found");
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+	        }
+
+	        // Step 3: Get the existing hospital data entity
+	        HospitalDataList existingHospitalData = hospitalDataOptional.get();
+
+	        // Step 4: Set the userIsActive flag to false for soft delete
+	        existingHospitalData.setUserIsActive(false); // Soft delete by marking user as inactive
+	        existingHospitalData.setUserUpdatedBy(existingHospitalData.getCreatedBy()); // Set the updated by user
+	        existingHospitalData.setUserUpdatedOn(new Date()); // Set the updated time to current time
+
+	        // Step 5: Save the updated hospital data entity back to the database
+	        HospitalDataList updatedHospitalData = userRepository.save(existingHospitalData);
+
+	        // Step 6: Handle associated media files
+	        List<MediaFile> mediaFiles = mediaFileRepository.findByFileDomainReferenceId(existingHospitalData.getHospitalDataId());
+
+	        if (!mediaFiles.isEmpty()) {
+	            for (MediaFile mediaFile : mediaFiles) {
+	                // Delete the file from the server
+	                String filePath = imageLocation + "/ProfilePic/" + mediaFile.getFileName();
+	                Base64FileUpload.deleteFile(filePath, mediaFile.getFileName());
+
+	                // Delete the media file record from the database
+	                mediaFileRepository.deleteById(mediaFile.getFileId());
+	            }
+	        }
+
+	        // Step 7: Prepare the success response
+	        response.put("message", "Hospital data and associated media files soft deleted successfully");
+	        response.put("data", updatedHospitalData);
+
+	        return ResponseEntity.ok(new Response(1, "Success", "Hospital data and associated media files soft deleted successfully"));
+
+	    } catch (Exception e) {
+	        logger.error("Error soft deleting hospital data and media files: " + e.getMessage(), e);
+	        response.put("message", "Error soft deleting hospital data and media files");
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
+	}
+
+
+	@Override
+	public ResponseEntity<?> getByHopitalName() {
+	    HashMap<String, Object> response = new HashMap<>();
+	    try {
+	        // Fetch users with userType = "HOSPITAL"
+	        List<User> users = usersRepository.findByUserType("HOSPITAL");
+
+	        // Check if no users were found
+	        if (users.isEmpty()) {
+	            response.put("message", "No hospitals found.");
+	            return ResponseEntity.ok(new Response(1, "No hospitals found.", new ArrayList<>()));  // Return empty list on success
+	        }
+
+	        // Create a list to store the hospital ID and name
+	        List<HashMap<String, Object>> hospitalDataList = new ArrayList<>();
+
+	        // Extract userId (ID) and hospitalName from each user and add to the list
+	        for (User user : users) {
+	            HashMap<String, Object> hospitalData = new HashMap<>();
+	            hospitalData.put("id", user.getUserId());
+	            hospitalData.put("hospitalName", user.getHospitalName());
+	            hospitalDataList.add(hospitalData);
+	        }
+
+	        
+	        // Return the response
+	        return ResponseEntity.ok(new Response(1, "Hospitals retrieved successfully.", hospitalDataList));
+
+	    } catch (Exception e) {
+	        logger.error("Error fetching hospitals: " + e.getMessage(), e);
+	        response.put("message", "Error retrieving hospitals.");
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
+	}
 
 
 

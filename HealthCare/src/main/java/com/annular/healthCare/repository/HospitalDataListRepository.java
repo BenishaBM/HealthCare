@@ -1,5 +1,6 @@
 package com.annular.healthCare.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -7,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.annular.healthCare.model.HospitalDataList;
+import com.annular.healthCare.model.User;
 
 @Repository
 public interface HospitalDataListRepository extends JpaRepository<HospitalDataList, Integer> {
@@ -18,5 +20,6 @@ public interface HospitalDataListRepository extends JpaRepository<HospitalDataLi
 	Optional<HospitalDataList> findByUserTypeAndHospitalId(String userType, Integer hospitalId);
 
 	Optional<HospitalDataList> findByHospitalDataId(Integer hospitalDataId);
+
 
 }

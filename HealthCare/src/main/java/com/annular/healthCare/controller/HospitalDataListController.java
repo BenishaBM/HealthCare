@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -63,5 +64,46 @@ public class HospitalDataListController {
 					.body(new Response(-1, "Fail", e.getMessage()));
 		}
 	}
+	
+	@PostMapping("updateHospitalDataByUserId")
+	public ResponseEntity<?> updateHospitalDataByUserId(@RequestBody HospitalDataListWebModel userWebModel) {
+	    try {
+	        // Call the service to perform the update
+	        return authService.updateHospitalDataByUserId(userWebModel);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("updateHospitalDataByUserId Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+
+	@DeleteMapping("deleteHospitalDataByUserId")
+	public ResponseEntity<?> deleteHospitalDataByUserId(@RequestParam("hospitalDataId")Integer hospitalDataId) {
+	    try {
+	        // Call the service to perform the update
+	        return authService.deleteHospitalDataByUserId(hospitalDataId);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("deleteHospitalDataByUserId Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+	
+	@GetMapping("getByHopitalName")
+	public ResponseEntity<?> getByHopitalName() {
+	    try {
+	        // Call the service to perform the update
+	        return authService.getByHopitalName();
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("getByHopitalName Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+	
+	
 
 }

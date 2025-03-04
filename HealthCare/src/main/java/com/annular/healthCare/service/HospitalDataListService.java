@@ -12,4 +12,10 @@ public interface HospitalDataListService {
 
 	ResponseEntity<?> getHospitalDataByUserId(Integer hospitalDataId);
 
+    ResponseEntity<?> updateHospitalDataByUserId(HospitalDataListWebModel userWebModel);
+
+	ResponseEntity<?> deleteHospitalDataByUserId(Integer hospitalDataId);
+
+	ResponseEntity<?> getByHopitalName();
+
 }
