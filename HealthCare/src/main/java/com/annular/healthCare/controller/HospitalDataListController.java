@@ -105,5 +105,19 @@ public class HospitalDataListController {
 	}
 	
 	
+	@GetMapping("getByDoctorSpeciallity")
+	public ResponseEntity<?> getByDoctorSpeciallity() {
+	    try {
+	        // Call the service to perform the update
+	        return authService.getByDoctorSpeciallity();
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("getByDoctorSpeciallity Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+	
+	
 
 }

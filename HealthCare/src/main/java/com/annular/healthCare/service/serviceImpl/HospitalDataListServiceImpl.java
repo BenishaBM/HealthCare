@@ -3,6 +3,8 @@ package com.annular.healthCare.service.serviceImpl;
 import java.io.IOException;
 
 
+
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -21,14 +23,18 @@ import org.springframework.stereotype.Service;
 
 import com.annular.healthCare.Util.Base64FileUpload;
 import com.annular.healthCare.Util.HealthCareConstant;
+import com.annular.healthCare.model.DoctorSpecialty;
 import com.annular.healthCare.model.HospitalDataList;
 import com.annular.healthCare.model.MediaFile;
 import com.annular.healthCare.model.User;
+import com.annular.healthCare.repository.DoctorRoleRepository;
+import com.annular.healthCare.repository.DoctorSpecialityRepository;
 import com.annular.healthCare.repository.HospitalDataListRepository;
 import com.annular.healthCare.repository.MediaFileRepository;
 import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.HospitalDataListService;
 import com.annular.healthCare.webModel.FileInputWebModel;
+import com.annular.healthCare.model.DoctorRole;
 import com.annular.healthCare.webModel.HospitalDataListWebModel;
 
 
@@ -45,6 +51,12 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	
 	@Autowired
 	private PasswordEncoder passwordEncoder;
+	
+	@Autowired
+	DoctorRoleRepository doctorRoleRepository;
+	
+	@Autowired
+	DoctorSpecialityRepository doctorSpecialityRepository;
 	
 	@Autowired
 	UserRepository usersRepository;
@@ -68,7 +80,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 	        }
 
-	        // Create new hospital data entity
+	        // Create new hospital data entity (doctor)
 	        HospitalDataList newUser = HospitalDataList.builder()
 	                .emailId(userWebModel.getEmailId())
 	                .password(passwordEncoder.encode(userWebModel.getPassword())) // Encrypt password
@@ -84,8 +96,25 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	                .userName(userWebModel.getUserName())
 	                .build();
 
-	        // Save the hospital data list (which is the correct entity)
+	        // Save the hospital data list (which is the doctor)
 	        HospitalDataList savedUser = userRepository.save(newUser);
+
+	     // Save roles for the new doctor
+	        List<DoctorRole> doctorRoles = new ArrayList<>();
+	        if (userWebModel.getRoles() != null && !userWebModel.getRoles().isEmpty()) {
+	            for (Integer roleId : userWebModel.getRoles()) {
+	                DoctorRole doctorRole = new DoctorRole();
+	                doctorRole.setRoleId(roleId);
+	                doctorRole.setHospitalDataList(savedUser); // Assign the doctor to this role
+	                doctorRole.setUserIsActive(true);
+	                doctorRole.setCreatedBy(userWebModel.getCreatedBy());
+	                doctorRoles.add(doctorRole);
+	            }
+
+	            // Save roles in the DoctorRole table
+	            doctorRoleRepository.saveAll(doctorRoles);
+	        }
+
 
 	        // Handle media file deletion if it exists
 	        Optional<MediaFile> mediaFileOptional = mediaFileRepository.findByFileId(userWebModel.getFileId());
@@ -198,10 +227,36 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 
 	        // Attempt to retrieve the hospital data by hospitalId
 	        Optional<HospitalDataList> hospitalDataOptional = userRepository.findByHospitalDataId(hospitalDataId);
-	        
+
 	        // Check if the hospital data is present
 	        if (hospitalDataOptional.isPresent()) {
 	            HospitalDataList hospitalData = hospitalDataOptional.get();
+	            // Create a HashMap for userDetails and map individual fields
+	            HashMap<String, Object> userDetails = new HashMap<>();
+	            userDetails.put("hospitalDataId", hospitalData.getHospitalDataId());
+	            userDetails.put("hospitalId", hospitalData.getHospitalId());
+	            userDetails.put("userName", hospitalData.getUserName());
+	            userDetails.put("emailId", hospitalData.getEmailId());
+	            userDetails.put("userType", hospitalData.getUserType());
+	            userDetails.put("phoneNumber", hospitalData.getPhoneNumber());
+	            userDetails.put("userIsActive", hospitalData.getUserIsActive());
+	            userDetails.put("currentAddress", hospitalData.getCurrentAddress());
+	            userDetails.put("createdBy", hospitalData.getCreatedBy());
+	            userDetails.put("userCreatedOn", hospitalData.getUserCreatedOn());
+	            userDetails.put("userUpdatedBy", hospitalData.getUserUpdatedBy());
+	            userDetails.put("userUpdatedOn", hospitalData.getUserUpdatedOn());
+	            userDetails.put("empId", hospitalData.getEmpId());
+	            userDetails.put("gender", hospitalData.getGender());
+	            userDetails.put("dateOfBirth", hospitalData.getDateOfBirth());
+	            // Retrieve doctor roles associated with the hospital data
+	            List<DoctorRole> doctorRoles = doctorRoleRepository.findByHospitalDataList(hospitalData);  // This will fetch all doctor roles for the hospital
+
+	            // Prepare the list of specialties associated with each doctor role
+	            List<String> specialties = new ArrayList<>();
+	            for (DoctorRole doctorRole : doctorRoles) {
+	                Optional<DoctorSpecialty> specialty = doctorSpecialityRepository.findById(doctorRole.getRoleId()); // Assuming `roleId` corresponds to a specialty ID
+	                specialty.ifPresent(doctorSpecialty -> specialties.add(doctorSpecialty.getSpecialtyName()));  // Add the specialty name
+	            }
 
 	            // Retrieve media files associated with the hospital data (Profile Photo)
 	            List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
@@ -213,6 +268,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            for (MediaFile mediaFile : files) {
 	                FileInputWebModel filesInput = new FileInputWebModel();
 	                filesInput.setFileName(mediaFile.getFileOriginalName());
+	                filesInput.setFileId(mediaFile.getFileId());
 	                filesInput.setFileSize(mediaFile.getFileSize());
 	                filesInput.setFileType(mediaFile.getFileType());
 
@@ -220,14 +276,15 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	                String fileData = Base64FileUpload.encodeToBase64String(
 	                        imageLocation + "/ProfilePic", mediaFile.getFileName());
 	                filesInput.setFileData(fileData);
-	                
+
 	                filesInputWebModel.add(filesInput);
 	            }
 
-	            // Prepare the response map
+	            // Prepare the response map with hospital data, media files, and specialties
 	            HashMap<String, Object> responseMap = new HashMap<>();
-	            responseMap.put("userDetails", hospitalData);
+	            responseMap.put("userDetails", userDetails);
 	            responseMap.put("mediaFiles", filesInputWebModel);
+	            responseMap.put("specialties", specialties);  // Add specialties to the response map
 
 	            // Return successful response with hospital data and associated media files
 	            return ResponseEntity.ok(new Response(1, "Hospital data retrieved successfully", responseMap));
@@ -242,6 +299,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 	    }
 	}
+
 
 	@Override
 	public ResponseEntity<?> updateHospitalDataByUserId(HospitalDataListWebModel userWebModel) {
@@ -417,7 +475,41 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 	    }
 	}
+	@Override
+	public ResponseEntity<?> getByDoctorSpeciallity() {
+	    HashMap<String, Object> response = new HashMap<>();
+	    try {
+	        // Fetch all doctor specialties
+	        List<DoctorSpecialty> specialties = doctorSpecialityRepository.findAll();
 
+	        // Check if no specialties were found
+	        if (specialties.isEmpty()) {
+	            response.put("message", "No specialties found.");
+	            return ResponseEntity.ok(new Response(1, "No specialties found.", new ArrayList<>()));  // Return empty list on success
+	        }
+
+	        // Create a list to store the specialty ID and name
+	        List<HashMap<String, Object>> specialtyDataList = new ArrayList<>();
+
+	        // Extract specialtyId and specialtyName from each DoctorSpecialty and add to the list
+	        for (DoctorSpecialty specialty : specialties) {
+	            HashMap<String, Object> specialtyData = new HashMap<>();
+	            specialtyData.put("id", specialty.getDoctorSpecialtiesId());
+	            specialtyData.put("specialtyName", specialty.getSpecialtyName());
+	            specialtyDataList.add(specialtyData);
+	        }
+
+	        // Return the response
+	        return ResponseEntity.ok(new Response(1, "Specialties retrieved successfully.", specialtyDataList));
+
+	    } catch (Exception e) {
+	        logger.error("Error fetching specialties: " + e.getMessage(), e);
+	        response.put("message", "Error retrieving specialties.");
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
+	}
+
+	
 
 
 }
