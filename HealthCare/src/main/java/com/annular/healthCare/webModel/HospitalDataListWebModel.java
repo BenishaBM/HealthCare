@@ -43,6 +43,7 @@ public class HospitalDataListWebModel {
 	private String gender;
 	private String userType;
 	private Integer fileId;
+	private Date dateOfBirth;
 	private ArrayList<FileInputWebModel> filesInputWebModel;
 
 

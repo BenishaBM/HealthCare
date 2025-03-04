@@ -81,6 +81,10 @@ public class HospitalDataList {
 
 	@Column(name = "gender")
 	private String gender;
+	
+	@Column(name = "dateOfBirth")
+	private Date dateOfBirth;
+	
 
 
 

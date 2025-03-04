@@ -70,6 +70,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	                .userType(userWebModel.getUserType())
 	                .hospitalId(userWebModel.getHospitalId())
 	                .phoneNumber(userWebModel.getPhoneNumber())
+	                .dateOfBirth(userWebModel.getDateOfBirth())
 	                .userIsActive(true) // Default to active
 	                .currentAddress(userWebModel.getCurrentAddress())
 	                .empId(userWebModel.getEmpId())
