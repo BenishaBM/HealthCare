@@ -1,5 +1,6 @@
 package com.annular.healthCare.webModel;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -41,6 +42,8 @@ public class HospitalDataListWebModel {
 	private String empId;
 	private String gender;
 	private String userType;
+	private Integer fileId;
+	private ArrayList<FileInputWebModel> filesInputWebModel;
 
 
 }

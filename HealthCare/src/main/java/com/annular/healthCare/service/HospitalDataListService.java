@@ -8,4 +8,6 @@ public interface HospitalDataListService {
 
 	ResponseEntity<?> register(HospitalDataListWebModel userWebModel);
 
+	ResponseEntity<?> getHospitalDataByUserTypeAndHospitalId(String userType, Integer hospitalId);
+
 }

@@ -1,6 +1,8 @@
 package com.annular.healthCare.webModel;
 
+import java.util.ArrayList;
 import java.util.Date;
+
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+
 
 @Builder
 @Getter
@@ -34,6 +37,7 @@ public class UserWebModel {
 	private Integer hospitalId;
 	private String token;
 	private String hospitalName;
+	private ArrayList<FileInputWebModel> filesInputWebModel;
 	
 
 }

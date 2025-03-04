@@ -11,7 +11,10 @@ import com.annular.healthCare.model.HospitalDataList;
 @Repository
 public interface HospitalDataListRepository extends JpaRepository<HospitalDataList, Integer> {
 
-	@Query("SELECT u FROM User u WHERE u.emailId = :emailId AND u.userType = :userType AND u.userIsActive = true")
+	@Query("SELECT u FROM HospitalDataList u WHERE u.emailId = :emailId AND u.userType = :userType AND u.userIsActive = true")
 	Optional<HospitalDataList> findByEmailId(String emailId, String userType);
+
+	@Query("SELECT u FROM HospitalDataList u WHERE u.userType = :userType AND u.hospitalId = :hospitalId AND u.userIsActive = true")
+	Optional<HospitalDataList> findByUserTypeAndHospitalId(String userType, Integer hospitalId);
 
 }

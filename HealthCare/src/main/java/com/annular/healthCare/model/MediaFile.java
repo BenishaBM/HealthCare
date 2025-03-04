@@ -10,86 +10,59 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.persistence.ManyToOne;
-import javax.persistence.JoinColumn;
-import javax.persistence.Enumerated;
-import javax.persistence.EnumType;
-import javax.persistence.UniqueConstraint;
 
 import org.hibernate.annotations.CreationTimestamp;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "MediaFile", uniqueConstraints = @UniqueConstraint(name = "UNIQUE_FILE_ID_CATEGORY_REF_ID_STATUS",
-        columnNames = {"file_id", "category", "category_ref_id", "status"})
-)
-@Builder
-@Getter
-@Setter
-@ToString
+@Table(name = "MediaFiles")
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class MediaFile {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Integer id;
+	@Column
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer fileId;
 
-    @ToString.Exclude
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+	@Column
+	private String fileName;
 
-    @Column(name = "category")
-    @Enumerated(value = EnumType.STRING)
-    private MediaFileCategory category;
+	@Column
+	private String fileOriginalName;
 
-    @Column(name = "category_ref_id") // for all referred table's[Post,Story] primary key
-    private Integer categoryRefId;
+	@Column
+	private Integer fileDomainId;
 
-    @Column(name = "file_id")
-    private String fileId;
+	@Column
+	private Integer fileDomainReferenceId;
 
-    @Column(name = "file_name")
-    private String fileName;
+	@Column
+	private Boolean fileIsActive;
 
-    @Column(name = "file_size")
-    private Long fileSize;
+	@Column
+	private Integer fileCreatedBy;
 
-    @Column(name = "file_type")
-    private String fileType;
+	@Column
+	@CreationTimestamp
+	private Date fileCreatedOn;
 
-    @Column(name = "file_path")
-    private String filePath;
+	@Column
+	private Integer fileUpdatedBy;
 
-    @Column(name = "status")
-    private Boolean status;
+	@Column
+	@CreationTimestamp
+	private Date fileUpdatedOn;
 
-    @Column(name = "created_by")
-    private Integer createdBy;
+	@Column
+	private String fileSize;
 
-    @Column(name = "created_on")
-    @CreationTimestamp
-    private Date createdOn;
+	@Column
+	private String fileType;
 
-    @Column(name = "updated_by")
-    private Integer updatedBy;
 
-    @Column(name = "updated_on")
-    @CreationTimestamp
-    private Date updatedOn;
-
-    @Column(name = "description")
-    private String description;
-    
-    @Column(name = "type")
-    private String type;
-    
 }
