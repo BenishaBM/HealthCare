@@ -10,4 +10,6 @@ public interface HospitalDataListService {
 
 	ResponseEntity<?> getHospitalDataByUserTypeAndHospitalId(String userType, Integer hospitalId);
 
+	ResponseEntity<?> getHospitalDataByUserId(Integer hospitalDataId);
+
 }

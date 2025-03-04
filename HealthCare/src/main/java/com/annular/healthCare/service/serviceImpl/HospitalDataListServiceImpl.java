@@ -2,6 +2,7 @@ package com.annular.healthCare.service.serviceImpl;
 
 import java.io.IOException;
 
+
 import java.util.ArrayList;
 
 import java.util.HashMap;
@@ -27,6 +28,8 @@ import com.annular.healthCare.repository.MediaFileRepository;
 import com.annular.healthCare.service.HospitalDataListService;
 import com.annular.healthCare.webModel.FileInputWebModel;
 import com.annular.healthCare.webModel.HospitalDataListWebModel;
+
+
 import com.annular.healthCare.Response;
 
 
@@ -131,7 +134,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            filesList.add(mediaFile);
 
 	            // Save the file to the file system
-	            Base64FileUpload.saveFile(imageLocation + "/CustomerDocument", fileInput.getFileData(), fileName);
+	            Base64FileUpload.saveFile(imageLocation + "/ProfilePic", fileInput.getFileData(), fileName);
 	        }
 	    }
 	}
@@ -181,6 +184,60 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 	    }
 	}
+	@Override
+	public ResponseEntity<?> getHospitalDataByUserId(Integer hospitalDataId) {
+	    HashMap<String, Object> response = new HashMap<>();
+	    try {
+	        logger.info("Fetching hospital data for hospitalId: " + hospitalDataId);
+
+	        // Attempt to retrieve the hospital data by hospitalId
+	        Optional<HospitalDataList> hospitalDataOptional = userRepository.findByHospitalDataId(hospitalDataId);
+	        
+	        // Check if the hospital data is present
+	        if (hospitalDataOptional.isPresent()) {
+	            HospitalDataList hospitalData = hospitalDataOptional.get();
+
+	            // Retrieve media files associated with the hospital data (Profile Photo)
+	            List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
+	                    HealthCareConstant.ProfilePhoto, hospitalData.getHospitalDataId());
+
+	            // Prepare the list of FileInputWebModel from retrieved media files
+	            ArrayList<FileInputWebModel> filesInputWebModel = new ArrayList<>();
+
+	            for (MediaFile mediaFile : files) {
+	                FileInputWebModel filesInput = new FileInputWebModel();
+	                filesInput.setFileName(mediaFile.getFileOriginalName());
+	                filesInput.setFileSize(mediaFile.getFileSize());
+	                filesInput.setFileType(mediaFile.getFileType());
+
+	                // Encode file data to Base64 string
+	                String fileData = Base64FileUpload.encodeToBase64String(
+	                        imageLocation + "/ProfilePic", mediaFile.getFileName());
+	                filesInput.setFileData(fileData);
+	                
+	                filesInputWebModel.add(filesInput);
+	            }
+
+	            // Prepare the response map
+	            HashMap<String, Object> responseMap = new HashMap<>();
+	            responseMap.put("userDetails", hospitalData);
+	            responseMap.put("mediaFiles", filesInputWebModel);
+
+	            // Return successful response with hospital data and associated media files
+	            return ResponseEntity.ok(new Response(1, "Hospital data retrieved successfully", responseMap));
+	        } else {
+	            // Return a not found response if the hospital data is not found
+	            return ResponseEntity.badRequest().body(new Response(0, "Fail", "Hospital data not found"));
+	        }
+
+	    } catch (Exception e) {
+	        logger.error("Error retrieving hospital data: " + e.getMessage(), e);
+	        response.put("message", "Error retrieving data");
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
+	}
+
+
 
 
 }

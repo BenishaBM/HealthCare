@@ -52,5 +52,16 @@ public class HospitalDataListController {
 					.body(new Response(-1, "Fail", e.getMessage()));
 		}
 	}
+	
+	@GetMapping("getHospitalDataByUserId")
+	public ResponseEntity<?> getHospitalDataByUserId(@RequestParam("hospitalDataId")Integer hospitalDataId) {
+		try {
+			return authService.getHospitalDataByUserId(hospitalDataId);
+		} catch (Exception e) {
+			logger.error("getUserDetailsByUserType Method Exception: {}", e.getMessage(), e);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(new Response(-1, "Fail", e.getMessage()));
+		}
+	}
 
 }
