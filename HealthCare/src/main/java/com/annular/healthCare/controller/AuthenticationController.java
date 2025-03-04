@@ -32,7 +32,7 @@ import com.annular.healthCare.security.Jwt.JwtUtils;
 import com.annular.healthCare.security.UserDetailsImpl;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/auth")
 public class AuthenticationController {
 
 	public static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);

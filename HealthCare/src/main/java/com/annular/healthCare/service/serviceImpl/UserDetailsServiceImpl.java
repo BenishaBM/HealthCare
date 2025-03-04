@@ -35,7 +35,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         logger.info("I am from loadUserByUsername() !!! ");
         logger.info("Email :- {}, UserType from LoginConstants :- {}", email, loginConstants.getUserType());
         email = email.contains(CARET) ? email.split(ESCAPED_CARET)[0] : email;
-        Optional<User> optionalUser = userRepo.findByEmailId(email);
+        Optional<User> optionalUser = userRepo.findByEmailIds(email);
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
             logger.info("User from DB --> {} -- {} -- {}", user.getUserId(), user.getEmailId(), user.getUserType());

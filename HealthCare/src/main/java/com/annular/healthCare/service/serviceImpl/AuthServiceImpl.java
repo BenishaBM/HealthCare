@@ -43,7 +43,7 @@ public class AuthServiceImpl implements AuthService {
 	        logger.info("Register method start");
 
 	        // Check if user already exists
-	        Optional<User> existingUser = userRepository.findByEmailId(userWebModel.getEmailId());
+	        Optional<User> existingUser = userRepository.findByEmailId(userWebModel.getEmailId(),userWebModel.getUserType());
 	        if (existingUser.isPresent()) {
 	            response.put("message", "User with this email already exists");
 	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -84,7 +84,7 @@ public class AuthServiceImpl implements AuthService {
 			logger.info("createRefreshToken method start");
 
 			// Find the user by username and userType
-			Optional<User> checkUser = userRepository.findByEmailId(user.getEmailId());
+			Optional<User> checkUser = userRepository.findByEmailId(user.getEmailId(),user.getUserType());
 
 			// Check if the user is present
 			if (checkUser.isPresent()) {
