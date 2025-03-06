@@ -32,6 +32,7 @@ public class HospitalDataListWebModel {
 	private Integer hospitalId;
 	private String userName;
 	private String emailId;
+	private Integer userId;
 	private String password;
 	private String phoneNumber;
 	private Boolean userIsActive;
@@ -40,10 +41,12 @@ public class HospitalDataListWebModel {
 	private Date userCreatedOn;
 	private Integer userUpdatedBy;
 	private Date userUpdatedOn;
+	private String hospitalName;
 	private String empId;
 	private String gender;
 	private String userType;
 	private Integer fileId;
+	private List<HospitalAdminWebModel> admins; // List of admins if provided
 	private Date dateOfBirth;
 	private List<Integer> roles; // Add this field to hold the roles (e.g., ["ROLE_DOCTOR", "ROLE_ADMIN"])
 	private ArrayList<FileInputWebModel> filesInputWebModel;
