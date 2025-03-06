@@ -52,6 +52,9 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 
 	@Autowired
 	DoctorRoleRepository doctorRoleRepository;
+	
+	@Autowired
+	HospitalDataListRepository hospitalDataListRepository;
 
 	@Autowired
 	DoctorSpecialityRepository doctorSpecialityRepository;
@@ -445,7 +448,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 		HashMap<String, Object> response = new HashMap<>();
 		try {
 			// Fetch users with userType = "HOSPITAL"
-			List<User> users = usersRepository.findByUserType("HOSPITAL");
+			List<HospitalDataList> users = hospitalDataListRepository.findByData();
 
 			// Check if no users were found
 			if (users.isEmpty()) {
@@ -459,9 +462,14 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 			List<HashMap<String, Object>> hospitalDataList = new ArrayList<>();
 
 			// Extract userId (ID) and hospitalName from each user and add to the list
-			for (User user : users) {
+			for (HospitalDataList user : users) {
 				HashMap<String, Object> hospitalData = new HashMap<>();
-				hospitalData.put("id", user.getUserId());
+				hospitalData.put("id", user.getHospitalDataId());
+				hospitalData.put("emailId", user.getEmailId());
+				hospitalData.put("phoneNumber", user.getPhoneNumber());
+				hospitalData.put("currentAddress", user.getCurrentAddress());
+				hospitalData.put("isActive", user.getUserIsActive());
+				hospitalData.put("hospitalName", user.getHospitalName());
 				// hospitalData.put("hospitalName", user.getHospitalName());
 				hospitalDataList.add(hospitalData);
 			}

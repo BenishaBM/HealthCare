@@ -1,5 +1,6 @@
 package com.annular.healthCare.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,5 +16,8 @@ public interface HospitalDataListRepository extends JpaRepository<HospitalDataLi
 
 	@Query("SELECT u FROM HospitalDataList u WHERE u.hospitalName = :hospitalName AND u.userIsActive = true")
 	Optional<HospitalDataList> findByHospitalName(String hospitalName);
+
+	@Query("SELECT u FROM HospitalDataList u WHERE u.userIsActive = true")
+	List<HospitalDataList> findByData();
 
 }
