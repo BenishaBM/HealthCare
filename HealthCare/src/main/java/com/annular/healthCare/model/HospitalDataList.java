@@ -34,33 +34,18 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 public class HospitalDataList {
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "hospitalDataId")
 	private Integer hospitalDataId;
-	
-	@Column(name = "hospitalId")//map the hospitalId in user Table
-	private Integer hospitalId;
-	
-	@Column(name = "userName")
-	private String userName;
-	
-	
+
 	@Column(name = "emailId")
 	private String emailId;
-
-	@JsonIgnore
-	@Column(name = "password")
-	private String password;
-	
-	@Column(name = "userType")
-	private String userType;
 
 	@Column(name = "phone_number")
 	private String phoneNumber;
 
-	
 	@Column(name = "userIsActive")
 	private Boolean userIsActive;
 
@@ -80,22 +65,11 @@ public class HospitalDataList {
 	@Column(name = "user_updated_on")
 	@CreationTimestamp
 	private Date userUpdatedOn;
-
-	@Column(name = "empId")
-	private String empId;
-
-	@Column(name = "gender")
-	private String gender;
 	
-	@Column(name = "dateOfBirth")
-	private Date dateOfBirth;
-	
-	@OneToMany(mappedBy = "hospitalDataList", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	private List<DoctorRole> doctorRoles;
+	@Column(name = "hospitalName")
+	private String hospitalName;
 
-	
-
-
-
+//	@OneToMany(mappedBy = "hospitalDataList", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+//	private List<DoctorRole> doctorRoles;
 
 }

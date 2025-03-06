@@ -33,11 +33,17 @@ public class User {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id")
+	@Column(name = "userId")
 	private Integer userId;
 
 	@Column(name = "emailId")
 	private String emailId;
+	
+	@Column(name = "firstName")
+	private String firstName;
+	
+	@Column(name = "lastName")
+	private String lastName;
 
 	@JsonIgnore
 	@Column(name = "password")
@@ -77,9 +83,10 @@ public class User {
 
 	@Column(name = "gender")
 	private String gender;
-
-	@Column(name = "hospitalName")
-	private String hospitalName;
 	
+	@Column(name = "dob")
+	private String dob;
 
+	@Column(name = "hospitalId")
+	private Integer hospitalId;//map the hospital in HospitalDataList
 }

@@ -3,6 +3,7 @@ package com.annular.healthCare.webModel;
 import java.util.ArrayList;
 import java.util.Date;
 
+import javax.persistence.Column;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,6 +36,8 @@ public class UserWebModel {
 	private String empId;
 	private String gender;
 	private Integer hospitalId;
+	private String firstName;
+	private String lastName;
 	private String token;
 	private String hospitalName;
 	private ArrayList<FileInputWebModel> filesInputWebModel;

@@ -27,38 +27,43 @@ import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.AuthService;
 import com.annular.healthCare.webModel.UserWebModel;
 
-
-
 @Service
 public class AuthServiceImpl implements AuthService {
-	
+
 	public static final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
-	
+
 	@Autowired
 	UserRepository userRepository;
-	
+
 	@Autowired
 	private PasswordEncoder passwordEncoder;
-	
+
 	@Autowired
 	RefreshTokenRepository refreshTokenRepository;
-	
+
 	@Override
 	public ResponseEntity<?> register(UserWebModel userWebModel) {
 	    HashMap<String, Object> response = new HashMap<>();
 	    try {
 	        logger.info("Register method start");
 
-	        // Check if user already exists
-	        Optional<User> existingUser = userRepository.findByEmailId(userWebModel.getEmailId(),userWebModel.getUserType());
+	        // Check if a user with the same emailId, userType, and hospitalId already exists
+	        Optional<User> existingUser = userRepository.findByEmailIdAndUserTypeAndHospitalId(
+	                userWebModel.getEmailId(), 
+	                userWebModel.getUserType(), 
+	                userWebModel.getHospitalId()
+	        );
+
 	        if (existingUser.isPresent()) {
-	            response.put("message", "User with this email already exists");
+	            response.put("message", "User with this email, user type, and hospital ID already exists");
 	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 	        }
 
 	        // Create new user entity
 	        User newUser = User.builder()
 	                .emailId(userWebModel.getEmailId())
+	                .firstName(userWebModel.getFirstName())
+	                .lastName(userWebModel.getLastName())
 	                .password(passwordEncoder.encode(userWebModel.getPassword())) // Encrypt password
 	                .userType(userWebModel.getUserType())
 	                .phoneNumber(userWebModel.getPhoneNumber())
@@ -67,16 +72,14 @@ public class AuthServiceImpl implements AuthService {
 	                .empId(userWebModel.getEmpId())
 	                .gender(userWebModel.getGender())
 	                .createdBy(userWebModel.getCreatedBy())
-	                .userName(userWebModel.getUserName())
-	                .hospitalName(userWebModel.getHospitalName())
+	                .userName(userWebModel.getFirstName() + " " + userWebModel.getLastName()) // Concatenate first name and last name
+	                .hospitalId(userWebModel.getHospitalId()) // Assuming `hospitalId` exists in the User entity
 	                .build();
 
 	        // Save user
 	        User savedUser = userRepository.save(newUser);
 
-	        response.put("message", "User registered successfully");
-	        response.put("userId", savedUser.getUserId());
-	        return ResponseEntity.ok(response);
+	        return ResponseEntity.ok(new Response(1, "success", "User registered successfully"));
 
 	    } catch (Exception e) {
 	        logger.error("Error registering user: " + e.getMessage(), e);
@@ -92,7 +95,7 @@ public class AuthServiceImpl implements AuthService {
 			logger.info("createRefreshToken method start");
 
 			// Find the user by username and userType
-			Optional<User> checkUser = userRepository.findByEmailId(user.getEmailId(),user.getUserType());
+			Optional<User> checkUser = userRepository.findByEmailId(user.getEmailId(), user.getUserType());
 
 			// Check if the user is present
 			if (checkUser.isPresent()) {
@@ -127,42 +130,37 @@ public class AuthServiceImpl implements AuthService {
 		return new Response(-1, "Fail", "RefreshToken expired");
 	}
 
-
 	@Override
 	public ResponseEntity<Response> getUserDetailsByUserType(String userType) {
-	    logger.info("Fetching user details for userType: {}", userType);
+		logger.info("Fetching user details for userType: {}", userType);
 
-	    List<User> usersList = userRepository.findByUserType(userType);
+		List<User> usersList = userRepository.findByUserType(userType);
 
-	    if (usersList.isEmpty()) {
-	        logger.warn("No users found for userType: {}", userType);
-	        return ResponseEntity.ok(new Response(0, "No user found for given userType", new ArrayList<>()));
-	    }
+		if (usersList.isEmpty()) {
+			logger.warn("No users found for userType: {}", userType);
+			return ResponseEntity.ok(new Response(0, "No user found for given userType", new ArrayList<>()));
+		}
 
+		List<Map<String, Object>> usersResponseList = usersList.stream().map(user -> {
+			Map<String, Object> userMap = new HashMap<>();
+			userMap.put("userId", user.getUserId());
+			userMap.put("userName", user.getUserName());
+			userMap.put("emailId", user.getEmailId());
+			userMap.put("phoneNumber", user.getPhoneNumber());
+			userMap.put("address", user.getCurrentAddress());
+			userMap.put("userType", user.getUserType());
+			userMap.put("userIsActive", user.getUserIsActive());
+			userMap.put("empId", user.getEmpId());
+			userMap.put("gender", user.getGender());
 
+			return userMap;
+		}).collect(Collectors.toList());
 
-	    List<Map<String, Object>> usersResponseList = usersList.stream().map(user -> {
-	        Map<String, Object> userMap = new HashMap<>();
-	        userMap.put("userId", user.getUserId());
-	        userMap.put("userName", user.getUserName());
-	        userMap.put("emailId", user.getEmailId());
-	        userMap.put("phoneNumber", user.getPhoneNumber());
-	        userMap.put("address", user.getCurrentAddress());
-	        userMap.put("hospitalName", user.getHospitalName());
-	        userMap.put("userType", user.getUserType());
-	        userMap.put("userIsActive", user.getUserIsActive());
-	        userMap.put("empId", user.getEmpId());
-	        userMap.put("gender", user.getGender());
+		HashMap<String, Object> responseMap = new HashMap<>();
+		responseMap.put("users", usersResponseList);
 
-	        return userMap;
-	    }).collect(Collectors.toList());
-
-	    HashMap<String, Object> responseMap = new HashMap<>();
-	    responseMap.put("users", usersResponseList);
-
-	    logger.info("Users retrieved successfully for userType: {}", userType);
-	    return ResponseEntity.ok(new Response(1, "Users retrieved successfully", responseMap));
+		logger.info("Users retrieved successfully for userType: {}", userType);
+		return ResponseEntity.ok(new Response(1, "Users retrieved successfully", responseMap));
 	}
-	
-	
+
 }

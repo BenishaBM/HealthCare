@@ -74,26 +74,26 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	        logger.info("Register method started");
 
 	        // Check if user already exists
-	        Optional<HospitalDataList> existingUser = userRepository.findByEmailId(userWebModel.getEmailId(), userWebModel.getUserType());
-	        if (existingUser.isPresent()) {
-	            response.put("message", "User with this email already exists");
-	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-	        }
+//	        Optional<HospitalDataList> existingUser = userRepository.findByEmailId(userWebModel.getEmailId(), userWebModel.getUserType());
+//	        if (existingUser.isPresent()) {
+//	            response.put("message", "User with this email already exists");
+//	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+//	        }
 
 	        // Create new hospital data entity (doctor)
 	        HospitalDataList newUser = HospitalDataList.builder()
 	                .emailId(userWebModel.getEmailId())
-	                .password(passwordEncoder.encode(userWebModel.getPassword())) // Encrypt password
-	                .userType(userWebModel.getUserType())
-	                .hospitalId(userWebModel.getHospitalId())
+	               // .password(passwordEncoder.encode(userWebModel.getPassword())) // Encrypt password
+	              //  .userType(userWebModel.getUserType())
+	             //   .hospitalId(userWebModel.getHospitalId())
 	                .phoneNumber(userWebModel.getPhoneNumber())
-	                .dateOfBirth(userWebModel.getDateOfBirth())
+	               // .dateOfBirth(userWebModel.getDateOfBirth())
 	                .userIsActive(true) // Default to active
 	                .currentAddress(userWebModel.getCurrentAddress())
-	                .empId(userWebModel.getEmpId())
-	                .gender(userWebModel.getGender())
+	            //    .empId(userWebModel.getEmpId())
+	              //  .gender(userWebModel.getGender())
 	                .createdBy(userWebModel.getCreatedBy())
-	                .userName(userWebModel.getUserName())
+	                //.userName(userWebModel.getUserName())
 	                .build();
 
 	        // Save the hospital data list (which is the doctor)
@@ -180,35 +180,35 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	    try {
 	        logger.info("Fetching hospital data for userType: " + userType + " and hospitalId: " + hospitalId);
 
-	        // Query the repository for the matching data
-	        List<HospitalDataList> hospitalDataList = userRepository.findByUserTypeAndHospitalId(userType, hospitalId);
+//	        // Query the repository for the matching data
+//	        List<HospitalDataList> hospitalDataList = userRepository.findByUserTypeAndHospitalId(userType, hospitalId);
 
-	        // Check if data exists
-	        if (hospitalDataList.isEmpty()) {
-	            return ResponseEntity.ok(new Response(1, "No hospital data found for the given userType and hospitalId", new ArrayList<>()));
-	        }
+//	        // Check if data exists
+//	        if (hospitalDataList.isEmpty()) {
+//	            return ResponseEntity.ok(new Response(1, "No hospital data found for the given userType and hospitalId", new ArrayList<>()));
+//	        }
 
 	        // Extract the hospital data
 	        List<HashMap<String, Object>> dataList = new ArrayList<>();
-	        for (HospitalDataList hospitalData : hospitalDataList) {
-	            HashMap<String, Object> data = new HashMap<>();
-	            data.put("hospitalDataId", hospitalData.getHospitalDataId());
-	            data.put("hospitalId", hospitalData.getHospitalId());
-	            data.put("userName", hospitalData.getUserName());
-	            data.put("emailId", hospitalData.getEmailId());
-	            data.put("userType", hospitalData.getUserType());
-	            data.put("phoneNumber", hospitalData.getPhoneNumber());
-	            data.put("currentAddress", hospitalData.getCurrentAddress());
-	            data.put("empId", hospitalData.getEmpId());
-	            data.put("gender", hospitalData.getGender());
-	            data.put("userIsActive", hospitalData.getUserIsActive());
-
-	            // Add the data to the list
-	            dataList.add(data);
-	        }
-
-	        // Add the data to the response map
-	        response.put("data", dataList);
+//	        for (HospitalDataList hospitalData : hospitalDataList) {
+//	            HashMap<String, Object> data = new HashMap<>();
+//	            data.put("hospitalDataId", hospitalData.getHospitalDataId());
+//	            data.put("hospitalId", hospitalData.getHospitalId());
+//	            data.put("userName", hospitalData.getUserName());
+//	            data.put("emailId", hospitalData.getEmailId());
+//	            data.put("userType", hospitalData.getUserType());
+//	            data.put("phoneNumber", hospitalData.getPhoneNumber());
+//	            data.put("currentAddress", hospitalData.getCurrentAddress());
+//	            data.put("empId", hospitalData.getEmpId());
+//	            data.put("gender", hospitalData.getGender());
+//	            data.put("userIsActive", hospitalData.getUserIsActive());
+//
+//	            // Add the data to the list
+//	            dataList.add(data);
+//	        }
+//
+//	        // Add the data to the response map
+//	        response.put("data", dataList);
 
 	        return ResponseEntity.ok(new Response(1, "Success", response));
 
@@ -234,21 +234,21 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            // Create a HashMap for userDetails and map individual fields
 	            HashMap<String, Object> userDetails = new HashMap<>();
 	            userDetails.put("hospitalDataId", hospitalData.getHospitalDataId());
-	            userDetails.put("hospitalId", hospitalData.getHospitalId());
-	            userDetails.put("userName", hospitalData.getUserName());
-	            userDetails.put("emailId", hospitalData.getEmailId());
-	            userDetails.put("userType", hospitalData.getUserType());
-	            userDetails.put("phoneNumber", hospitalData.getPhoneNumber());
-	            userDetails.put("userIsActive", hospitalData.getUserIsActive());
-	            userDetails.put("currentAddress", hospitalData.getCurrentAddress());
-	            userDetails.put("createdBy", hospitalData.getCreatedBy());
-	            userDetails.put("userCreatedOn", hospitalData.getUserCreatedOn());
-	            userDetails.put("userUpdatedBy", hospitalData.getUserUpdatedBy());
-	            userDetails.put("userUpdatedOn", hospitalData.getUserUpdatedOn());
-	            userDetails.put("empId", hospitalData.getEmpId());
-	            userDetails.put("gender", hospitalData.getGender());
-	            userDetails.put("dateOfBirth", hospitalData.getDateOfBirth());
-	            // Retrieve doctor roles associated with the hospital data
+//	            userDetails.put("hospitalId", hospitalData.getHospitalId());
+//	            userDetails.put("userName", hospitalData.getUserName());
+//	            userDetails.put("emailId", hospitalData.getEmailId());
+//	            userDetails.put("userType", hospitalData.getUserType());
+//	            userDetails.put("phoneNumber", hospitalData.getPhoneNumber());
+//	            userDetails.put("userIsActive", hospitalData.getUserIsActive());
+//	            userDetails.put("currentAddress", hospitalData.getCurrentAddress());
+//	            userDetails.put("createdBy", hospitalData.getCreatedBy());
+//	            userDetails.put("userCreatedOn", hospitalData.getUserCreatedOn());
+//	            userDetails.put("userUpdatedBy", hospitalData.getUserUpdatedBy());
+//	            userDetails.put("userUpdatedOn", hospitalData.getUserUpdatedOn());
+//	            userDetails.put("empId", hospitalData.getEmpId());
+//	            userDetails.put("gender", hospitalData.getGender());
+//	            userDetails.put("dateOfBirth", hospitalData.getDateOfBirth());
+//	            // Retrieve doctor roles associated with the hospital data
 	            List<DoctorRole> doctorRoles = doctorRoleRepository.findByHospitalDataList(hospitalData);  // This will fetch all doctor roles for the hospital
 
 	            // Prepare the list of specialties associated with each doctor role
@@ -320,9 +320,9 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	        HospitalDataList existingHospitalData = hospitalDataOptional.get();
 
 	        // Step 3: Update only the fields that are provided (non-null values)
-	        if (userWebModel.getUserName() != null) {
-	            existingHospitalData.setUserName(userWebModel.getUserName());
-	        }
+//	        if (userWebModel.getUserName() != null) {
+//	            existingHospitalData.setUserName(userWebModel.getUserName());
+//	        }
 	        if (userWebModel.getEmailId() != null) {
 	            existingHospitalData.setEmailId(userWebModel.getEmailId());
 	        }
@@ -335,15 +335,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	        if (userWebModel.getCurrentAddress() != null) {
 	            existingHospitalData.setCurrentAddress(userWebModel.getCurrentAddress());
 	        }
-	        if (userWebModel.getEmpId() != null) {
-	            existingHospitalData.setEmpId(userWebModel.getEmpId());
-	        }
-	        if (userWebModel.getGender() != null) {
-	            existingHospitalData.setGender(userWebModel.getGender());
-	        }
-	        if (userWebModel.getDateOfBirth() != null) {
-	            existingHospitalData.setDateOfBirth(userWebModel.getDateOfBirth());
-	        }
+	      
 	        
 	        // Assuming the updater's ID is passed in 'createdBy' (could be renamed to 'updatedBy')
 	        if (userWebModel.getCreatedBy() != null) {
@@ -461,7 +453,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	        for (User user : users) {
 	            HashMap<String, Object> hospitalData = new HashMap<>();
 	            hospitalData.put("id", user.getUserId());
-	            hospitalData.put("hospitalName", user.getHospitalName());
+	          //  hospitalData.put("hospitalName", user.getHospitalName());
 	            hospitalDataList.add(hospitalData);
 	        }
 
