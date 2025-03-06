@@ -43,51 +43,44 @@ public class AuthServiceImpl implements AuthService {
 
 	@Override
 	public ResponseEntity<?> register(UserWebModel userWebModel) {
-	    HashMap<String, Object> response = new HashMap<>();
-	    try {
-	        logger.info("Register method start");
+		HashMap<String, Object> response = new HashMap<>();
+		try {
+			logger.info("Register method start");
 
-	        // Check if a user with the same emailId, userType, and hospitalId already exists
-	        Optional<User> existingUser = userRepository.findByEmailIdAndUserTypeAndHospitalId(
-	                userWebModel.getEmailId(), 
-	                userWebModel.getUserType(), 
-	                userWebModel.getHospitalId()
-	        );
+			// Check if a user with the same emailId, userType, and hospitalId already
+			// exists
+			Optional<User> existingUser = userRepository.findByEmailIdAndUserTypeAndHospitalId(
+					userWebModel.getEmailId(), userWebModel.getUserType(), userWebModel.getHospitalId());
 
-	        if (existingUser.isPresent()) {
-	            response.put("message", "User with this email, user type, and hospital ID already exists");
-	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-	        }
+			if (existingUser.isPresent()) {
+				response.put("message", "User with this email, user type, and hospital ID already exists");
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+			}
 
-	        // Create new user entity
-	        User newUser = User.builder()
-	                .emailId(userWebModel.getEmailId())
-	                .firstName(userWebModel.getFirstName())
-	                .lastName(userWebModel.getLastName())
-	                .password(passwordEncoder.encode(userWebModel.getPassword())) // Encrypt password
-	                .userType(userWebModel.getUserType())
-	                .phoneNumber(userWebModel.getPhoneNumber())
-	                .userIsActive(true) // Default active
-	                .currentAddress(userWebModel.getCurrentAddress())
-	                .empId(userWebModel.getEmpId())
-	                .gender(userWebModel.getGender())
-	                .createdBy(userWebModel.getCreatedBy())
-	                .userName(userWebModel.getFirstName() + " " + userWebModel.getLastName()) // Concatenate first name and last name
-	                .hospitalId(userWebModel.getHospitalId()) // Assuming `hospitalId` exists in the User entity
-	                .build();
+			// Create new user entity
+			User newUser = User.builder().emailId(userWebModel.getEmailId()).firstName(userWebModel.getFirstName())
+					.lastName(userWebModel.getLastName()).password(passwordEncoder.encode(userWebModel.getPassword())) // Encrypt
+																														// password
+					.userType(userWebModel.getUserType()).phoneNumber(userWebModel.getPhoneNumber()).userIsActive(true) // Default
+																														// active
+					.currentAddress(userWebModel.getCurrentAddress()).empId(userWebModel.getEmpId())
+					.gender(userWebModel.getGender()).createdBy(userWebModel.getCreatedBy())
+					.userName(userWebModel.getFirstName() + " " + userWebModel.getLastName()) // Concatenate first name
+																								// and last name
+					.hospitalId(userWebModel.getHospitalId()) // Assuming `hospitalId` exists in the User entity
+					.build();
 
-	        // Save user
-	        User savedUser = userRepository.save(newUser);
+			// Save user
+			User savedUser = userRepository.save(newUser);
 
-	        return ResponseEntity.ok(new Response(1, "success", "User registered successfully"));
+			return ResponseEntity.ok(new Response(1, "success", "User registered successfully"));
 
-	    } catch (Exception e) {
-	        logger.error("Error registering user: " + e.getMessage(), e);
-	        response.put("message", "Registration failed");
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-	    }
+		} catch (Exception e) {
+			logger.error("Error registering user: " + e.getMessage(), e);
+			response.put("message", "Registration failed");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
 	}
-
 
 	@Override
 	public RefreshToken createRefreshToken(User user) {
@@ -163,4 +156,31 @@ public class AuthServiceImpl implements AuthService {
 		return ResponseEntity.ok(new Response(1, "Users retrieved successfully", responseMap));
 	}
 
+	public ResponseEntity<?> getDropDownByUserTypeByHospitalId() {
+	    try {
+	        // Fetch users with userType = "ADMIN" and hospitalId is null
+	        List<User> admins = userRepository.findByUserTypeAndHospitalIdIsNull("ADMIN");
+
+	        // Extract only userId and userName
+	        List<Map<String, Object>> adminList = admins.stream()
+	            .map(admin -> {
+	                Map<String, Object> userMap = new HashMap<>();
+	                userMap.put("userId", admin.getUserId());
+	                userMap.put("userName", admin.getUserName());
+	                return userMap;
+	            })
+	            .collect(Collectors.toList());
+
+	        // Prepare response using HashMap
+	        Map<String, Object> response = new HashMap<>();
+	        //response.put("admins", adminList.isEmpty() ? new ArrayList<>() : adminList); // Ensure empty array instead of null
+
+	        return ResponseEntity.ok(new Response (1,"success",adminList.isEmpty() ? new ArrayList<>() : adminList));
+	    } catch (Exception e) {
+	        Map<String, String> errorResponse = new HashMap<>();
+	        errorResponse.put("error", "An error occurred while fetching admins");
+	        return ResponseEntity.status(500).body(errorResponse);
+	    }
+	
+    }
 }

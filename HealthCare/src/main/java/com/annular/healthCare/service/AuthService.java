@@ -17,4 +17,6 @@ public interface AuthService {
 
 	ResponseEntity<?> getUserDetailsByUserType(String userType);
 
+	ResponseEntity<?> getDropDownByUserTypeByHospitalId();
+
 }

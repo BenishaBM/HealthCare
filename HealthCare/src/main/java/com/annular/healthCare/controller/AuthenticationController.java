@@ -140,4 +140,16 @@ public class AuthenticationController {
 					.body(new Response(-1, "Fail", e.getMessage()));
 		}
 	}
+	
+	@GetMapping("getDropDownByUserTypeByHospitalId")
+	public ResponseEntity<?> getDropDownByUserTypeByHospitalId() {
+		try {
+			logger.info("getDropDownByUserTypeByHospitalId request for userType: {}");
+			return authService.getDropDownByUserTypeByHospitalId();
+		} catch (Exception e) {
+			logger.error("getDropDownByUserTypeByHospitalId Method Exception: {}", e.getMessage(), e);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(new Response(-1, "Fail", e.getMessage()));
+		}
+}
 }
