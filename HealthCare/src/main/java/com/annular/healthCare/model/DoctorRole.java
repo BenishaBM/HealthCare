@@ -33,9 +33,10 @@ public class DoctorRole {
 	@Column(name = "doctorRoleId")
 	private Integer doctorRoleId;
 	
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "hospitalDataListId", referencedColumnName = "hospitalDataId", insertable = true, updatable = true)
-	private HospitalDataList hospitalDataList;
+    // Correcting relationship: Many DoctorRole records can belong to one User
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "userId", referencedColumnName = "userId", insertable = true, updatable = true)
+    private User user;
 
 	
 	@Column(name = "roleId") // Role ID should be part of the table to store the specific role

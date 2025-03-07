@@ -2,6 +2,7 @@ package com.annular.healthCare.webModel;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import javax.persistence.Column;
 
@@ -38,6 +39,7 @@ public class UserWebModel {
 	private Integer hospitalId;
 	private String firstName;
 	private String lastName;
+	private List<Integer> roleIds; // List of role IDs (multiple roles can be assigned)
 	private String token;
 	private String hospitalName;
 	private ArrayList<FileInputWebModel> filesInputWebModel;

@@ -11,6 +11,5 @@ import com.annular.healthCare.model.HospitalDataList;
 @Repository
 public interface DoctorRoleRepository extends JpaRepository<DoctorRole, Integer> {
 
-	List<DoctorRole> findByHospitalDataList(HospitalDataList hospitalData);
-
+	
 }

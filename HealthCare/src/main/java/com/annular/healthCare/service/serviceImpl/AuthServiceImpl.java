@@ -25,11 +25,13 @@ import org.springframework.stereotype.Service;
 import com.annular.healthCare.Response;
 import com.annular.healthCare.Util.Base64FileUpload;
 import com.annular.healthCare.Util.HealthCareConstant;
+import com.annular.healthCare.model.DoctorRole;
 import com.annular.healthCare.model.HospitalAdmin;
 import com.annular.healthCare.model.HospitalDataList;
 import com.annular.healthCare.model.MediaFile;
 import com.annular.healthCare.model.RefreshToken;
 import com.annular.healthCare.model.User;
+import com.annular.healthCare.repository.DoctorRoleRepository;
 import com.annular.healthCare.repository.HospitalAdminRepository;
 import com.annular.healthCare.repository.MediaFileRepository;
 import com.annular.healthCare.repository.RefreshTokenRepository;
@@ -55,6 +57,9 @@ public class AuthServiceImpl implements AuthService {
 	
 	@Autowired
 	MediaFileRepository mediaFileRepository;
+	
+	@Autowired
+	DoctorRoleRepository doctorRoleRepository;
 	
 	@Autowired
 	HospitalAdminRepository hospitalAdminRepository;
@@ -97,6 +102,21 @@ public class AuthServiceImpl implements AuthService {
 	        if (userWebModel.getFilesInputWebModel() != null) {
 	            handleFileUploads(newUser, userWebModel.getFilesInputWebModel());
 	        }
+	        
+
+	        if (userWebModel.getRoleIds() != null && !userWebModel.getRoleIds().isEmpty()) {
+	            for (Integer roleId : userWebModel.getRoleIds()) {
+	                DoctorRole doctorRole = DoctorRole.builder()
+	                    .user(savedUser)
+	                    .roleId(roleId)
+	                    .createdBy(savedUser.getCreatedBy())
+	                    .userIsActive(true)
+	                    .build();
+	                doctorRoleRepository.save(doctorRole);
+	            }
+	        }
+
+
 
 			return ResponseEntity.ok(new Response(1, "success", "User registered successfully"));
 
