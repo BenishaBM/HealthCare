@@ -2,6 +2,7 @@ package com.annular.healthCare.service.serviceImpl;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,11 +21,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.annular.healthCare.Response;
+import com.annular.healthCare.model.HospitalAdmin;
 import com.annular.healthCare.model.RefreshToken;
 import com.annular.healthCare.model.User;
+import com.annular.healthCare.repository.HospitalAdminRepository;
 import com.annular.healthCare.repository.RefreshTokenRepository;
 import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.AuthService;
+import com.annular.healthCare.webModel.HospitalDataListWebModel;
 import com.annular.healthCare.webModel.UserWebModel;
 
 @Service
@@ -40,6 +44,9 @@ public class AuthServiceImpl implements AuthService {
 
 	@Autowired
 	RefreshTokenRepository refreshTokenRepository;
+	
+	@Autowired
+	HospitalAdminRepository hospitalAdminRepository;
 
 	@Override
 	public ResponseEntity<?> register(UserWebModel userWebModel) {
@@ -155,7 +162,7 @@ public class AuthServiceImpl implements AuthService {
 		logger.info("Users retrieved successfully for userType: {}", userType);
 		return ResponseEntity.ok(new Response(1, "Users retrieved successfully", responseMap));
 	}
-
+	@Override
 	public ResponseEntity<?> getDropDownByUserTypeByHospitalId() {
 	    try {
 	        // Fetch users with userType = "ADMIN" and hospitalId is null
@@ -183,4 +190,159 @@ public class AuthServiceImpl implements AuthService {
 	    }
 	
     }
+
+	@Override
+	public ResponseEntity<?> updateUserDetailsByUserId(HospitalDataListWebModel userWebModel) {
+	    HashMap<String, Object> response = new HashMap<>();
+	    try {
+	        // Log the incoming update request
+	        logger.info("Updating user details for userId: " + userWebModel.getUserId());
+
+	        // Step 1: Retrieve the existing user by userId
+	        Optional<User> userOptional = userRepository.findById(userWebModel.getUserId());
+
+	        // Step 2: Check if the user exists
+	        if (!userOptional.isPresent()) {
+	            response.put("message", "User not found");
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body(new Response(0, "Fail", "User not found"));
+	        }
+
+	        // Step 3: Get the existing user entity
+	        User existingUser = userOptional.get();
+
+	        // Step 4: Update only the fields that are provided (non-null values)
+	        if (userWebModel.getEmailId() != null) {
+	            existingUser.setEmailId(userWebModel.getEmailId());
+	        }
+	        if (userWebModel.getFirstName() != null) {
+	            existingUser.setFirstName(userWebModel.getFirstName());
+	        }
+	        
+	        // Set the password only if it's provided and non-empty
+	        if (userWebModel.getPassword() != null && !userWebModel.getPassword().isEmpty()) {
+	            existingUser.setPassword(passwordEncoder.encode(userWebModel.getPassword()));
+	        }
+	        
+	        if (userWebModel.getLastName() != null) {
+	            existingUser.setLastName(userWebModel.getLastName());
+	        }
+	        if (userWebModel.getPhoneNumber() != null) {
+	            existingUser.setPhoneNumber(userWebModel.getPhoneNumber());
+	        }
+	        if (userWebModel.getCurrentAddress() != null) {
+	            existingUser.setCurrentAddress(userWebModel.getCurrentAddress());
+	        }
+	        if (userWebModel.getUserUpdatedBy() != null) {
+	            existingUser.setUserUpdatedBy(userWebModel.getCreatedBy()); // Assuming 'createdBy' in the web model is the user making the update
+	        }
+
+	        // Update the 'userUpdatedOn' field to current time
+	        existingUser.setUserUpdatedOn(new Date());
+
+	        // Step 5: Save the updated user entity back to the database
+	        User updatedUser = userRepository.save(existingUser);
+
+	        // Step 6: Prepare and return the success response
+	        response.put("message", "User details updated successfully");
+	        response.put("data", updatedUser);
+
+	        return ResponseEntity.ok(new Response(1, "success", "User details updated successfully"));
+
+	    } catch (Exception e) {
+	        logger.error("Error updating user details: " + e.getMessage(), e);
+	        response.put("message", "Error updating user details");
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "Fail", "Error updating user details"));
+	    }
+	}
+	@Override
+	public ResponseEntity<?> deleteUserDetailsByUserId(HospitalDataListWebModel userWebModel) {
+	    HashMap<String, Object> response = new HashMap<>();
+	    try {
+	        // Log the incoming soft delete request
+	        logger.info("Soft deleting user details for userId: " + userWebModel.getUserId());
+
+	        // Step 1: Retrieve the existing user by userId
+	        Optional<User> userOptional = userRepository.findById(userWebModel.getUserId());
+
+	        // Step 2: Check if the user exists
+	        if (!userOptional.isPresent()) {
+	            response.put("message", "User not found");
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body(new Response(0, "Fail", "User not found"));
+	        }
+
+	        // Step 3: Get the existing user entity
+	        User existingUser = userOptional.get();
+
+	        // Step 4: Set userIsActive to false (soft delete)
+	        existingUser.setUserIsActive(false);
+
+	        // Update the 'userUpdatedOn' field to the current time
+	        existingUser.setUserUpdatedOn(new Date());
+
+	        // Step 5: Save the updated user entity back to the database
+	        User updatedUser = userRepository.save(existingUser);
+
+	        // Step 6: Soft delete associated HospitalAdmin entities (if any)
+	        List<HospitalAdmin> hospitalAdmins = hospitalAdminRepository.findByAdminUserId(userWebModel.getUserId());
+	        for (HospitalAdmin admin : hospitalAdmins) {
+	            admin.setUserIsActive(false);  // Set admin as inactive
+	            admin.setUserUpdatedOn(new Date());  // Update the timestamp for admin
+	            hospitalAdminRepository.save(admin);  // Save the updated admin record
+	        }
+
+	        // Step 7: Return success response
+	        response.put("message", "User and associated HospitalAdmin soft deleted successfully");
+	        response.put("data", updatedUser);
+
+	        return ResponseEntity.ok(new Response(1, "success", "deleted successfully"));
+
+	    } catch (Exception e) {
+	        logger.error("Error soft deleting user and HospitalAdmin details: " + e.getMessage(), e);
+	        response.put("message", "Error soft deleting user and HospitalAdmin details");
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "Fail", "Error soft deleting user and HospitalAdmin details"));
+	    }
+	}
+
+	@Override
+	public ResponseEntity<?> deletehospitalAdminByUserId(Integer adminId) {
+	    HashMap<String, Object> response = new HashMap<>();
+	    try {
+	        // Log the incoming delete request
+	        logger.info("Soft deleting admin user with adminId: " + adminId);
+
+	        // Step 1: Retrieve the existing hospital admin by adminId (using Optional)
+	        Optional<HospitalAdmin> hospitalAdminOptional = hospitalAdminRepository.findById(adminId);
+
+	        // Step 2: Check if the admin exists
+	        if (!hospitalAdminOptional.isPresent()) {
+	            response.put("message", "Admin not found for the given adminId");
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body(new Response(0, "Fail", "Admin not found for the given adminId"));
+	        }
+
+	        // Step 3: Get the existing HospitalAdmin entity
+	        HospitalAdmin hospitalAdmin = hospitalAdminOptional.get();
+
+	        // Step 4: Set userIsActive to false to soft delete the admin
+	        hospitalAdmin.setUserIsActive(false);  // Mark the admin as inactive
+	        hospitalAdmin.setUserUpdatedOn(new Date());  // Update the timestamp of when it was deactivated
+
+	        // Step 5: Save the updated HospitalAdmin entity back to the database
+	        hospitalAdminRepository.save(hospitalAdmin);
+
+	        return ResponseEntity.ok(new Response(1, "success", "Admin user deactivated successfully"));
+
+	    } catch (Exception e) {
+	        logger.error("Error soft deleting admin: " + e.getMessage(), e);
+	        response.put("message", "Error soft deleting admin");
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "Fail", "Error soft deleting admin"));
+	    }
+	}
+
+
 }

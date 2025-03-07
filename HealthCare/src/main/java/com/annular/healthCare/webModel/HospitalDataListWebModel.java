@@ -35,6 +35,8 @@ public class HospitalDataListWebModel {
 	private Integer userId;
 	private String password;
 	private String phoneNumber;
+	private String firstName;
+	private String lastName;
 	private Boolean userIsActive;
 	private String currentAddress;
 	private Integer createdBy;

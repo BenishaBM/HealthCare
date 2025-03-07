@@ -14,6 +14,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.annular.healthCare.service.AuthService;
+import com.annular.healthCare.webModel.HospitalDataListWebModel;
 import com.annular.healthCare.webModel.UserWebModel;
 import com.annular.healthCare.Response;
 import com.annular.healthCare.UserStatusConfig;
@@ -152,4 +154,43 @@ public class AuthenticationController {
 					.body(new Response(-1, "Fail", e.getMessage()));
 		}
 }
+	
+	@PostMapping("updateUserDetailsByUserId")
+	public ResponseEntity<?> updateUserDetailsByUserId(@RequestBody HospitalDataListWebModel userWebModel) {
+	    try {
+	        // Call the service to perform the update
+	        return authService.updateUserDetailsByUserId(userWebModel);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("updateUserDetailsByUserId Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+	@PostMapping("deleteUserDetailsByUserId")
+	public ResponseEntity<?> deleteUserDetailsByUserId(@RequestBody HospitalDataListWebModel userWebModel) {
+	    try {
+	        // Call the service to perform the update
+	        return authService.deleteUserDetailsByUserId(userWebModel);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("deleteUserDetailsByUserId Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+	
+	@PostMapping("deletehospitalAdminByUserId")
+	public ResponseEntity<?> deletehospitalAdminByUserId(@RequestParam("id") Integer id) {
+	    try {
+	        // Call the service to perform the update
+	        return authService.deletehospitalAdminByUserId(id);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("deletehospitalAdminByUserId Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+
 }
