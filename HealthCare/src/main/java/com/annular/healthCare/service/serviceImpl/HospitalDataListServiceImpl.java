@@ -182,35 +182,36 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 		try {
 			logger.info("Fetching hospital data for userType: " + userType + " and hospitalId: " + hospitalId);
 
-//	        // Query the repository for the matching data
-//	        List<HospitalDataList> hospitalDataList = userRepository.findByUserTypeAndHospitalId(userType, hospitalId);
+	        // Query the repository for the matching data
+	        List<User> hospitalDataList = usersRepository.findByUserTypeAndHospitalIds(userType, hospitalId);
 
-//	        // Check if data exists
-//	        if (hospitalDataList.isEmpty()) {
-//	            return ResponseEntity.ok(new Response(1, "No hospital data found for the given userType and hospitalId", new ArrayList<>()));
-//	        }
+	        // Check if data exists
+	        if (hospitalDataList.isEmpty()) {
+	            return ResponseEntity.ok(new Response(1, "No hospital data found for the given userType and hospitalId", new ArrayList<>()));
+	        }
 
 			// Extract the hospital data
 			List<HashMap<String, Object>> dataList = new ArrayList<>();
-//	        for (HospitalDataList hospitalData : hospitalDataList) {
-//	            HashMap<String, Object> data = new HashMap<>();
-//	            data.put("hospitalDataId", hospitalData.getHospitalDataId());
-//	            data.put("hospitalId", hospitalData.getHospitalId());
-//	            data.put("userName", hospitalData.getUserName());
-//	            data.put("emailId", hospitalData.getEmailId());
-//	            data.put("userType", hospitalData.getUserType());
-//	            data.put("phoneNumber", hospitalData.getPhoneNumber());
-//	            data.put("currentAddress", hospitalData.getCurrentAddress());
-//	            data.put("empId", hospitalData.getEmpId());
-//	            data.put("gender", hospitalData.getGender());
-//	            data.put("userIsActive", hospitalData.getUserIsActive());
+	        for (User hospitalData : hospitalDataList) {
+	            HashMap<String, Object> data = new HashMap<>();
+	            data.put("hospitalDataId", hospitalData.getUserId());
+	            data.put("hospitalId", hospitalData.getHospitalId());
+	            data.put("userName", hospitalData.getUserName());
+	            data.put("firstName", hospitalData.getLastName());
+	            data.put("emailId", hospitalData.getEmailId());
+	            data.put("userType", hospitalData.getUserType());
+	            data.put("phoneNumber", hospitalData.getPhoneNumber());
+	            data.put("currentAddress", hospitalData.getCurrentAddress());
+	            data.put("empId", hospitalData.getEmpId());
+	            data.put("gender", hospitalData.getGender());
+	            data.put("userIsActive", hospitalData.getUserIsActive());
 //
 //	            // Add the data to the list
-//	            dataList.add(data);
-//	        }
+	            dataList.add(data);
+	        }
 //
-//	        // Add the data to the response map
-//	        response.put("data", dataList);
+	        // Add the data to the response map
+	        response.put("data", dataList);
 
 			return ResponseEntity.ok(new Response(1, "Success", response));
 
@@ -265,8 +266,12 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 						Optional<User> userOptional = usersRepository.findByUserId(hospitalAdmin.getAdminUserId());
 						if (userOptional.isPresent()) {
 							User user = userOptional.get();
+						    String fullName = (user.getFirstName() != null ? user.getFirstName() : "") + 
+				                      " " + 
+				                      (user.getLastName() != null ? user.getLastName() : "");
 							adminData.put("firstName", user.getFirstName());
 							adminData.put("lastName", user.getLastName());
+							 adminData.put("userName", fullName.trim()); // Trim to remove extra spaces
 						} else {
 							adminData.put("message", "No user found for this adminUserId.");
 						}

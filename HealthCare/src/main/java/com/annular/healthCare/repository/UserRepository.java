@@ -36,5 +36,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 //
 //	@Query("SELECT u FROM User u WHERE u.userId = :userId")
 //	Optional<User> findByIds(Integer userId);
+	
+	@Query("SELECT u FROM User u WHERE u.userIsActive = true AND u.hospitalId = :hospitalId AND u.userType = :userType")
+    List<User> findByUserTypeAndHospitalIds(String userType, Integer hospitalId);
 
 }

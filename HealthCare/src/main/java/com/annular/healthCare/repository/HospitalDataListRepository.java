@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.annular.healthCare.model.HospitalDataList;
+import com.annular.healthCare.model.User;
 
 @Repository
 public interface HospitalDataListRepository extends JpaRepository<HospitalDataList, Integer> {
@@ -19,5 +20,8 @@ public interface HospitalDataListRepository extends JpaRepository<HospitalDataLi
 
 	@Query("SELECT u FROM HospitalDataList u WHERE u.userIsActive = true")
 	List<HospitalDataList> findByData();
+
+
+
 
 }

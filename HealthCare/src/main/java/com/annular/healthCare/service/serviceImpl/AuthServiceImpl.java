@@ -1,5 +1,6 @@
 package com.annular.healthCare.service.serviceImpl;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -22,13 +23,19 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.annular.healthCare.Response;
+import com.annular.healthCare.Util.Base64FileUpload;
+import com.annular.healthCare.Util.HealthCareConstant;
 import com.annular.healthCare.model.HospitalAdmin;
+import com.annular.healthCare.model.HospitalDataList;
+import com.annular.healthCare.model.MediaFile;
 import com.annular.healthCare.model.RefreshToken;
 import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.HospitalAdminRepository;
+import com.annular.healthCare.repository.MediaFileRepository;
 import com.annular.healthCare.repository.RefreshTokenRepository;
 import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.AuthService;
+import com.annular.healthCare.webModel.FileInputWebModel;
 import com.annular.healthCare.webModel.HospitalDataListWebModel;
 import com.annular.healthCare.webModel.UserWebModel;
 
@@ -45,6 +52,9 @@ public class AuthServiceImpl implements AuthService {
 
 	@Autowired
 	RefreshTokenRepository refreshTokenRepository;
+	
+	@Autowired
+	MediaFileRepository mediaFileRepository;
 	
 	@Autowired
 	HospitalAdminRepository hospitalAdminRepository;
@@ -83,7 +93,10 @@ public class AuthServiceImpl implements AuthService {
 
 			// Save user
 			User savedUser = userRepository.save(newUser);
-			
+	        // Handle file uploads (e.g., hospital logo)
+	        if (userWebModel.getFilesInputWebModel() != null) {
+	            handleFileUploads(newUser, userWebModel.getFilesInputWebModel());
+	        }
 
 			return ResponseEntity.ok(new Response(1, "success", "User registered successfully"));
 
@@ -93,6 +106,41 @@ public class AuthServiceImpl implements AuthService {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
+	
+	// Helper method to handle file uploads (hospital logo)
+		public void handleFileUploads(User hospitalData, List<FileInputWebModel> filesInputWebModel)
+				throws IOException {
+			if (filesInputWebModel == null || filesInputWebModel.isEmpty()) {
+				return; // No files to upload
+			}
+
+			List<MediaFile> filesList = new ArrayList<>();
+			for (FileInputWebModel fileInput : filesInputWebModel) {
+				if (fileInput.getFileData() != null) {
+					// Create a new MediaFile instance for each file
+					MediaFile mediaFile = new MediaFile();
+					String fileName = UUID.randomUUID().toString(); // Generate a unique file name for each file
+
+					// Set properties of the media file
+					mediaFile.setFileName(fileName);
+					mediaFile.setFileOriginalName(fileInput.getFileName());
+					mediaFile.setFileSize(fileInput.getFileSize());
+					mediaFile.setFileType(fileInput.getFileType());
+					mediaFile.setFileDomainId(HealthCareConstant.ProfilePhoto); // This constant can be changed to represent
+																				// logo files
+					mediaFile.setFileDomainReferenceId(hospitalData.getUserId()); // Set the hospital ID reference
+					mediaFile.setFileIsActive(true);
+					mediaFile.setFileCreatedBy(hospitalData.getCreatedBy());
+
+					// Save media file to the database
+					mediaFile = mediaFileRepository.save(mediaFile);
+					filesList.add(mediaFile);
+
+					// Save the file to the file system
+					Base64FileUpload.saveFile(imageLocation + "/profilePhoto", fileInput.getFileData(), fileName);
+				}
+			}
+		}
 
 	@Override
 	public RefreshToken createRefreshToken(User user) {
