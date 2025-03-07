@@ -214,66 +214,109 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 
 	@Override
 	public ResponseEntity<?> getHospitalDataByUserId(Integer hospitalDataId) {
-		HashMap<String, Object> response = new HashMap<>();
-		try {
-			logger.info("Fetching hospital data for hospitalId: " + hospitalDataId);
+	    HashMap<String, Object> response = new HashMap<>();
+	    try {
+	        logger.info("Fetching hospital data for hospitalId: " + hospitalDataId);
 
-			// Attempt to retrieve the hospital data by hospitalId
-			Optional<HospitalDataList> hospitalDataOptional = userRepository.findByHospitalDataId(hospitalDataId);
+	        // Attempt to retrieve the hospital data by hospitalId
+	        Optional<HospitalDataList> hospitalDataOptional = userRepository.findByHospitalDataId(hospitalDataId);
 
-			// Check if the hospital data is present
-			if (hospitalDataOptional.isPresent()) {
-				HospitalDataList hospitalData = hospitalDataOptional.get();
-				// Create a HashMap for userDetails and map individual fields
-				HashMap<String, Object> userDetails = new HashMap<>();
-				userDetails.put("hospitalDataId", hospitalData.getHospitalDataId());
+	        // Check if the hospital data is present
+	        if (hospitalDataOptional.isPresent()) {
+	            HospitalDataList hospitalData = hospitalDataOptional.get();
+	            // Create a HashMap for userDetails and map individual fields
+	            HashMap<String, Object> userDetails = new HashMap<>();
+	            userDetails.put("hospitalDataId", hospitalData.getHospitalDataId());
 	            userDetails.put("emailId", hospitalData.getEmailId());
 	            userDetails.put("phoneNumber", hospitalData.getPhoneNumber());
-                userDetails.put("userIsActive", hospitalData.getUserIsActive());
-                userDetails.put("currentAddress", hospitalData.getCurrentAddress());
+	            userDetails.put("userIsActive", hospitalData.getUserIsActive());
+	            userDetails.put("currentAddress", hospitalData.getCurrentAddress());
 	            userDetails.put("createdBy", hospitalData.getCreatedBy());
 	            userDetails.put("userCreatedOn", hospitalData.getUserCreatedOn());
 	            userDetails.put("userUpdatedBy", hospitalData.getUserUpdatedBy());
 	            userDetails.put("userUpdatedOn", hospitalData.getUserUpdatedOn());
 
-				// Retrieve media files associated with the hospital data (Profile Photo)
-				List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
-						HealthCareConstant.hospitalLogo, hospitalData.getHospitalDataId());
+	            // Step 4: Retrieve all HospitalAdmin details using hospitalDataId
+	            List<HospitalAdmin> hospitalAdminList = hospitalAdminRepository.findByAdminUserIds(hospitalDataId);
 
-				// Prepare the list of FileInputWebModel from retrieved media files
-				ArrayList<FileInputWebModel> filesInputWebModel = new ArrayList<>();
+	            // Create a HashMap for HospitalAdmin details
+	            HashMap<String, Object> adminDetails = new HashMap<>();
+	            if (hospitalAdminList != null && !hospitalAdminList.isEmpty()) {
+	                // Prepare a list to store each admin's data
+	                ArrayList<HashMap<String, Object>> allAdminDetails = new ArrayList<>();
 
-				for (MediaFile mediaFile : files) {
-					FileInputWebModel filesInput = new FileInputWebModel();
-					filesInput.setFileName(mediaFile.getFileOriginalName());
-					filesInput.setFileId(mediaFile.getFileId());
-					filesInput.setFileSize(mediaFile.getFileSize());
-					filesInput.setFileType(mediaFile.getFileType());
+	                // Iterate through all HospitalAdmin records
+	                for (HospitalAdmin hospitalAdmin : hospitalAdminList) {
+	                    HashMap<String, Object> adminData = new HashMap<>();
+	                    adminData.put("adminId", hospitalAdmin.getAdminId());
+	                    adminData.put("adminUserId", hospitalAdmin.getAdminUserId());
+	                    adminData.put("userIsActive", hospitalAdmin.getUserIsActive());
 
-					String fileData = Base64FileUpload.encodeToBase64String(imageLocation + "/hospitalLogo",
-							mediaFile.getFileName());
-					filesInput.setFileData(fileData);
+	                    // Retrieve User data (firstName, lastName) from User table using adminUserId
+	                    Optional<User> userOptional = usersRepository.findByUserId(hospitalAdmin.getAdminUserId());
+	                    if (userOptional.isPresent()) {
+	                        User user = userOptional.get();
+	                        adminData.put("firstName", user.getFirstName());
+	                        adminData.put("lastName", user.getLastName());
+	                    } else {
+	                        adminData.put("message", "No user found for this adminUserId.");
+	                    }
 
-					filesInputWebModel.add(filesInput);
-				}
+	                    adminData.put("createdBy", hospitalAdmin.getCreatedBy());
+	                    adminData.put("userCreatedOn", hospitalAdmin.getUserCreatedOn());
+	                    adminData.put("userUpdatedBy", hospitalAdmin.getUserUpdatedBy());
+	                    adminData.put("userUpdatedOn", hospitalAdmin.getUserUpdatedOn());
 
-				// Prepare the response map with hospital data, media files, and specialties
-				HashMap<String, Object> responseMap = new HashMap<>();
-				responseMap.put("userDetails", userDetails);
-				responseMap.put("mediaFiles", filesInputWebModel);
+	                    // Add each admin's data to the list
+	                    allAdminDetails.add(adminData);
+	                }
 
-				// Return successful response with hospital data and associated media files
-				return ResponseEntity.ok(new Response(1, "Hospital data retrieved successfully", responseMap));
-			} else {
-				// Return a not found response if the hospital data is not found
-				return ResponseEntity.badRequest().body(new Response(0, "Fail", "Hospital data not found"));
-			}
+	                // Add the list of all admins to the response
+	                adminDetails.put("hospitalAdmins", allAdminDetails);
+	            } else {
+	                // If no admins found, return a message
+	                adminDetails.put("message", "No admins found for this hospital.");
+	            }
 
-		} catch (Exception e) {
-			logger.error("Error retrieving hospital data: " + e.getMessage(), e);
-			response.put("message", "Error retrieving data");
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-		}
+	            // Retrieve media files associated with the hospital data (Profile Photo)
+	            List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
+	                    HealthCareConstant.hospitalLogo, hospitalData.getHospitalDataId());
+
+	            // Prepare the list of FileInputWebModel from retrieved media files
+	            ArrayList<FileInputWebModel> filesInputWebModel = new ArrayList<>();
+
+	            for (MediaFile mediaFile : files) {
+	                FileInputWebModel filesInput = new FileInputWebModel();
+	                filesInput.setFileName(mediaFile.getFileOriginalName());
+	                filesInput.setFileId(mediaFile.getFileId());
+	                filesInput.setFileSize(mediaFile.getFileSize());
+	                filesInput.setFileType(mediaFile.getFileType());
+
+	                String fileData = Base64FileUpload.encodeToBase64String(imageLocation + "/hospitalLogo",
+	                        mediaFile.getFileName());
+	                filesInput.setFileData(fileData);
+
+	                filesInputWebModel.add(filesInput);
+	            }
+
+	            // Prepare the response map with hospital data, media files, and specialties
+	            HashMap<String, Object> responseMap = new HashMap<>();
+	            responseMap.put("userDetails", userDetails);
+	            responseMap.put("mediaFiles", filesInputWebModel);
+	            responseMap.put("hospitalAdmins", adminDetails);
+
+	            // Return successful response with hospital data and associated media files
+	            return ResponseEntity.ok(new Response(1, "Hospital data retrieved successfully", responseMap));
+	        } else {
+	            // Return a not found response if the hospital data is not found
+	            return ResponseEntity.badRequest().body(new Response(0, "Fail", "Hospital data not found"));
+	        }
+
+	    } catch (Exception e) {
+	        logger.error("Error retrieving hospital data: " + e.getMessage(), e);
+	        response.put("message", "Error retrieving data");
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
 	}
 
 	@Override

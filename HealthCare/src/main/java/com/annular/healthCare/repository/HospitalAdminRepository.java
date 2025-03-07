@@ -15,6 +15,9 @@ public interface HospitalAdminRepository extends JpaRepository<HospitalAdmin, In
 	@Query("SELECT ha FROM HospitalAdmin ha WHERE ha.adminUserId = :userId")
 	List<HospitalAdmin> findByAdminUserId(Integer userId);
 
-	//Optional<HospitalAdmin> findByAdminUserIds(Integer hospitalDataId);
+	@Query("SELECT ha FROM HospitalAdmin ha WHERE ha.hospitalDataList.hospitalDataId = :hospitalDataId AND ha.userIsActive = true")
+	List<HospitalAdmin> findByAdminUserIds(Integer hospitalDataId);
 
+	//Optional<HospitalAdmin> findByAdminUserIds(Integer hospitalDataId);
+	
 }
