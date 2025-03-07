@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.annular.healthCare.model.HospitalDataList;
 import com.annular.healthCare.model.User;
 
 @Repository
@@ -32,5 +33,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
 	@Query("SELECT u FROM User u WHERE u.userId = :adminUserId ")
 	Optional<User> findByUserId(Integer adminUserId);
+
+	@Query("SELECT u FROM User u WHERE u.userId = :userId")
+	Optional<User> findByIds(Integer userId);
 
 }

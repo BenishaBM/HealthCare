@@ -52,7 +52,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 
 	@Autowired
 	DoctorRoleRepository doctorRoleRepository;
-	
+
 	@Autowired
 	HospitalDataListRepository hospitalDataListRepository;
 
@@ -64,108 +64,115 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 
 	@Autowired
 	MediaFileRepository mediaFileRepository;
-	
+
 	@Autowired
 	HospitalAdminRepository hospitalAdminRepository;
-	
 
 	@Value("${annular.app.imageLocation}")
 	private String imageLocation;
 
 	@Override
 	public ResponseEntity<?> register(HospitalDataListWebModel userWebModel) {
-	    HashMap<String, Object> response = new HashMap<>();
-	    try {
-	        logger.info("Register method started");
+		HashMap<String, Object> response = new HashMap<>();
+		try {
+			logger.info("Register method started");
 
-	        // Check if the hospital already exists based on the hospital name
-	        Optional<HospitalDataList> existingHospital = userRepository.findByHospitalName(userWebModel.getHospitalName());
-	        if (existingHospital.isPresent()) {
-	            response.put("message", "Hospital with this name already exists");
-	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-	        }
+			// Check if the hospital already exists based on the hospital name
+			Optional<HospitalDataList> existingHospital = userRepository
+					.findByHospitalName(userWebModel.getHospitalName());
+			if (existingHospital.isPresent()) {
+				response.put("message", "Hospital with this name already exists");
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+			}
 
-	        // Create a new hospital data entity (hospital)
-	        HospitalDataList newHospitalData = HospitalDataList.builder()
-	                .emailId(userWebModel.getEmailId())
-	                .phoneNumber(userWebModel.getPhoneNumber())
-	                .userIsActive(true) // Default to active
-	                .currentAddress(userWebModel.getCurrentAddress())
-	                .createdBy(userWebModel.getCreatedBy())
-	                .hospitalName(userWebModel.getHospitalName()) // Set the hospital name here
-	                .build();
+			// Create a new hospital data entity (hospital)
+			HospitalDataList newHospitalData = HospitalDataList.builder().emailId(userWebModel.getEmailId())
+					.phoneNumber(userWebModel.getPhoneNumber()).userIsActive(true) // Default to active
+					.currentAddress(userWebModel.getCurrentAddress()).createdBy(userWebModel.getCreatedBy())
+					.hospitalName(userWebModel.getHospitalName()) // Set the hospital name here
+					.build();
 
-	        // Save the hospital data list (hospital)
-	        HospitalDataList savedHospitalData = userRepository.save(newHospitalData);
+			// Save the hospital data list (hospital)
+			HospitalDataList savedHospitalData = userRepository.save(newHospitalData);
 
-	        // Handle file uploads (e.g., hospital logo)
-	        if (userWebModel.getFilesInputWebModel() != null) {
-	            handleFileUploads(savedHospitalData, userWebModel.getFilesInputWebModel());
-	        }
-	     // Register multiple admins if provided
-	        if (userWebModel.getAdmins() != null && !userWebModel.getAdmins().isEmpty()) {
-	            for (HospitalAdminWebModel adminWebModel : userWebModel.getAdmins()) {
-	                // Create a new admin entity for each admin
-	                HospitalAdmin newAdmin = HospitalAdmin.builder()
-	                        .userIsActive(true) // Default to active
-	                        .adminUserId(userWebModel.getUserId()) // The user registering the hospital
-	                        .createdBy(userWebModel.getCreatedBy())
-	                        .hospitalDataList(savedHospitalData) // Associate the admin with the newly created hospital
-	                        .build();
+			// Handle file uploads (e.g., hospital logo)
+			if (userWebModel.getFilesInputWebModel() != null) {
+				handleFileUploads(savedHospitalData, userWebModel.getFilesInputWebModel());
+			}
 
-	                // Save the admin in the database
-	                hospitalAdminRepository.save(newAdmin);
-	            }
-	        }
+			// Register multiple admins if provided
+			if (userWebModel.getAdmins() != null && !userWebModel.getAdmins().isEmpty()) {
+				for (HospitalAdminWebModel adminWebModel : userWebModel.getAdmins()) {
+					// Create a new admin entity for each admin
+					HospitalAdmin newAdmin = HospitalAdmin.builder().userIsActive(true) // Default to active
+							.adminUserId(userWebModel.getUserId()) // The user registering the hospital
+							.createdBy(userWebModel.getCreatedBy()).hospitalDataList(savedHospitalData) // Associate the
+																										// admin with
+																										// the newly
+																										// created
+																										// hospital
+							.build();
 
-	        // Prepare the response with successful registration details
-//	        response.put("message", "Hospital registered successfully with admins");
-//	        response.put("hospitalId", savedHospitalData.getHospitalDataId());
-	       // return ResponseEntity.ok(response);
-	        return ResponseEntity.ok(new Response(1, "success", "Hospital registered successfully with admins"));
+					// Save the admin in the database
+					hospitalAdminRepository.save(newAdmin);
+				}
+			}
 
+			// Save the hospitalId for the user who is registering the hospital (not inside
+			// the admin loop)
+			User registeringUser = usersRepository.findByIds(userWebModel.getUserId())
+					.orElseThrow(() -> new RuntimeException("User not found"));
 
-	    } catch (Exception e) {
-	        logger.error("Error registering hospital: " + e.getMessage(), e);
-	        response.put("message", "Registration failed");
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-	    }
+			// Set the hospitalId for the registering user
+			registeringUser.setHospitalId(savedHospitalData.getHospitalDataId());
+
+			// Save the user with the updated hospitalId
+			usersRepository.save(registeringUser);
+
+			// Prepare the response with successful registration details
+			return ResponseEntity.ok(new Response(1, "success", "Hospital registered successfully with admins"));
+
+		} catch (Exception e) {
+			logger.error("Error registering hospital: " + e.getMessage(), e);
+			response.put("message", "Registration failed");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
 	}
 
 	// Helper method to handle file uploads (hospital logo)
 	public void handleFileUploads(HospitalDataList hospitalData, List<FileInputWebModel> filesInputWebModel)
-	        throws IOException {
-	    if (filesInputWebModel == null || filesInputWebModel.isEmpty()) {
-	        return; // No files to upload
-	    }
+			throws IOException {
+		if (filesInputWebModel == null || filesInputWebModel.isEmpty()) {
+			return; // No files to upload
+		}
 
-	    List<MediaFile> filesList = new ArrayList<>();
-	    for (FileInputWebModel fileInput : filesInputWebModel) {
-	        if (fileInput.getFileData() != null) {
-	            // Create a new MediaFile instance for each file
-	            MediaFile mediaFile = new MediaFile();
-	            String fileName = UUID.randomUUID().toString(); // Generate a unique file name for each file
+		List<MediaFile> filesList = new ArrayList<>();
+		for (FileInputWebModel fileInput : filesInputWebModel) {
+			if (fileInput.getFileData() != null) {
+				// Create a new MediaFile instance for each file
+				MediaFile mediaFile = new MediaFile();
+				String fileName = UUID.randomUUID().toString(); // Generate a unique file name for each file
 
-	            // Set properties of the media file
-	            mediaFile.setFileName(fileName);
-	            mediaFile.setFileOriginalName(fileInput.getFileName());
-	            mediaFile.setFileSize(fileInput.getFileSize());
-	            mediaFile.setFileType(fileInput.getFileType());
-	            mediaFile.setFileDomainId(HealthCareConstant.hospitalLogo); // This constant can be changed to represent logo files
-	            mediaFile.setFileDomainReferenceId(hospitalData.getHospitalDataId()); // Set the hospital ID reference
-	            mediaFile.setFileIsActive(true);
-	            mediaFile.setFileCreatedBy(hospitalData.getCreatedBy());
+				// Set properties of the media file
+				mediaFile.setFileName(fileName);
+				mediaFile.setFileOriginalName(fileInput.getFileName());
+				mediaFile.setFileSize(fileInput.getFileSize());
+				mediaFile.setFileType(fileInput.getFileType());
+				mediaFile.setFileDomainId(HealthCareConstant.hospitalLogo); // This constant can be changed to represent
+																			// logo files
+				mediaFile.setFileDomainReferenceId(hospitalData.getHospitalDataId()); // Set the hospital ID reference
+				mediaFile.setFileIsActive(true);
+				mediaFile.setFileCreatedBy(hospitalData.getCreatedBy());
 
-	            // Save media file to the database
-	            mediaFile = mediaFileRepository.save(mediaFile);
-	            filesList.add(mediaFile);
+				// Save media file to the database
+				mediaFile = mediaFileRepository.save(mediaFile);
+				filesList.add(mediaFile);
 
-	            // Save the file to the file system
-	            Base64FileUpload.saveFile(imageLocation + "/hospitalLogo", fileInput.getFileData(), fileName);
-	        }
-	    }
+				// Save the file to the file system
+				Base64FileUpload.saveFile(imageLocation + "/hospitalLogo", fileInput.getFileData(), fileName);
+			}
+		}
 	}
-
 
 	@Override
 	public ResponseEntity<?> getHospitalDataByUserTypeAndHospitalId(String userType, Integer hospitalId) {
@@ -214,201 +221,207 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 
 	@Override
 	public ResponseEntity<?> getHospitalDataByUserId(Integer hospitalDataId) {
-	    HashMap<String, Object> response = new HashMap<>();
-	    try {
-	        logger.info("Fetching hospital data for hospitalId: " + hospitalDataId);
+		HashMap<String, Object> response = new HashMap<>();
+		try {
+			logger.info("Fetching hospital data for hospitalId: " + hospitalDataId);
 
-	        // Attempt to retrieve the hospital data by hospitalId
-	        Optional<HospitalDataList> hospitalDataOptional = userRepository.findByHospitalDataId(hospitalDataId);
+			// Attempt to retrieve the hospital data by hospitalId
+			Optional<HospitalDataList> hospitalDataOptional = userRepository.findByHospitalDataId(hospitalDataId);
 
-	        // Check if the hospital data is present
-	        if (hospitalDataOptional.isPresent()) {
-	            HospitalDataList hospitalData = hospitalDataOptional.get();
-	            // Create a HashMap for userDetails and map individual fields
-	            HashMap<String, Object> userDetails = new HashMap<>();
-	            userDetails.put("hospitalDataId", hospitalData.getHospitalDataId());
-	            userDetails.put("emailId", hospitalData.getEmailId());
-	            userDetails.put("phoneNumber", hospitalData.getPhoneNumber());
-	            userDetails.put("userIsActive", hospitalData.getUserIsActive());
-	            userDetails.put("currentAddress", hospitalData.getCurrentAddress());
-	            userDetails.put("createdBy", hospitalData.getCreatedBy());
-	            userDetails.put("userCreatedOn", hospitalData.getUserCreatedOn());
-	            userDetails.put("userUpdatedBy", hospitalData.getUserUpdatedBy());
-	            userDetails.put("userUpdatedOn", hospitalData.getUserUpdatedOn());
+			// Check if the hospital data is present
+			if (hospitalDataOptional.isPresent()) {
+				HospitalDataList hospitalData = hospitalDataOptional.get();
+				// Create a HashMap for userDetails and map individual fields
+				HashMap<String, Object> userDetails = new HashMap<>();
+				userDetails.put("hospitalDataId", hospitalData.getHospitalDataId());
+				userDetails.put("emailId", hospitalData.getEmailId());
+				userDetails.put("phoneNumber", hospitalData.getPhoneNumber());
+				userDetails.put("userIsActive", hospitalData.getUserIsActive());
+				userDetails.put("currentAddress", hospitalData.getCurrentAddress());
+				userDetails.put("createdBy", hospitalData.getCreatedBy());
+				userDetails.put("userCreatedOn", hospitalData.getUserCreatedOn());
+				userDetails.put("userUpdatedBy", hospitalData.getUserUpdatedBy());
+				userDetails.put("userUpdatedOn", hospitalData.getUserUpdatedOn());
 
-	            // Step 4: Retrieve all HospitalAdmin details using hospitalDataId
-	            List<HospitalAdmin> hospitalAdminList = hospitalAdminRepository.findByAdminUserIds(hospitalDataId);
+				// Step 4: Retrieve all HospitalAdmin details using hospitalDataId
+				List<HospitalAdmin> hospitalAdminList = hospitalAdminRepository.findByAdminUserIds(hospitalDataId);
 
-	            // Create a HashMap for HospitalAdmin details
-	            HashMap<String, Object> adminDetails = new HashMap<>();
-	            if (hospitalAdminList != null && !hospitalAdminList.isEmpty()) {
-	                // Prepare a list to store each admin's data
-	                ArrayList<HashMap<String, Object>> allAdminDetails = new ArrayList<>();
+				// Create a HashMap for HospitalAdmin details
+				HashMap<String, Object> adminDetails = new HashMap<>();
+				if (hospitalAdminList != null && !hospitalAdminList.isEmpty()) {
+					// Prepare a list to store each admin's data
+					ArrayList<HashMap<String, Object>> allAdminDetails = new ArrayList<>();
 
-	                // Iterate through all HospitalAdmin records
-	                for (HospitalAdmin hospitalAdmin : hospitalAdminList) {
-	                    HashMap<String, Object> adminData = new HashMap<>();
-	                    adminData.put("adminId", hospitalAdmin.getAdminId());
-	                    adminData.put("adminUserId", hospitalAdmin.getAdminUserId());
-	                    adminData.put("userIsActive", hospitalAdmin.getUserIsActive());
+					// Iterate through all HospitalAdmin records
+					for (HospitalAdmin hospitalAdmin : hospitalAdminList) {
+						HashMap<String, Object> adminData = new HashMap<>();
+						adminData.put("adminId", hospitalAdmin.getAdminId());
+						adminData.put("adminUserId", hospitalAdmin.getAdminUserId());
+						adminData.put("userIsActive", hospitalAdmin.getUserIsActive());
 
-	                    // Retrieve User data (firstName, lastName) from User table using adminUserId
-	                    Optional<User> userOptional = usersRepository.findByUserId(hospitalAdmin.getAdminUserId());
-	                    if (userOptional.isPresent()) {
-	                        User user = userOptional.get();
-	                        adminData.put("firstName", user.getFirstName());
-	                        adminData.put("lastName", user.getLastName());
-	                    } else {
-	                        adminData.put("message", "No user found for this adminUserId.");
-	                    }
+						// Retrieve User data (firstName, lastName) from User table using adminUserId
+						Optional<User> userOptional = usersRepository.findByUserId(hospitalAdmin.getAdminUserId());
+						if (userOptional.isPresent()) {
+							User user = userOptional.get();
+							adminData.put("firstName", user.getFirstName());
+							adminData.put("lastName", user.getLastName());
+						} else {
+							adminData.put("message", "No user found for this adminUserId.");
+						}
 
-	                    adminData.put("createdBy", hospitalAdmin.getCreatedBy());
-	                    adminData.put("userCreatedOn", hospitalAdmin.getUserCreatedOn());
-	                    adminData.put("userUpdatedBy", hospitalAdmin.getUserUpdatedBy());
-	                    adminData.put("userUpdatedOn", hospitalAdmin.getUserUpdatedOn());
+						adminData.put("createdBy", hospitalAdmin.getCreatedBy());
+						adminData.put("userCreatedOn", hospitalAdmin.getUserCreatedOn());
+						adminData.put("userUpdatedBy", hospitalAdmin.getUserUpdatedBy());
+						adminData.put("userUpdatedOn", hospitalAdmin.getUserUpdatedOn());
 
-	                    // Add each admin's data to the list
-	                    allAdminDetails.add(adminData);
-	                }
+						// Add each admin's data to the list
+						allAdminDetails.add(adminData);
+					}
 
-	                // Add the list of all admins to the response
-	                adminDetails.put("hospitalAdmins", allAdminDetails);
-	            } else {
-	                // If no admins found, return a message
-	                adminDetails.put("message", "No admins found for this hospital.");
-	            }
+					// Add the list of all admins to the response
+					adminDetails.put("hospitalAdmins", allAdminDetails);
+				} else {
+					// If no admins found, return a message
+					adminDetails.put("message", "No admins found for this hospital.");
+				}
 
-	            // Retrieve media files associated with the hospital data (Profile Photo)
-	            List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
-	                    HealthCareConstant.hospitalLogo, hospitalData.getHospitalDataId());
+				// Retrieve media files associated with the hospital data (Profile Photo)
+				List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
+						HealthCareConstant.hospitalLogo, hospitalData.getHospitalDataId());
 
-	            // Prepare the list of FileInputWebModel from retrieved media files
-	            ArrayList<FileInputWebModel> filesInputWebModel = new ArrayList<>();
+				// Prepare the list of FileInputWebModel from retrieved media files
+				ArrayList<FileInputWebModel> filesInputWebModel = new ArrayList<>();
 
-	            for (MediaFile mediaFile : files) {
-	                FileInputWebModel filesInput = new FileInputWebModel();
-	                filesInput.setFileName(mediaFile.getFileOriginalName());
-	                filesInput.setFileId(mediaFile.getFileId());
-	                filesInput.setFileSize(mediaFile.getFileSize());
-	                filesInput.setFileType(mediaFile.getFileType());
+				for (MediaFile mediaFile : files) {
+					FileInputWebModel filesInput = new FileInputWebModel();
+					filesInput.setFileName(mediaFile.getFileOriginalName());
+					filesInput.setFileId(mediaFile.getFileId());
+					filesInput.setFileSize(mediaFile.getFileSize());
+					filesInput.setFileType(mediaFile.getFileType());
 
-	                String fileData = Base64FileUpload.encodeToBase64String(imageLocation + "/hospitalLogo",
-	                        mediaFile.getFileName());
-	                filesInput.setFileData(fileData);
+					String fileData = Base64FileUpload.encodeToBase64String(imageLocation + "/hospitalLogo",
+							mediaFile.getFileName());
+					filesInput.setFileData(fileData);
 
-	                filesInputWebModel.add(filesInput);
-	            }
+					filesInputWebModel.add(filesInput);
+				}
 
-	            // Prepare the response map with hospital data, media files, and specialties
-	            HashMap<String, Object> responseMap = new HashMap<>();
-	            responseMap.put("userDetails", userDetails);
-	            responseMap.put("mediaFiles", filesInputWebModel);
-	            responseMap.put("hospitalAdmins", adminDetails);
+				// Prepare the response map with hospital data, media files, and specialties
+				HashMap<String, Object> responseMap = new HashMap<>();
+				responseMap.put("userDetails", userDetails);
+				responseMap.put("mediaFiles", filesInputWebModel);
+				responseMap.put("hospitalAdmins", adminDetails);
 
-	            // Return successful response with hospital data and associated media files
-	            return ResponseEntity.ok(new Response(1, "Hospital data retrieved successfully", responseMap));
-	        } else {
-	            // Return a not found response if the hospital data is not found
-	            return ResponseEntity.badRequest().body(new Response(0, "Fail", "Hospital data not found"));
-	        }
+				// Return successful response with hospital data and associated media files
+				return ResponseEntity.ok(new Response(1, "Hospital data retrieved successfully", responseMap));
+			} else {
+				// Return a not found response if the hospital data is not found
+				return ResponseEntity.badRequest().body(new Response(0, "Fail", "Hospital data not found"));
+			}
 
-	    } catch (Exception e) {
-	        logger.error("Error retrieving hospital data: " + e.getMessage(), e);
-	        response.put("message", "Error retrieving data");
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-	    }
+		} catch (Exception e) {
+			logger.error("Error retrieving hospital data: " + e.getMessage(), e);
+			response.put("message", "Error retrieving data");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
 	}
 
 	@Override
 	public ResponseEntity<?> updateHospitalDataByUserId(HospitalDataListWebModel userWebModel) {
-	    HashMap<String, Object> response = new HashMap<>();
-	    try {
-	        logger.info("Updating hospital data for hospitalDataId: " + userWebModel.getHospitalDataId());
+		HashMap<String, Object> response = new HashMap<>();
+		try {
+			logger.info("Updating hospital data for hospitalDataId: " + userWebModel.getHospitalDataId());
 
-	        // Step 1: Retrieve the existing hospital data by hospitalDataId
-	        Optional<HospitalDataList> hospitalDataOptional = userRepository.findById(userWebModel.getHospitalDataId());
+			// Step 1: Retrieve the existing hospital data by hospitalDataId
+			Optional<HospitalDataList> hospitalDataOptional = userRepository.findById(userWebModel.getHospitalDataId());
 
-	        // Check if the hospital data exists
-	        if (!hospitalDataOptional.isPresent()) {
-	            response.put("message", "Hospital data not found");
-	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-	                    .body(new Response(0, "Fail", "Hospital data not found"));
-	        }
+			// Check if the hospital data exists
+			if (!hospitalDataOptional.isPresent()) {
+				response.put("message", "Hospital data not found");
+				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+						.body(new Response(0, "Fail", "Hospital data not found"));
+			}
 
-	        // Step 2: Get the existing hospital data entity
-	        HospitalDataList existingHospitalData = hospitalDataOptional.get();
+			// Step 2: Get the existing hospital data entity
+			HospitalDataList existingHospitalData = hospitalDataOptional.get();
 
-	        // Step 3: Update only the fields that are provided (non-null values)
-	        if (userWebModel.getEmailId() != null) {
-	            existingHospitalData.setEmailId(userWebModel.getEmailId());
-	        }
-	        if (userWebModel.getPhoneNumber() != null) {
-	            existingHospitalData.setPhoneNumber(userWebModel.getPhoneNumber());
-	        }
-	        if (userWebModel.getUserIsActive() != null) {
-	            existingHospitalData.setUserIsActive(userWebModel.getUserIsActive());
-	        }
-	        if (userWebModel.getCurrentAddress() != null) {
-	            existingHospitalData.setCurrentAddress(userWebModel.getCurrentAddress());
-	        }
+			// Step 3: Update only the fields that are provided (non-null values)
+			if (userWebModel.getEmailId() != null) {
+				existingHospitalData.setEmailId(userWebModel.getEmailId());
+			}
+			if (userWebModel.getPhoneNumber() != null) {
+				existingHospitalData.setPhoneNumber(userWebModel.getPhoneNumber());
+			}
+			if (userWebModel.getUserIsActive() != null) {
+				existingHospitalData.setUserIsActive(userWebModel.getUserIsActive());
+			}
+			if (userWebModel.getCurrentAddress() != null) {
+				existingHospitalData.setCurrentAddress(userWebModel.getCurrentAddress());
+			}
 
-	        // Assuming the updater's ID is passed in 'createdBy' (could be renamed to 'updatedBy')
-	        if (userWebModel.getCreatedBy() != null) {
-	            existingHospitalData.setUserUpdatedBy(userWebModel.getCreatedBy()); // Assuming 'createdBy' is the user updating
-	        }
+			// Assuming the updater's ID is passed in 'createdBy' (could be renamed to
+			// 'updatedBy')
+			if (userWebModel.getCreatedBy() != null) {
+				existingHospitalData.setUserUpdatedBy(userWebModel.getCreatedBy()); // Assuming 'createdBy' is the user
+																					// updating
+			}
 
-	        // Update the 'userUpdatedOn' field to current time
-	        existingHospitalData.setUserUpdatedOn(new Date());
+			// Update the 'userUpdatedOn' field to current time
+			existingHospitalData.setUserUpdatedOn(new Date());
 
-	        // Step 4: Save the updated hospital data entity back to the database
-	        HospitalDataList updatedHospitalData = userRepository.save(existingHospitalData);
+			// Step 4: Save the updated hospital data entity back to the database
+			HospitalDataList updatedHospitalData = userRepository.save(existingHospitalData);
 
-	        // Step 5: Register multiple admins if provided
-	        if (userWebModel.getAdmins() != null && !userWebModel.getAdmins().isEmpty()) {
-	            for (HospitalAdminWebModel adminWebModel : userWebModel.getAdmins()) {
-	                // Create a new admin entity for each admin
-	                HospitalAdmin newAdmin = HospitalAdmin.builder()
-	                        .userIsActive(true) // Default to active
-	                        .adminUserId(userWebModel.getUserId()) // The user registering the hospital
-	                        .createdBy(userWebModel.getCreatedBy())
-	                        .hospitalDataList(updatedHospitalData) // Associate the admin with the updated hospital data
-	                        .build();
+			// Step 5: Register multiple admins if provided
+			if (userWebModel.getAdmins() != null && !userWebModel.getAdmins().isEmpty()) {
+				for (HospitalAdminWebModel adminWebModel : userWebModel.getAdmins()) {
+					// Create a new admin entity for each admin
+					HospitalAdmin newAdmin = HospitalAdmin.builder().userIsActive(true) // Default to active
+							.adminUserId(userWebModel.getUserId()) // The user registering the hospital
+							.createdBy(userWebModel.getCreatedBy()).hospitalDataList(updatedHospitalData) // Associate
+																											// the admin
+																											// with the
+																											// updated
+																											// hospital
+																											// data
+							.build();
 
-	                // Save the admin in the database
-	                hospitalAdminRepository.save(newAdmin);
-	            }
-	        }
+					// Save the admin in the database
+					hospitalAdminRepository.save(newAdmin);
+				}
+			}
 
-	        // Step 6: Handle media file deletion if it exists (before updating with a new file)
-	        if (userWebModel.getFileId() != null) {
-	            Optional<MediaFile> mediaFileOptional = mediaFileRepository.findByFileId(userWebModel.getFileId());
-	            if (mediaFileOptional.isPresent()) {
-	                MediaFile mediaFile = mediaFileOptional.get();
-	                // Delete the old file from the server (if it exists)
-	                Base64FileUpload.deleteFile(imageLocation + "/hospitalLogo", mediaFile.getFileName());
-	                // Delete the media record from the database
-	                mediaFileRepository.deleteById(mediaFile.getFileId());
-	            }
-	        }
+			// Step 6: Handle media file deletion if it exists (before updating with a new
+			// file)
+			if (userWebModel.getFileId() != null) {
+				Optional<MediaFile> mediaFileOptional = mediaFileRepository.findByFileId(userWebModel.getFileId());
+				if (mediaFileOptional.isPresent()) {
+					MediaFile mediaFile = mediaFileOptional.get();
+					// Delete the old file from the server (if it exists)
+					Base64FileUpload.deleteFile(imageLocation + "/hospitalLogo", mediaFile.getFileName());
+					// Delete the media record from the database
+					mediaFileRepository.deleteById(mediaFile.getFileId());
+				}
+			}
 
-	        // Step 7: Handle file uploads (if any)
-	        if (userWebModel.getFilesInputWebModel() != null && !userWebModel.getFilesInputWebModel().isEmpty()) {
-	            // Handle the upload of the new image(s)
-	            handleFileUploads(updatedHospitalData, userWebModel.getFilesInputWebModel());
-	        }
+			// Step 7: Handle file uploads (if any)
+			if (userWebModel.getFilesInputWebModel() != null && !userWebModel.getFilesInputWebModel().isEmpty()) {
+				// Handle the upload of the new image(s)
+				handleFileUploads(updatedHospitalData, userWebModel.getFilesInputWebModel());
+			}
 
-	        // Step 8: Prepare and return the success response
-	        response.put("message", "Hospital data updated successfully");
-	        response.put("data", updatedHospitalData);
+			// Step 8: Prepare and return the success response
+			response.put("message", "Hospital data updated successfully");
+			response.put("data", updatedHospitalData);
 
-	        return ResponseEntity.ok(new Response(1, "Hospital data updated successfully", response));
+			return ResponseEntity.ok(new Response(1, "Hospital data updated successfully", response));
 
-	    } catch (Exception e) {
-	        logger.error("Error updating hospital data: " + e.getMessage(), e);
-	        response.put("message", "Error updating hospital data");
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                .body(new Response(0, "Fail", "Error updating hospital data"));
-	    }
+		} catch (Exception e) {
+			logger.error("Error updating hospital data: " + e.getMessage(), e);
+			response.put("message", "Error updating hospital data");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(new Response(0, "Fail", "Error updating hospital data"));
+		}
 	}
 
 	@Override
