@@ -180,7 +180,7 @@ public class AuthenticationController {
 	    }
 	}
 	
-	@PostMapping("deletehospitalAdminByUserId")
+	@DeleteMapping("deletehospitalAdminByUserId")
 	public ResponseEntity<?> deletehospitalAdminByUserId(@RequestParam("id") Integer id) {
 	    try {
 	        // Call the service to perform the update
