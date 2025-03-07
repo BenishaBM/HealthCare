@@ -99,7 +99,7 @@ public class AuthenticationController {
 				// Return response with JWT and refresh token
 				return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(), 1, // Assuming this is a status or
 																						// role value
-						refreshToken.getToken(), userDetails.getUserType(), userDetails.getUserEmailId()));
+						refreshToken.getToken(), userDetails.getUserType(), userDetails.getUserEmailId(), user.getHospitalId()));
 			} else {
 				return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Invalid email or password"));
 			}
@@ -126,7 +126,7 @@ public class AuthenticationController {
 			refreshTokenRepository.save(refreshToken);
 			return ResponseEntity.ok(new JwtResponse(jwt, userData.get().getUserId(),
 
-					1, token.getData().toString(), userData.get().getUserType(), userData.get().getEmailId()));
+					1, token.getData().toString(), userData.get().getUserType(), userData.get().getEmailId(), userData.get().getHospitalId()));
 		}
 		return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Refresh Token Failed"));
 	}
