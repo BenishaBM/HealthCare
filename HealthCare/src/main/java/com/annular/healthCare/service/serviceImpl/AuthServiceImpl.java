@@ -239,6 +239,12 @@ public class AuthServiceImpl implements AuthService {
 
 	        // Update the 'userUpdatedOn' field to current time
 	        existingUser.setUserUpdatedOn(new Date());
+	        
+	        // Merge firstName and lastName into userName
+	        String fullName = (existingUser.getFirstName() != null ? existingUser.getFirstName() : "") + 
+	                          " " + 
+	                          (existingUser.getLastName() != null ? existingUser.getLastName() : "");
+	        existingUser.setUserName(fullName.trim()); // Trim to remove extra spaces
 
 	        // Step 5: Save the updated user entity back to the database
 	        User updatedUser = userRepository.save(existingUser);

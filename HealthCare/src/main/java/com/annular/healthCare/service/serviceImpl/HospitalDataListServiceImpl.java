@@ -73,71 +73,73 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 
 	@Override
 	public ResponseEntity<?> register(HospitalDataListWebModel userWebModel) {
-		HashMap<String, Object> response = new HashMap<>();
-		try {
-			logger.info("Register method started");
+	    HashMap<String, Object> response = new HashMap<>();
+	    try {
+	        logger.info("Register method started");
 
-			// Check if the hospital already exists based on the hospital name
-			Optional<HospitalDataList> existingHospital = userRepository
-					.findByHospitalName(userWebModel.getHospitalName());
-			if (existingHospital.isPresent()) {
-				response.put("message", "Hospital with this name already exists");
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-			}
+	        // Check if the hospital already exists based on the hospital name
+	        Optional<HospitalDataList> existingHospital = userRepository.findByHospitalName(userWebModel.getHospitalName());
+	        if (existingHospital.isPresent()) {
+	            response.put("message", "Hospital with this name already exists");
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+	        }
 
-			// Create a new hospital data entity (hospital)
-			HospitalDataList newHospitalData = HospitalDataList.builder().emailId(userWebModel.getEmailId())
-					.phoneNumber(userWebModel.getPhoneNumber()).userIsActive(true) // Default to active
-					.currentAddress(userWebModel.getCurrentAddress()).createdBy(userWebModel.getCreatedBy())
-					.hospitalName(userWebModel.getHospitalName()) // Set the hospital name here
-					.build();
+	        // Create a new hospital data entity (hospital)
+	        HospitalDataList newHospitalData = HospitalDataList.builder()
+	                .emailId(userWebModel.getEmailId())
+	                .phoneNumber(userWebModel.getPhoneNumber())
+	                .userIsActive(true) // Default to active
+	                .currentAddress(userWebModel.getCurrentAddress())
+	                .createdBy(userWebModel.getCreatedBy())
+	                .hospitalName(userWebModel.getHospitalName()) // Set the hospital name here
+	                .build();
 
-			// Save the hospital data list (hospital)
-			HospitalDataList savedHospitalData = userRepository.save(newHospitalData);
+	        // Save the hospital data list (hospital)
+	        HospitalDataList savedHospitalData = userRepository.save(newHospitalData);
 
-			// Handle file uploads (e.g., hospital logo)
-			if (userWebModel.getFilesInputWebModel() != null) {
-				handleFileUploads(savedHospitalData, userWebModel.getFilesInputWebModel());
-			}
+	        // Handle file uploads (e.g., hospital logo)
+	        if (userWebModel.getFilesInputWebModel() != null) {
+	            handleFileUploads(savedHospitalData, userWebModel.getFilesInputWebModel());
+	        }
 
-			// Register multiple admins if provided
-			if (userWebModel.getAdmins() != null && !userWebModel.getAdmins().isEmpty()) {
-				for (HospitalAdminWebModel adminWebModel : userWebModel.getAdmins()) {
-					// Create a new admin entity for each admin
-					HospitalAdmin newAdmin = HospitalAdmin.builder().userIsActive(true) // Default to active
-							.adminUserId(userWebModel.getUserId()) // The user registering the hospital
-							.createdBy(userWebModel.getCreatedBy()).hospitalDataList(savedHospitalData) // Associate the
-																										// admin with
-																										// the newly
-																										// created
-																										// hospital
-							.build();
+	        // Register multiple admins if provided and update their hospitalId in the user table
+	        if (userWebModel.getAdmins() != null && !userWebModel.getAdmins().isEmpty()) {
+	            for (HospitalAdminWebModel adminWebModel : userWebModel.getAdmins()) {
+	                // Create a new admin entity for each admin
+	                HospitalAdmin newAdmin = HospitalAdmin.builder()
+	                        .userIsActive(true) // Default to active
+	                        .adminUserId(adminWebModel.getUserAdminId()) // Use userAdminId
+	                        .createdBy(userWebModel.getCreatedBy())
+	                        .hospitalDataList(savedHospitalData) // Associate the admin with the hospital
+	                        .build();
 
-					// Save the admin in the database
-					hospitalAdminRepository.save(newAdmin);
-				}
-			}
+	                // Save the admin in the database
+	                hospitalAdminRepository.save(newAdmin);
 
-			// Save the hospitalId for the user who is registering the hospital (not inside
-			// the admin loop)
-			User registeringUser = usersRepository.findByIds(userWebModel.getUserId())
-					.orElseThrow(() -> new RuntimeException("User not found"));
+	                // Update the admin's hospitalId in the User table
+	                Optional<User> adminUser = usersRepository.findById(adminWebModel.getUserAdminId());
+	                if (adminUser.isPresent()) {
+	                    User user = adminUser.get();
+	                    user.setHospitalId(savedHospitalData.getHospitalDataId());
+	                    usersRepository.save(user);
+	                } else {
+	                    logger.warn("Admin user not found: " + adminWebModel.getUserAdminId());
+	                }
+	            }
+	        }
 
-			// Set the hospitalId for the registering user
-			registeringUser.setHospitalId(savedHospitalData.getHospitalDataId());
 
-			// Save the user with the updated hospitalId
-			usersRepository.save(registeringUser);
 
-			// Prepare the response with successful registration details
-			return ResponseEntity.ok(new Response(1, "success", "Hospital registered successfully with admins"));
+	        // Prepare the response with successful registration details
+	        return ResponseEntity.ok(new Response(1, "success", "Hospital registered successfully with admins"));
 
-		} catch (Exception e) {
-			logger.error("Error registering hospital: " + e.getMessage(), e);
-			response.put("message", "Registration failed");
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-		}
+	    } catch (Exception e) {
+	        logger.error("Error registering hospital: " + e.getMessage(), e);
+	        response.put("message", "Registration failed");
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
 	}
+
 
 	// Helper method to handle file uploads (hospital logo)
 	public void handleFileUploads(HospitalDataList hospitalData, List<FileInputWebModel> filesInputWebModel)
@@ -348,6 +350,10 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 			// Step 3: Update only the fields that are provided (non-null values)
 			if (userWebModel.getEmailId() != null) {
 				existingHospitalData.setEmailId(userWebModel.getEmailId());
+			}
+			if(userWebModel.getHospitalName() != null)
+			{
+				existingHospitalData.setHospitalName(userWebModel.getHospitalName());
 			}
 			if (userWebModel.getPhoneNumber() != null) {
 				existingHospitalData.setPhoneNumber(userWebModel.getPhoneNumber());
