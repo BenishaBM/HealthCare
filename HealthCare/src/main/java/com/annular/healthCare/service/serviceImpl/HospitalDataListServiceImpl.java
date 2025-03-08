@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -179,9 +180,9 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 
 	@Override
 	public ResponseEntity<?> getHospitalDataByUserTypeAndHospitalId(String userType, Integer hospitalId) {
-		HashMap<String, Object> response = new HashMap<>();
-		try {
-			logger.info("Fetching hospital data for userType: " + userType + " and hospitalId: " + hospitalId);
+	    HashMap<String, Object> response = new HashMap<>();
+	    try {
+	        logger.info("Fetching hospital data for userType: " + userType + " and hospitalId: " + hospitalId);
 
 	        // Query the repository for the matching data
 	        List<User> hospitalDataList = usersRepository.findByUserTypeAndHospitalIds(userType, hospitalId);
@@ -191,14 +192,15 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            return ResponseEntity.ok(new Response(1, "No hospital data found for the given userType and hospitalId", new ArrayList<>()));
 	        }
 
-			// Extract the hospital data
-			List<HashMap<String, Object>> dataList = new ArrayList<>();
+	        // Extract the hospital data
+	        List<HashMap<String, Object>> dataList = new ArrayList<>();
 	        for (User hospitalData : hospitalDataList) {
 	            HashMap<String, Object> data = new HashMap<>();
 	            data.put("hospitalDataId", hospitalData.getUserId());
 	            data.put("hospitalId", hospitalData.getHospitalId());
 	            data.put("userName", hospitalData.getUserName());
-	            data.put("firstName", hospitalData.getLastName());
+	            data.put("firstName", hospitalData.getFirstName()); // Corrected the field
+	            data.put("lastName", hospitalData.getLastName()); // Added missing lastName
 	            data.put("emailId", hospitalData.getEmailId());
 	            data.put("userType", hospitalData.getUserType());
 	            data.put("userId", hospitalData.getUserId());
@@ -209,28 +211,37 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            data.put("gender", hospitalData.getGender());
 	            data.put("userIsActive", hospitalData.getUserIsActive());
 
-	            // Extract doctorRoleId and roleId from DoctorRole
-	            List<HashMap<String, Object>> rolesList = hospitalData.getDoctorRoles().stream().map(role -> {
-	                HashMap<String, Object> roleMap = new HashMap<>();
-	                roleMap.put("doctorRoleId", role.getDoctorRoleId()); // Assuming DoctorRole has a doctorRoleId field
-	                roleMap.put("roleId", role.getRoleId());
-	                return roleMap;
-	            }).collect(Collectors.toList());
+	            // Filter only active doctor roles
+	            List<Map<String, Object>> roleDetails = new ArrayList<>();
+	            if (hospitalData.getDoctorRoles() != null) { // Corrected reference
+	                for (DoctorRole doctorRole : hospitalData.getDoctorRoles()) {
+	                    if (doctorRole.getUserIsActive()) { // Check if the role is active
+	                        Map<String, Object> roleMap = new HashMap<>();
+	                        roleMap.put("roleId", doctorRole.getRoleId());
 
-	            data.put("roles", rolesList); // Add list of roles to response
+	                        try {
+	                            String specialtyName = doctorSpecialityRepository.findSpecialtyNameByRoleId(doctorRole.getRoleId());
+	                            roleMap.put("specialtyName", specialtyName != null ? specialtyName : "N/A");
+	                        } catch (Exception e) {
+	                            logger.error("Error fetching specialty name for roleId {}: {}", doctorRole.getRoleId(), e.getMessage());
+	                            roleMap.put("specialtyName", "Error retrieving");
+	                        }
 
+	                        roleDetails.add(roleMap);
+	                    }
+	                }
+	            }
+	            data.put("doctorRoles", roleDetails); // Added doctorRoles to response
 	            dataList.add(data);
 	        }
-	        // Add the data to the response map
-	        response.put("data", dataList);
 
-			return ResponseEntity.ok(new Response(1, "Success", response));
+	        return ResponseEntity.ok(new Response(1, "Success", dataList));
 
-		} catch (Exception e) {
-			logger.error("Error retrieving hospital data: " + e.getMessage(), e);
-			response.put("message", "Error retrieving data");
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-		}
+	    } catch (Exception e) {
+	        logger.error("Error retrieving hospital data: " + e.getMessage(), e);
+	        response.put("message", "Error retrieving data");
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
 	}
 
 	@Override
