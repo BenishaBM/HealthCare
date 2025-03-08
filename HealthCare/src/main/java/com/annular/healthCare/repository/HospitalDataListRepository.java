@@ -21,6 +21,9 @@ public interface HospitalDataListRepository extends JpaRepository<HospitalDataLi
 	@Query("SELECT u FROM HospitalDataList u WHERE u.userIsActive = true")
 	List<HospitalDataList> findByData();
 
+	@Query("SELECT u FROM HospitalDataList u WHERE u.hospitalDataId = :hospitalId")
+	Optional<HospitalDataList> findByHospitalId(Integer hospitalId);
+
 
 
 

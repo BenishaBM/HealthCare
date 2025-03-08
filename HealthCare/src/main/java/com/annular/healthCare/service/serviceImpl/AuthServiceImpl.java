@@ -35,6 +35,7 @@ import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.DoctorRoleRepository;
 import com.annular.healthCare.repository.DoctorSpecialityRepository;
 import com.annular.healthCare.repository.HospitalAdminRepository;
+import com.annular.healthCare.repository.HospitalDataListRepository;
 import com.annular.healthCare.repository.MediaFileRepository;
 import com.annular.healthCare.repository.RefreshTokenRepository;
 import com.annular.healthCare.repository.UserRepository;
@@ -59,6 +60,9 @@ public class AuthServiceImpl implements AuthService {
 	
 	@Autowired
 	MediaFileRepository mediaFileRepository;
+	
+	@Autowired
+	HospitalDataListRepository hospitalDataListRepository;
 	
 	@Autowired
 	DoctorRoleRepository doctorRoleRepository;
@@ -378,17 +382,25 @@ public class AuthServiceImpl implements AuthService {
 	            hospitalAdminRepository.save(admin);  // Save the updated admin record
 	        }
 
-	        // Step 7: Return success response
-	        response.put("message", "User and associated HospitalAdmin soft deleted successfully");
+	        // Step 7: Soft delete associated Doctor entities (if any)
+	        List<DoctorRole> doctors = doctorRoleRepository.findByDoctorUserId(userWebModel.getUserId());
+	        for (DoctorRole doctor : doctors) {
+	            doctor.setUserIsActive(false);  // Set doctor as inactive
+	            doctor.setUserUpdatedOn(new Date());  // Update the timestamp for doctor
+	            doctorRoleRepository.save(doctor);  // Save the updated doctor record
+	        }
+
+	        // Step 8: Return success response
+	        response.put("message", "User, HospitalAdmin, and Doctor soft deleted successfully");
 	        response.put("data", updatedUser);
 
 	        return ResponseEntity.ok(new Response(1, "success", "deleted successfully"));
 
 	    } catch (Exception e) {
-	        logger.error("Error soft deleting user and HospitalAdmin details: " + e.getMessage(), e);
-	        response.put("message", "Error soft deleting user and HospitalAdmin details");
+	        logger.error("Error soft deleting user, HospitalAdmin, and Doctor details: " + e.getMessage(), e);
+	        response.put("message", "Error soft deleting user, HospitalAdmin, and Doctor details");
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                .body(new Response(0, "Fail", "Error soft deleting user and HospitalAdmin details"));
+	                .body(new Response(0, "Fail", "Error soft deleting user, HospitalAdmin, and Doctor details"));
 	    }
 	}
 
@@ -450,35 +462,48 @@ public class AuthServiceImpl implements AuthService {
 	        data.put("gender", user.getGender());
 	        data.put("dob", user.getDob());
 	        data.put("yearOfExperience", user.getYearOfExperiences());
-	        data.put("hospitalId", user.getHospitalId());
+	        Integer hospitalId = user.getHospitalId();
+	        data.put("hospitalId", hospitalId);
+	        if (hospitalId != null) {
+	            try {
+	                Optional<HospitalDataList> hospitalData = hospitalDataListRepository.findByHospitalId(hospitalId);
+	                data.put("hospitalName", hospitalData.isPresent() ? hospitalData.get().getHospitalName() : "N/A");
+	            } catch (Exception e) {
+	                logger.error("Error retrieving hospital name for hospitalId {}: {}", hospitalId, e.getMessage());
+	                data.put("hospitalName", "Error retrieving");
+	            }
+	        } else {
+	            data.put("hospitalName", "N/A");
+	        }
 	        data.put("userIsActive", user.getUserIsActive());
 
-	        // 🛑 Prevent NullPointerException on doctorRoles
+	        //  Filter only active doctor roles
 	        List<Map<String, Object>> roleDetails = new ArrayList<>();
 	        if (user.getDoctorRoles() != null) {
 	            for (DoctorRole doctorRole : user.getDoctorRoles()) {
-	                Map<String, Object> roleMap = new HashMap<>();
-	                roleMap.put("roleId", doctorRole.getRoleId());
+	                if (doctorRole.getUserIsActive()) { // Check if the role is active
+	                    Map<String, Object> roleMap = new HashMap<>();
+	                    roleMap.put("roleId", doctorRole.getRoleId());
 
-	                try {
-	                    // Prevent potential NullPointerException
-	                    String specialtyName = doctorSpecialtyRepository.findSpecialtyNameByRoleId(doctorRole.getRoleId());
-	                    roleMap.put("specialtyName", specialtyName != null ? specialtyName : "N/A");
-	                } catch (Exception e) {
-	                    logger.error("Error fetching specialty name for roleId {}: {}", doctorRole.getRoleId(), e.getMessage());
-	                    roleMap.put("specialtyName", "Error retrieving");
+	                    try {
+	                        String specialtyName = doctorSpecialtyRepository.findSpecialtyNameByRoleId(doctorRole.getRoleId());
+	                        roleMap.put("specialtyName", specialtyName != null ? specialtyName : "N/A");
+	                    } catch (Exception e) {
+	                        logger.error("Error fetching specialty name for roleId {}: {}", doctorRole.getRoleId(), e.getMessage());
+	                        roleMap.put("specialtyName", "Error retrieving");
+	                    }
+
+	                    roleDetails.add(roleMap);
 	                }
-
-	                roleDetails.add(roleMap);
 	            }
 	        }
 	        data.put("roles", roleDetails);
 
-	        // 🛑 Prevent NullPointerException on mediaFiles
+	        //  Fetch media files for profile photos
 	        List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
 	                HealthCareConstant.ProfilePhoto, user.getUserId());
 	        if (files == null) {
-	            files = new ArrayList<>(); // Prevents null errors
+	            files = new ArrayList<>();
 	        }
 
 	        List<FileInputWebModel> filesInputWebModel = new ArrayList<>();
@@ -511,5 +536,6 @@ public class AuthServiceImpl implements AuthService {
 	                .body(Collections.singletonMap("message", "Error retrieving user details"));
 	    }
 	}
+
 
 }
