@@ -28,4 +28,6 @@ public interface AuthService {
 
 	ResponseEntity<?> getUserDetailsByUserId(Integer userId);
 
+	ResponseEntity<?> deleteDoctorRoleById(Integer doctorRoleId);
+
 }

@@ -205,6 +205,18 @@ public class AuthenticationController {
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+	@DeleteMapping("deleteDoctorRoleById")
+	public ResponseEntity<?> deleteDoctorRoleById(@RequestParam("doctorRoleId")Integer doctorRoleId) {
+	    try {
+	        // Call the service to perform the update
+	        return authService.deleteDoctorRoleById(doctorRoleId);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("deleteDoctorRoleById Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 	
 
 }

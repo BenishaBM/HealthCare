@@ -549,6 +549,34 @@ public class AuthServiceImpl implements AuthService {
 	                .body(Collections.singletonMap("message", "Error retrieving user details"));
 	    }
 	}
+	@Override
+	public ResponseEntity<?> deleteDoctorRoleById(Integer doctorRoleId) {
+	    try {
+	        logger.info("Disabling doctor role with ID: {}", doctorRoleId);
+	        
+	        // Step 1: Retrieve the existing DoctorRole entity by doctorRoleId
+	        DoctorRole doctorRole = doctorRoleRepository.findById(doctorRoleId)
+	                .orElseThrow(() -> new RuntimeException("Doctor role not found"));
 
+	        // Step 2: Set userIsActive to false
+	        doctorRole.setUserIsActive(false);
+	        doctorRole.setUserUpdatedOn(new Date());
+
+	        // Step 3: Save the updated entity
+	        doctorRoleRepository.save(doctorRole);
+
+	        // Step 4: Return success response
+	        return ResponseEntity.ok(new Response(1, "Success", "Doctor role disabled successfully"));
+
+	    } catch (RuntimeException e) {
+	        logger.warn("Doctor role not found: {}", e.getMessage());
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                .body(new Response(0, "Fail", "Doctor role not found"));
+	    } catch (Exception e) {
+	        logger.error("Error disabling doctor role: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "Fail", "Error disabling doctor role"));
+	    }
+	}
 
 }
