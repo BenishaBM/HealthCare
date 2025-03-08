@@ -201,6 +201,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            data.put("firstName", hospitalData.getLastName());
 	            data.put("emailId", hospitalData.getEmailId());
 	            data.put("userType", hospitalData.getUserType());
+	            data.put("userId", hospitalData.getUserId());
 	            data.put("phoneNumber", hospitalData.getPhoneNumber());
 	            data.put("currentAddress", hospitalData.getCurrentAddress());
 	            data.put("empId", hospitalData.getEmpId());
@@ -501,44 +502,76 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 
 	@Override
 	public ResponseEntity<?> getByHopitalName() {
-		HashMap<String, Object> response = new HashMap<>();
-		try {
-			// Fetch users with userType = "HOSPITAL"
-			List<HospitalDataList> users = hospitalDataListRepository.findByData();
+	    HashMap<String, Object> response = new HashMap<>();
+	    try {
+	        // Fetch users with userType = "HOSPITAL"
+	        List<HospitalDataList> users = hospitalDataListRepository.findByData();
 
-			// Check if no users were found
-			if (users.isEmpty()) {
-				response.put("message", "No hospitals found.");
-				return ResponseEntity.ok(new Response(1, "No hospitals found.", new ArrayList<>())); // Return empty
-																										// list on
-																										// success
-			}
+	        // Check if no users were found
+	        if (users.isEmpty()) {
+	            return ResponseEntity.ok(new Response(1, "No hospitals found.", new ArrayList<>()));
+	        }
 
-			// Create a list to store the hospital ID and name
-			List<HashMap<String, Object>> hospitalDataList = new ArrayList<>();
+	        // Create a list to store hospital details
+	        List<HashMap<String, Object>> hospitalDataList = new ArrayList<>();
 
-			// Extract userId (ID) and hospitalName from each user and add to the list
-			for (HospitalDataList user : users) {
-				HashMap<String, Object> hospitalData = new HashMap<>();
-				hospitalData.put("id", user.getHospitalDataId());
-				hospitalData.put("emailId", user.getEmailId());
-				hospitalData.put("phoneNumber", user.getPhoneNumber());
-				hospitalData.put("currentAddress", user.getCurrentAddress());
-				hospitalData.put("isActive", user.getUserIsActive());
-				hospitalData.put("hospitalName", user.getHospitalName());
-				// hospitalData.put("hospitalName", user.getHospitalName());
-				hospitalDataList.add(hospitalData);
-			}
+	        // Extract hospital details and associated admins
+	        for (HospitalDataList user : users) {
+	            HashMap<String, Object> hospitalData = new HashMap<>();
+	            hospitalData.put("id", user.getHospitalDataId());
+	            hospitalData.put("emailId", user.getEmailId());
+	            hospitalData.put("phoneNumber", user.getPhoneNumber());
+	            hospitalData.put("currentAddress", user.getCurrentAddress());
+	            hospitalData.put("isActive", user.getUserIsActive());
+	            hospitalData.put("hospitalName", user.getHospitalName());
 
-			// Return the response
-			return ResponseEntity.ok(new Response(1, "Hospitals retrieved successfully.", hospitalDataList));
+	            // Retrieve all HospitalAdmin details using hospitalDataId
+	            List<HospitalAdmin> hospitalAdminList = hospitalAdminRepository.findByAdminUserIds(user.getHospitalDataId());
 
-		} catch (Exception e) {
-			logger.error("Error fetching hospitals: " + e.getMessage(), e);
-			response.put("message", "Error retrieving hospitals.");
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-		}
+	            // Prepare a list to store each admin's data
+	            List<HashMap<String, Object>> allAdminDetails = new ArrayList<>();
+
+	            if (hospitalAdminList != null && !hospitalAdminList.isEmpty()) {
+	                for (HospitalAdmin hospitalAdmin : hospitalAdminList) {
+	                    HashMap<String, Object> adminData = new HashMap<>();
+	                    adminData.put("adminId", hospitalAdmin.getAdminId());
+	                    adminData.put("adminUserId", hospitalAdmin.getAdminUserId());
+	                    adminData.put("userIsActive", hospitalAdmin.getUserIsActive());
+
+	                    // Retrieve User data (firstName, lastName) from User table using adminUserId
+	                    Optional<User> userOptional = usersRepository.findByUserId(hospitalAdmin.getAdminUserId());
+	                    if (userOptional.isPresent()) {
+	                        User adminUser = userOptional.get();
+	                        String fullName = (adminUser.getFirstName() != null ? adminUser.getFirstName() : "") + " " +
+	                                          (adminUser.getLastName() != null ? adminUser.getLastName() : "");
+	                        adminData.put("firstName", adminUser.getFirstName());
+	                        adminData.put("lastName", adminUser.getLastName());
+	                        adminData.put("userName", fullName.trim()); // Trim to remove extra spaces
+	                    } else {
+	                        adminData.put("message", "No user found for this adminUserId.");
+	                    }
+
+	                    allAdminDetails.add(adminData);
+	                }
+	            }
+
+	            // Add the list of admin details to the hospital data
+	            hospitalData.put("hospitalAdmins", allAdminDetails);
+
+	            // Add hospital data to the final list
+	            hospitalDataList.add(hospitalData);
+	        }
+
+	        // Return the response
+	        return ResponseEntity.ok(new Response(1, "Hospitals retrieved successfully.", hospitalDataList));
+
+	    } catch (Exception e) {
+	        logger.error("Error fetching hospitals: " + e.getMessage(), e);
+	        response.put("message", "Error retrieving hospitals.");
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
 	}
+
 
 	@Override
 	public ResponseEntity<?> getByDoctorSpeciallity() {
