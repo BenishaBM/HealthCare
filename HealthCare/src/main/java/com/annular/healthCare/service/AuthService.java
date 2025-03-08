@@ -26,4 +26,6 @@ public interface AuthService {
 
 	ResponseEntity<?> deletehospitalAdminByUserId(Integer id);
 
+	ResponseEntity<?> getUserDetailsByUserId(Integer userId);
+
 }

@@ -192,5 +192,19 @@ public class AuthenticationController {
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+	
+	@GetMapping("getUserDetailsByUserId")
+	public ResponseEntity<?> getUserDetailsByUserId(@RequestParam("userId") Integer userId) {
+	    try {
+	        // Call the service to perform the update
+	        return authService.getUserDetailsByUserId(userId);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("getUserDetailsByUserId Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+	
 
 }

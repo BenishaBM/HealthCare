@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -203,13 +204,22 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            data.put("phoneNumber", hospitalData.getPhoneNumber());
 	            data.put("currentAddress", hospitalData.getCurrentAddress());
 	            data.put("empId", hospitalData.getEmpId());
+	            data.put("yearOfExperience", hospitalData.getYearOfExperiences());
 	            data.put("gender", hospitalData.getGender());
 	            data.put("userIsActive", hospitalData.getUserIsActive());
-//
-//	            // Add the data to the list
+
+	            // Extract doctorRoleId and roleId from DoctorRole
+	            List<HashMap<String, Object>> rolesList = hospitalData.getDoctorRoles().stream().map(role -> {
+	                HashMap<String, Object> roleMap = new HashMap<>();
+	                roleMap.put("doctorRoleId", role.getDoctorRoleId()); // Assuming DoctorRole has a doctorRoleId field
+	                roleMap.put("roleId", role.getRoleId());
+	                return roleMap;
+	            }).collect(Collectors.toList());
+
+	            data.put("roles", rolesList); // Add list of roles to response
+
 	            dataList.add(data);
 	        }
-//
 	        // Add the data to the response map
 	        response.put("data", dataList);
 

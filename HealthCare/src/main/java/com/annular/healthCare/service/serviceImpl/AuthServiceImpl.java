@@ -26,12 +26,14 @@ import com.annular.healthCare.Response;
 import com.annular.healthCare.Util.Base64FileUpload;
 import com.annular.healthCare.Util.HealthCareConstant;
 import com.annular.healthCare.model.DoctorRole;
+import com.annular.healthCare.model.DoctorSpecialty;
 import com.annular.healthCare.model.HospitalAdmin;
 import com.annular.healthCare.model.HospitalDataList;
 import com.annular.healthCare.model.MediaFile;
 import com.annular.healthCare.model.RefreshToken;
 import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.DoctorRoleRepository;
+import com.annular.healthCare.repository.DoctorSpecialityRepository;
 import com.annular.healthCare.repository.HospitalAdminRepository;
 import com.annular.healthCare.repository.MediaFileRepository;
 import com.annular.healthCare.repository.RefreshTokenRepository;
@@ -64,6 +66,9 @@ public class AuthServiceImpl implements AuthService {
 	@Autowired
 	HospitalAdminRepository hospitalAdminRepository;
 	
+	@Autowired
+	DoctorSpecialityRepository doctorSpecialtyRepository;
+	
 	@Value("${annular.app.imageLocation}")
 	private String imageLocation;
 
@@ -86,7 +91,7 @@ public class AuthServiceImpl implements AuthService {
 			// Create new user entity
 			User newUser = User.builder().emailId(userWebModel.getEmailId()).firstName(userWebModel.getFirstName())
 					.lastName(userWebModel.getLastName()).password(passwordEncoder.encode(userWebModel.getPassword())) // Encrypt
-																														// password
+				    .yearOfExperiences(userWebModel.getYearOfExperiences())																							// password
 					.userType(userWebModel.getUserType()).phoneNumber(userWebModel.getPhoneNumber()).userIsActive(true) // Default
 																														// active
 					.currentAddress(userWebModel.getCurrentAddress()).empId(userWebModel.getEmpId())
@@ -300,6 +305,7 @@ public class AuthServiceImpl implements AuthService {
 	        if (userWebModel.getLastName() != null) {
 	            existingUser.setLastName(userWebModel.getLastName());
 	        }
+	        
 	        if (userWebModel.getPhoneNumber() != null) {
 	            existingUser.setPhoneNumber(userWebModel.getPhoneNumber());
 	        }
@@ -422,6 +428,88 @@ public class AuthServiceImpl implements AuthService {
 	                .body(new Response(0, "Fail", "Error soft deleting admin"));
 	    }
 	}
+	@Override
+	public ResponseEntity<?> getUserDetailsByUserId(Integer userId) {
+	    try {
+	        Optional<User> userData = userRepository.findById(userId);
 
+	        if (!userData.isPresent()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body(Collections.singletonMap("message", "User not found"));
+	        }
+
+	        User user = userData.get();
+	        Map<String, Object> data = new HashMap<>();
+	        data.put("userId", user.getUserId());
+	        data.put("userName", user.getUserName());
+	        data.put("emailId", user.getEmailId());
+	        data.put("userType", user.getUserType());
+	        data.put("firstName", user.getFirstName());
+	        data.put("lastName", user.getLastName());
+	        data.put("phoneNumber", user.getPhoneNumber());
+	        data.put("gender", user.getGender());
+	        data.put("dob", user.getDob());
+	        data.put("yearOfExperience", user.getYearOfExperiences());
+	        data.put("hospitalId", user.getHospitalId());
+	        data.put("userIsActive", user.getUserIsActive());
+
+	        // 🛑 Prevent NullPointerException on doctorRoles
+	        List<Map<String, Object>> roleDetails = new ArrayList<>();
+	        if (user.getDoctorRoles() != null) {
+	            for (DoctorRole doctorRole : user.getDoctorRoles()) {
+	                Map<String, Object> roleMap = new HashMap<>();
+	                roleMap.put("roleId", doctorRole.getRoleId());
+
+	                try {
+	                    // Prevent potential NullPointerException
+	                    String specialtyName = doctorSpecialtyRepository.findSpecialtyNameByRoleId(doctorRole.getRoleId());
+	                    roleMap.put("specialtyName", specialtyName != null ? specialtyName : "N/A");
+	                } catch (Exception e) {
+	                    logger.error("Error fetching specialty name for roleId {}: {}", doctorRole.getRoleId(), e.getMessage());
+	                    roleMap.put("specialtyName", "Error retrieving");
+	                }
+
+	                roleDetails.add(roleMap);
+	            }
+	        }
+	        data.put("roles", roleDetails);
+
+	        // 🛑 Prevent NullPointerException on mediaFiles
+	        List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
+	                HealthCareConstant.ProfilePhoto, user.getUserId());
+	        if (files == null) {
+	            files = new ArrayList<>(); // Prevents null errors
+	        }
+
+	        List<FileInputWebModel> filesInputWebModel = new ArrayList<>();
+	        for (MediaFile mediaFile : files) {
+	            FileInputWebModel filesInput = new FileInputWebModel();
+	            filesInput.setFileName(mediaFile.getFileOriginalName());
+	            filesInput.setFileId(mediaFile.getFileId());
+	            filesInput.setFileSize(mediaFile.getFileSize());
+	            filesInput.setFileType(mediaFile.getFileType());
+
+	            try {
+	                String fileData = Base64FileUpload.encodeToBase64String(imageLocation + "/ProfilePhoto",
+	                        mediaFile.getFileName());
+	                filesInput.setFileData(fileData);
+	            } catch (Exception e) {
+	                logger.error("Error encoding file {}: {}", mediaFile.getFileName(), e.getMessage());
+	                filesInput.setFileData("Error encoding file");
+	            }
+
+	            filesInputWebModel.add(filesInput);
+	        }
+
+	        data.put("profilePhotos", filesInputWebModel);
+
+	        return ResponseEntity.ok(data);
+
+	    } catch (Exception e) {
+	        logger.error("Exception while retrieving user details: ", e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(Collections.singletonMap("message", "Error retrieving user details"));
+	    }
+	}
 
 }

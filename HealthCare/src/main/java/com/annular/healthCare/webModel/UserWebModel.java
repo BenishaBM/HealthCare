@@ -35,6 +35,7 @@ public class UserWebModel {
 	private Date userUpdatedOn;
 	private String userName;
 	private String empId;
+	private String yearOfExperiences;
 	private String gender;
 	private Integer hospitalId;
 	private String firstName;

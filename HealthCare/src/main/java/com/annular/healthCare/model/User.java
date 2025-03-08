@@ -89,6 +89,9 @@ public class User {
 	
 	@Column(name = "dob")
 	private String dob;
+	
+	@Column(name = "yearOfExperience")
+	private String yearOfExperiences;
 
 	@Column(name = "hospitalId")
 	private Integer hospitalId;//map the hospital in HospitalDataList
