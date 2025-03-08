@@ -414,16 +414,15 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 
 			// Step 6: Handle media file deletion if it exists (before updating with a new
 			// file)
-			if (userWebModel.getFileId() != null) {
-				Optional<MediaFile> mediaFileOptional = mediaFileRepository.findByFileId(userWebModel.getFileId());
-				if (mediaFileOptional.isPresent()) {
-					MediaFile mediaFile = mediaFileOptional.get();
-					// Delete the old file from the server (if it exists)
-					Base64FileUpload.deleteFile(imageLocation + "/hospitalLogo", mediaFile.getFileName());
-					// Delete the media record from the database
-					mediaFileRepository.deleteById(mediaFile.getFileId());
-				}
-			}
+	        // Step 4: Always delete old media files (if any)
+	        List<MediaFile> oldMediaFiles = mediaFileRepository.findByUserId(HealthCareConstant.hospitalLogo, updatedHospitalData.getHospitalDataId());
+	        if (!oldMediaFiles.isEmpty()) {
+	            for (MediaFile oldMediaFile : oldMediaFiles) {
+	                Base64FileUpload.deleteFile(imageLocation + "/hospitalLogo", oldMediaFile.getFileName());
+	                mediaFileRepository.deleteById(oldMediaFile.getFileId());
+	            }
+	        }
+
 
 			// Step 7: Handle file uploads (if any)
 			if (userWebModel.getFilesInputWebModel() != null && !userWebModel.getFilesInputWebModel().isEmpty()) {

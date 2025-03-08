@@ -277,74 +277,87 @@ public class AuthServiceImpl implements AuthService {
 	public ResponseEntity<?> updateUserDetailsByUserId(HospitalDataListWebModel userWebModel) {
 	    HashMap<String, Object> response = new HashMap<>();
 	    try {
-	        // Log the incoming update request
 	        logger.info("Updating user details for userId: " + userWebModel.getUserId());
 
-	        // Step 1: Retrieve the existing user by userId
+	        // Step 1: Retrieve the existing user
 	        Optional<User> userOptional = userRepository.findById(userWebModel.getUserId());
-
-	        // Step 2: Check if the user exists
 	        if (!userOptional.isPresent()) {
-	            response.put("message", "User not found");
 	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
 	                    .body(new Response(0, "Fail", "User not found"));
 	        }
 
-	        // Step 3: Get the existing user entity
 	        User existingUser = userOptional.get();
 
-	        // Step 4: Update only the fields that are provided (non-null values)
-	        if (userWebModel.getEmailId() != null) {
-	            existingUser.setEmailId(userWebModel.getEmailId());
-	        }
-	        if (userWebModel.getFirstName() != null) {
-	            existingUser.setFirstName(userWebModel.getFirstName());
-	        }
-	        
-	        // Set the password only if it's provided and non-empty
+	        // Step 2: Update user details (only non-null values)
+	        if (userWebModel.getEmailId() != null) existingUser.setEmailId(userWebModel.getEmailId());
+	        if (userWebModel.getFirstName() != null) existingUser.setFirstName(userWebModel.getFirstName());
 	        if (userWebModel.getPassword() != null && !userWebModel.getPassword().isEmpty()) {
 	            existingUser.setPassword(passwordEncoder.encode(userWebModel.getPassword()));
 	        }
-	        
-	        if (userWebModel.getLastName() != null) {
-	            existingUser.setLastName(userWebModel.getLastName());
-	        }
-	        
-	        if (userWebModel.getPhoneNumber() != null) {
-	            existingUser.setPhoneNumber(userWebModel.getPhoneNumber());
-	        }
-	        if (userWebModel.getCurrentAddress() != null) {
-	            existingUser.setCurrentAddress(userWebModel.getCurrentAddress());
-	        }
-	        if (userWebModel.getUserUpdatedBy() != null) {
-	            existingUser.setUserUpdatedBy(userWebModel.getCreatedBy()); // Assuming 'createdBy' in the web model is the user making the update
-	        }
+	        if (userWebModel.getLastName() != null) existingUser.setLastName(userWebModel.getLastName());
+	        if (userWebModel.getPhoneNumber() != null) existingUser.setPhoneNumber(userWebModel.getPhoneNumber());
+	        if (userWebModel.getCurrentAddress() != null) existingUser.setCurrentAddress(userWebModel.getCurrentAddress());
+	        if (userWebModel.getUserUpdatedBy() != null) existingUser.setUserUpdatedBy(userWebModel.getUserUpdatedBy());
+	        if (userWebModel.getYearOfExperiences() != null) existingUser.setYearOfExperiences(userWebModel.getYearOfExperiences());
 
-	        // Update the 'userUpdatedOn' field to current time
+	        // Update timestamp
 	        existingUser.setUserUpdatedOn(new Date());
-	        
-	        // Merge firstName and lastName into userName
+
+	        // Merge firstName + lastName → userName
 	        String fullName = (existingUser.getFirstName() != null ? existingUser.getFirstName() : "") + 
 	                          " " + 
 	                          (existingUser.getLastName() != null ? existingUser.getLastName() : "");
-	        existingUser.setUserName(fullName.trim()); // Trim to remove extra spaces
+	        existingUser.setUserName(fullName.trim());
 
-	        // Step 5: Save the updated user entity back to the database
+	        
+	        // Step 3: Save updated user
 	        User updatedUser = userRepository.save(existingUser);
 
-	        // Step 6: Prepare and return the success response
+	        // Step 4: Always delete old media files (if any)
+	        List<MediaFile> oldMediaFiles = mediaFileRepository.findByUserId(HealthCareConstant.ProfilePhoto, updatedUser.getUserId());
+	        if (!oldMediaFiles.isEmpty()) {
+	            for (MediaFile oldMediaFile : oldMediaFiles) {
+	                Base64FileUpload.deleteFile(imageLocation + "/profilePhoto", oldMediaFile.getFileName());
+	                mediaFileRepository.deleteById(oldMediaFile.getFileId());
+	            }
+	        }
+
+	        // Step 5: Upload new media file (if provided)
+	        if (userWebModel.getFilesInputWebModel() != null && !userWebModel.getFilesInputWebModel().isEmpty()) {
+	            handleFileUploads(updatedUser, userWebModel.getFilesInputWebModel());
+	        }
+
+	        // Step 6: Update User Roles (if provided)
+	        if (userWebModel.getRoleIds() != null && !userWebModel.getRoleIds().isEmpty()) {
+	            // Remove existing roles
+	            doctorRoleRepository.deactivateUser(updatedUser.getUserId());
+
+	            // Assign new roles
+	            for (Integer roleId : userWebModel.getRoleIds()) {
+	                DoctorRole doctorRole = DoctorRole.builder()
+	                    .user(updatedUser)
+	                    .roleId(roleId)
+	                    .createdBy(updatedUser.getCreatedBy())
+	                    .userIsActive(true)
+	                    .build();
+	                doctorRoleRepository.save(doctorRole);
+	            }
+	        }
+
+
+	        // Step 6: Return success response
 	        response.put("message", "User details updated successfully");
 	        response.put("data", updatedUser);
 
-	        return ResponseEntity.ok(new Response(1, "success", "User details updated successfully"));
+	        return ResponseEntity.ok(new Response(1, "Success", "User details updated successfully"));
 
 	    } catch (Exception e) {
 	        logger.error("Error updating user details: " + e.getMessage(), e);
-	        response.put("message", "Error updating user details");
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 	                .body(new Response(0, "Fail", "Error updating user details"));
 	    }
 	}
+
 	@Override
 	public ResponseEntity<?> deleteUserDetailsByUserId(HospitalDataListWebModel userWebModel) {
 	    HashMap<String, Object> response = new HashMap<>();

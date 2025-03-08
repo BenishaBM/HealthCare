@@ -40,10 +40,12 @@ public class HospitalDataListWebModel {
 	private Boolean userIsActive;
 	private String currentAddress;
 	private Integer createdBy;
+	private String yearOfExperiences;
 	private Date userCreatedOn;
 	private Integer userUpdatedBy;
 	private Date userUpdatedOn;
 	private String hospitalName;
+	private List<Integer> roleIds; // List of role IDs (multiple roles can be assigned)
 	private String empId;
 	private String gender;
 	private String userType;

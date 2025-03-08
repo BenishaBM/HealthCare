@@ -21,5 +21,8 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Integer>{
 	
     @Query("SELECT mf FROM MediaFile mf WHERE  mf.fileDomainReferenceId = :hospitalDataId")
     List<MediaFile> findByFileDomainReferenceId(Integer hospitalDataId);
+    
+    @Query("SELECT mf FROM MediaFile mf WHERE mf.fileDomainId = :profilephoto AND mf.fileDomainReferenceId = :userId")
+	List<MediaFile> findByUserId(int profilephoto, Integer userId);
 
 }
