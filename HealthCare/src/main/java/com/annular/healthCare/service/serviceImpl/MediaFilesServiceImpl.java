@@ -3,6 +3,9 @@ package com.annular.healthCare.service.serviceImpl;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import javax.transaction.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,9 +14,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.annular.healthCare.Util.FileUtil;
+import com.annular.healthCare.Util.HealthCareConstant;
 import com.annular.healthCare.Util.S3Util;
 import com.annular.healthCare.Util.Utility;
 import com.annular.healthCare.model.MediaFile;
+import com.annular.healthCare.model.MediaFileCategory;
 import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.MediaFileRepository;
 import com.annular.healthCare.service.AuthService;
@@ -31,6 +36,10 @@ public class MediaFilesServiceImpl implements MediaFileService {
 
     @Autowired
     FileUtil fileUtil;
+    
+    @Autowired
+    private S3Util s3Service;
+
 
     @Autowired
     AuthService userService;
@@ -92,10 +101,12 @@ public class MediaFilesServiceImpl implements MediaFileService {
                         mediaFile.setFileType(file.getContentType());
                         mediaFile.setFileSize(String.valueOf(file.getSize()));
                         mediaFile.setFileIsActive(true);
+                        mediaFile.setFileDomainId(HealthCareConstant.patient);
                         mediaFile.setFileIds(UUID.randomUUID().toString());
                         mediaFile.setFileCreatedBy(user.getUserId());
                         mediaFile.setFileCreatedOn(new Date());
-                        mediaFile.setFileDomainId(fileInput.getCategory().ordinal());
+                       
+                    
                         mediaFile.setFileDomainReferenceId(fileInput.getCategoryRefId());
 
                         // Set a proper file path for S3
@@ -146,4 +157,53 @@ public class MediaFilesServiceImpl implements MediaFileService {
         }
         return fileOutputWebModel;
     }
+
+    @Override
+    public List<FileOutputWebModel> getMediaFilesByCategoryAndRefId(MediaFileCategory category, Integer refId) {
+        List<FileOutputWebModel> outputWebModelList = new ArrayList<>();
+        try {
+            List<MediaFile> mediaFiles = mediaFilesRepository.getMediaFilesByCategoryAndRefId(category, refId);
+            if (!Utility.isNullOrEmptyList(mediaFiles)) {
+                outputWebModelList = mediaFiles.stream().map(this::transformData).collect(Collectors.toList());
+            }
+        } catch (Exception e) {
+            logger.error("Error at getMediaFilesByCategoryAndRefId() -> {}", e.getMessage());
+            e.printStackTrace();
+        }
+        return outputWebModelList;
+    }
+    @Override
+    @Transactional
+    public boolean deleteMediaFilesByUserIdAndCategoryAndRefIds(MediaFileCategory category, Integer fileId) {
+        try {
+            Optional<MediaFile> optionalFile = mediaFilesRepository.findById(fileId);
+
+            if (optionalFile.isPresent()) {
+                MediaFile file = optionalFile.get();
+
+                // Check category match
+                if (file.getCategory() == category) {
+
+                     //Optional: delete from S3/local storage if applicable
+                     s3Service.deleteFile(file.getFilePath());
+
+                    mediaFilesRepository.delete(file); // Delete from DB
+                    return true;
+
+                } else {
+                    logger.warn("Category mismatch for file ID: " + fileId);
+                    return false;
+                }
+
+            } else {
+                logger.warn("Media file not found with ID: " + fileId);
+                return false;
+            }
+
+        } catch (Exception e) {
+            logger.error("Error while deleting media file", e);
+            return false;
+        }
+    }
+
 }

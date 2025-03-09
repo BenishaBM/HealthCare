@@ -49,5 +49,7 @@ public class PatientDetailsWebModel {
 	private Boolean disability;
 	private String age;
 	 private List<MultipartFile> files;
+	 private List<FileOutputWebModel> filess;
+
 
 }

@@ -10,4 +10,12 @@ public interface PatientDetailsService {
 
 	ResponseEntity<?> getAllPatientDetails(Integer hospitalId);
 
+	ResponseEntity<?> updatePatientDetails(PatientDetailsWebModel userWebModel);
+
+	ResponseEntity<?> getPatientDetailsById(Integer patientDetailsID);
+
+	ResponseEntity<?> getDoctorListByHospitalId(Integer hospitalId);
+
+	boolean deleteMediaFilesById(Integer fileId);
+
 }

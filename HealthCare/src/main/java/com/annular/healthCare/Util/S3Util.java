@@ -36,7 +36,8 @@ public class S3Util {
 
     @Value("${s3.region.name}")
     private String s3RegionName;
-
+    
+    
     @Value("${s3.bucket.name}")
     private String s3BucketName;
 
@@ -269,7 +270,36 @@ public class S3Util {
         return s3BaseURL + S3Util.S3_PATH_DELIMITER + filePath;
     }
     
-    
+    public void deleteFile(String filePath) {
+        logger.info("Attempting to delete file from S3: [{}]", filePath);
+        try (S3AsyncClient s3Client = buildS3ClientAsync()) {
+            DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
+                    .bucket(s3BucketName)
+                    .key(filePath)
+                    .build();
+
+            CompletableFuture<DeleteObjectResponse> deleteFuture = s3Client.deleteObject(deleteRequest);
+
+            deleteFuture.whenComplete((response, exception) -> {
+                if (exception != null) {
+                    logger.error("Error deleting file from S3: {}", exception.getMessage());
+                } else {
+                    logger.info("File deleted successfully from S3: [{}]", filePath);
+                }
+            });
+
+            // Wait for async operation to finish if needed
+            deleteFuture.join();
+
+        } catch (S3Exception e) {
+            logger.error("S3Exception while deleting file: {}", e.awsErrorDetails().errorMessage());
+            throw e;
+        } catch (Exception ex) {
+            logger.error("Unexpected error deleting file from S3", ex);
+            throw new RuntimeException("Error deleting S3 file", ex);
+        }
+    }
+
 
 }
         

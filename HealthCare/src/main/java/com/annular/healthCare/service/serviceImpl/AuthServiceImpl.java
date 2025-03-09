@@ -30,6 +30,7 @@ import com.annular.healthCare.model.DoctorSpecialty;
 import com.annular.healthCare.model.HospitalAdmin;
 import com.annular.healthCare.model.HospitalDataList;
 import com.annular.healthCare.model.MediaFile;
+import com.annular.healthCare.model.MediaFileCategory;
 import com.annular.healthCare.model.RefreshToken;
 import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.DoctorRoleRepository;
@@ -152,9 +153,14 @@ public class AuthServiceImpl implements AuthService {
 
 					// Set properties of the media file
 					mediaFile.setFileName(fileName);
+					User hospitalUser = userRepository.findById(hospitalData.getUserId())
+						    .orElseThrow(() -> new RuntimeException("User not found"));
+					mediaFile.setUser(hospitalUser);
+
 					mediaFile.setFileOriginalName(fileInput.getFileName());
 					mediaFile.setFileSize(fileInput.getFileSize());
 					mediaFile.setFileType(fileInput.getFileType());
+					mediaFile.setCategory(MediaFileCategory.patientDocument); // Define a suitable enum value
 					mediaFile.setFileDomainId(HealthCareConstant.ProfilePhoto); // This constant can be changed to represent
 																				// logo files
 					mediaFile.setFileDomainReferenceId(hospitalData.getUserId()); // Set the hospital ID reference

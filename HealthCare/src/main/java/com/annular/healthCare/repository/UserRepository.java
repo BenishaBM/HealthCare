@@ -40,4 +40,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 	@Query("SELECT u FROM User u WHERE u.userIsActive = true AND u.hospitalId = :hospitalId AND u.userType = :userType")
     List<User> findByUserTypeAndHospitalIds(String userType, Integer hospitalId);
 
+	@Query("SELECT u FROM User u WHERE u.userIsActive = true AND u.hospitalId = :hospitalId AND u.userType = :string")
+	List<User> findByHospitalIdAndUserType(Integer hospitalId, String string);
+
 }

@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +25,7 @@ import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.MediaFileService;
 import com.annular.healthCare.service.PatientDetailsService;
 import com.annular.healthCare.webModel.FileInputWebModel;
+import com.annular.healthCare.webModel.FileOutputWebModel;
 import com.annular.healthCare.webModel.PatientDetailsWebModel;
 
 @Service
@@ -82,7 +85,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	        // Save media files if any
 	        if (!Utility.isNullOrEmptyList(userWebModel.getFiles())) {
 	            FileInputWebModel fileInput = FileInputWebModel.builder()
-	                    .category(MediaFileCategory.patient) // Define a suitable enum value
+	                    .category(MediaFileCategory.patientDocument) // Define a suitable enum value
 	                    .categoryRefId(savedPatient.getPatientDetailsId())
 	                    .files(userWebModel.getFiles())
 	                    .build();
@@ -149,6 +152,164 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 	    }
 	}
+	@Override
+	public ResponseEntity<?> updatePatientDetails(PatientDetailsWebModel userWebModel) {
+	    try {
+	        logger.info("Updating patient details for ID: {}", userWebModel.getPatientDetailsId());
 
+	        if (userWebModel.getPatientDetailsId() == null) {
+	            return ResponseEntity.badRequest().body(
+	                new Response(0, "Fail", "Patient ID is required for update")
+	            );
+	        }
+
+	        Optional<PatientDetails> optionalPatient = patientDetailsRepository.findById(userWebModel.getPatientDetailsId());
+
+	        if (optionalPatient.isEmpty()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body(new Response(0, "Fail", "Patient not found with ID: " + userWebModel.getPatientDetailsId()));
+	        }
+
+	        PatientDetails patient = optionalPatient.get();
+
+	        // Only update fields if they are non-null
+	        if (userWebModel.getPatientName() != null) patient.setPatientName(userWebModel.getPatientName());
+	        if (userWebModel.getDob() != null) patient.setDob(userWebModel.getDob());
+	        if (userWebModel.getAge() != null) patient.setAge(userWebModel.getAge());
+	        if (userWebModel.getGender() != null) patient.setGender(userWebModel.getGender());
+	        if (userWebModel.getBloodGroup() != null) patient.setBloodGroup(userWebModel.getBloodGroup());
+	        if (userWebModel.getMobileNumber() != null) patient.setMobileNumber(userWebModel.getMobileNumber());
+	        if (userWebModel.getEmailId() != null) patient.setEmailId(userWebModel.getEmailId());
+	        if (userWebModel.getAddress() != null) patient.setAddress(userWebModel.getAddress());
+	        if (userWebModel.getCurrentAddress() != null) patient.setCurrentAddress(userWebModel.getCurrentAddress());
+	        if (userWebModel.getEmergencyContact() != null) patient.setEmergencyContact(userWebModel.getEmergencyContact());
+	        if (userWebModel.getHospitalId() != null) patient.setHospitalId(userWebModel.getHospitalId());
+	        if (userWebModel.getPurposeOfVisit() != null) patient.setPurposeOfVisit(userWebModel.getPurposeOfVisit());
+	        if (userWebModel.getDoctorId() != null) patient.setDoctorId(userWebModel.getDoctorId());
+	        if (userWebModel.getPreviousMedicalHistory() != null) patient.setPreviousMedicalHistory(userWebModel.getPreviousMedicalHistory());
+	        if (userWebModel.getInsuranceDetails() != null) patient.setInsuranceDetails(userWebModel.getInsuranceDetails());
+	        if (userWebModel.getInsurerName() != null) patient.setInsurerName(userWebModel.getInsurerName());
+	        if (userWebModel.getInsuranceProvider() != null) patient.setInsuranceProvider(userWebModel.getInsuranceProvider());
+	        if (userWebModel.getPolicyNumber() != null) patient.setPolicyNumber(userWebModel.getPolicyNumber());
+	        if (userWebModel.getDisability() != null) patient.setDisability(userWebModel.getDisability());
+
+	        patient.setUserUpdatedOn(new Date());
+	        if (userWebModel.getUserUpdatedBy() != null)
+	            patient.setUserUpdatedBy(userWebModel.getUserUpdatedBy());
+
+	        // Save updated patient
+	        patientDetailsRepository.save(patient);
+
+	        // Save or update media files (if passed)
+	        if (!Utility.isNullOrEmptyList(userWebModel.getFiles())) {
+	            FileInputWebModel fileInput = FileInputWebModel.builder()
+	                    .category(MediaFileCategory.patientDocument)
+	                    .categoryRefId(patient.getPatientDetailsId())
+	                    .files(userWebModel.getFiles())
+	                    .build();
+
+	            User userFromDB = userRepository.findById(userWebModel.getUserUpdatedBy()).orElse(null);
+	            mediaFilesService.saveMediaFiles(fileInput, userFromDB);
+	        }
+
+	        return ResponseEntity.ok(new Response(1, "Success", "Patient updated successfully"));
+
+	    } catch (Exception e) {
+	        logger.error("Patient update failed", e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "Fail", "Something went wrong during update"));
+	    }
+	}
+
+
+
+	@Override
+	public ResponseEntity<?> getPatientDetailsById(Integer patientDetailsID) {
+	    try {
+	        if (patientDetailsID == null) {
+	            return ResponseEntity.badRequest().body(new Response(0, "Fail", "Patient ID is required"));
+	        }
+
+	        Optional<PatientDetails> optionalPatient = patientDetailsRepository.findById(patientDetailsID);
+
+	        if (optionalPatient.isEmpty()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body(new Response(0, "Fail", "Patient not found with ID: " + patientDetailsID));
+	        }
+
+	        PatientDetails patient = optionalPatient.get();
+
+	        // Convert to WebModel
+	        PatientDetailsWebModel webModel = new PatientDetailsWebModel();
+	        webModel.setPatientDetailsId(patient.getPatientDetailsId());
+	        webModel.setPatientName(patient.getPatientName());
+	        webModel.setDob(patient.getDob());
+	        webModel.setAge(patient.getAge());
+	        webModel.setGender(patient.getGender());
+	        webModel.setBloodGroup(patient.getBloodGroup());
+	        webModel.setMobileNumber(patient.getMobileNumber());
+	        webModel.setEmailId(patient.getEmailId());
+	        webModel.setAddress(patient.getAddress());
+	        webModel.setCurrentAddress(patient.getCurrentAddress());
+	        webModel.setEmergencyContact(patient.getEmergencyContact());
+	        webModel.setHospitalId(patient.getHospitalId());
+	        webModel.setPurposeOfVisit(patient.getPurposeOfVisit());
+	        webModel.setDoctorId(patient.getDoctorId());
+	        webModel.setPreviousMedicalHistory(patient.getPreviousMedicalHistory());
+	        webModel.setInsuranceDetails(patient.getInsuranceDetails());
+	        webModel.setInsurerName(patient.getInsurerName());
+	        webModel.setInsuranceProvider(patient.getInsuranceProvider());
+	        webModel.setPolicyNumber(patient.getPolicyNumber());
+	        webModel.setDisability(patient.getDisability());
+	        webModel.setUserUpdatedBy(patient.getUserUpdatedBy());
+
+	        // Fetch media files
+	        List<FileOutputWebModel> mediaFiles = mediaFilesService.getMediaFilesByCategoryAndRefId(
+	                MediaFileCategory.patientDocument, patient.getPatientDetailsId());
+	        webModel.setFiless(mediaFiles);
+
+	        return ResponseEntity.ok(new Response(1, "Success", webModel));
+
+	    } catch (Exception e) {
+	        logger.error("Failed to fetch patient details", e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "Fail", "Something went wrong while retrieving patient details"));
+	    }
+	}
+
+	@Override
+	public ResponseEntity<?> getDoctorListByHospitalId(Integer hospitalId) {
+	    try {
+	        if (hospitalId == null) {
+	            return ResponseEntity.badRequest().body(new Response(0, "Fail", "Hospital ID is required"));
+	        }
+
+	        // Assuming userType "doctor" is a String. Adjust if it's an enum or different value.
+	        List<User> doctors = userRepository.findByHospitalIdAndUserType(hospitalId, "Doctor");
+
+	        // Transforming to only return id and name
+	        List<Map<String, Object>> doctorList = doctors.stream().map(doctor -> {
+	            Map<String, Object> map = new HashMap<>();
+	            map.put("id", doctor.getUserId());
+	            map.put("firstname", doctor.getFirstName());
+	            map.put("lastName", doctor.getLastName());
+	            return map;
+	        }).collect(Collectors.toList());
+
+	        return ResponseEntity.ok(new Response(1, "Success", doctorList));
+
+	    } catch (Exception e) {
+	        logger.error("Error fetching doctor list", e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "Fail", "Something went wrong while fetching doctor list"));
+	    }
+	}
+	@Override
+	public boolean deleteMediaFilesById(Integer fileId) {
+	    return mediaFilesService.deleteMediaFilesByUserIdAndCategoryAndRefIds(
+	            MediaFileCategory.patientDocument, fileId
+	    ); 
+	}
+	
 
 }
