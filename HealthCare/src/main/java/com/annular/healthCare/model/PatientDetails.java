@@ -89,5 +89,25 @@ public class PatientDetails {
 	@Column(name = "user_updated_on")
 	@CreationTimestamp
 	private Date userUpdatedOn;
+	
+	@Column(name = "previousMedicalHistory")
+	private String previousMedicalHistory;
+	
+	@Column(name = "insuranceDetails")
+	private String insuranceDetails;
 
+	@Column(name = "insurerName")
+	private String insurerName;
+	
+	@Column(name = "insuranceprovider")
+	private String insuranceProvider;
+	
+	@Column(name = "policyNumber")
+	private String policyNumber;
+	
+	@Column(name = "disability")
+	private Boolean disability;
+	
+	@Column(name = "age")
+	private String age;
 }

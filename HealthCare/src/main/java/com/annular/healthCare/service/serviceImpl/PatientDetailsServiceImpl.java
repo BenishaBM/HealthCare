@@ -14,9 +14,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.annular.healthCare.Response;
+import com.annular.healthCare.Util.Utility;
+import com.annular.healthCare.model.MediaFileCategory;
 import com.annular.healthCare.model.PatientDetails;
+import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.PatientDetailsRepository;
+import com.annular.healthCare.repository.UserRepository;
+import com.annular.healthCare.service.MediaFileService;
 import com.annular.healthCare.service.PatientDetailsService;
+import com.annular.healthCare.webModel.FileInputWebModel;
 import com.annular.healthCare.webModel.PatientDetailsWebModel;
 
 @Service
@@ -27,51 +33,71 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	
 	@Autowired
 	PatientDetailsRepository patientDetailsRepository;
+	
+	@Autowired
+	MediaFileService mediaFilesService;
+	
+	@Autowired
+	UserRepository userRepository;
 
 	@Override
 	public ResponseEntity<?> register(PatientDetailsWebModel userWebModel) {
-	    HashMap<String, Object> response = new HashMap<>();
 	    try {
-	        logger.info("Registering new patient: " + userWebModel.getPatientName());
+	        logger.info("Registering patient: {}", userWebModel.getPatientName());
 
-	        // Validate required fields
 	        if (userWebModel.getPatientName() == null || userWebModel.getMobileNumber() == null) {
-	            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-	                    .body(new Response(0, "Fail", "Patient name and mobile number are required"));
+	            return ResponseEntity.badRequest().body(
+	                new Response(0, "Fail", "Patient name and mobile number are required")
+	            );
 	        }
 
-	        // Create new PatientDetails entity
 	        PatientDetails newPatient = PatientDetails.builder()
 	                .patientName(userWebModel.getPatientName())
 	                .dob(userWebModel.getDob())
+	                .age(userWebModel.getAge())
 	                .gender(userWebModel.getGender())
 	                .bloodGroup(userWebModel.getBloodGroup())
 	                .mobileNumber(userWebModel.getMobileNumber())
 	                .emailId(userWebModel.getEmailId())
 	                .address(userWebModel.getAddress())
+	                .currentAddress(userWebModel.getCurrentAddress())
 	                .emergencyContact(userWebModel.getEmergencyContact())
 	                .hospitalId(userWebModel.getHospitalId())
 	                .purposeOfVisit(userWebModel.getPurposeOfVisit())
 	                .doctorId(userWebModel.getDoctorId())
-	                .userIsActive(true) // Defaulting to active
-	                .currentAddress(userWebModel.getCurrentAddress())
+	                .userIsActive(true)
 	                .createdBy(userWebModel.getCreatedBy())
-	                .userCreatedOn(new Date()) // Setting creation date
+	                .userCreatedOn(new Date())
+	                .previousMedicalHistory(userWebModel.getPreviousMedicalHistory())
+	                .insuranceDetails(userWebModel.getInsuranceDetails())
+	                .insurerName(userWebModel.getInsurerName())
+	                .insuranceProvider(userWebModel.getInsuranceProvider())
+	                .policyNumber(userWebModel.getPolicyNumber())
+	                .disability(userWebModel.getDisability())
 	                .build();
 
-	        // Save to database
-	        patientDetailsRepository.save(newPatient);
+	        // Save patient first to generate ID
+	        PatientDetails savedPatient = patientDetailsRepository.save(newPatient);
 
-	        response.put("message", "Patient registered successfully");
-	        response.put("data", newPatient);
+	        // Save media files if any
+	        if (!Utility.isNullOrEmptyList(userWebModel.getFiles())) {
+	            FileInputWebModel fileInput = FileInputWebModel.builder()
+	                    .category(MediaFileCategory.patient) // Define a suitable enum value
+	                    .categoryRefId(savedPatient.getPatientDetailsId())
+	                    .files(userWebModel.getFiles())
+	                    .build();
+
+	            User userFromDB = userRepository.findById(userWebModel.getCreatedBy()).orElse(null); // Or handle accordingly
+
+	            mediaFilesService.saveMediaFiles(fileInput, userFromDB);
+	        }
 
 	        return ResponseEntity.ok(new Response(1, "Success", "Patient registered successfully"));
 
 	    } catch (Exception e) {
-	        logger.error("Error registering patient: " + e.getMessage(), e);
-	        response.put("message", "Error registering patient");
+	        logger.error("Registration failed", e);
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                .body(new Response(0, "Fail", "Error registering patient"));
+	                .body(new Response(0, "Fail", "Something went wrong during registration"));
 	    }
 	}
 

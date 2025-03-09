@@ -1,6 +1,12 @@
 package com.annular.healthCare.webModel;
 
 
+import java.util.List;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import com.annular.healthCare.model.MediaFileCategory;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,16 +18,28 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class FileInputWebModel {
 	
-	private Integer fileId;
-	
-	private String fileName;
+	// For save purpose
+		private Integer userId;
+		private MediaFileCategory category;
+		private Integer categoryRefId;
+		private List<MultipartFile> files;
+		private String description;
 
-	private String fileSize;
+		// For read purpose
+		private String fileIds;
+		private String fileType;
+		private String filePath;
+		private String type;
+		
+		private Integer fileId;
+		
+		private String fileName;
 
-	private String fileType;
+		private String fileSize;
 
-	private String fileData;
-	
-	private Integer fileCategory;
+
+		private String fileData;
+		
+		private Integer fileCategory;
 
 }

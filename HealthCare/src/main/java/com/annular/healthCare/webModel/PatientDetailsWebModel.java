@@ -1,6 +1,11 @@
 package com.annular.healthCare.webModel;
 
 import java.util.Date;
+import java.util.List;
+
+import javax.persistence.Column;
+
+import org.springframework.web.multipart.MultipartFile;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,5 +40,14 @@ public class PatientDetailsWebModel {
 	private Integer userUpdatedBy;
 	private Date userUpdatedOn;
 	private String emergencyContact;
+	@Column(name = "previousMedicalHistory")
+	private String previousMedicalHistory;
+	private String insuranceDetails;
+	private String insurerName;
+	private String insuranceProvider;
+	private String policyNumber;
+	private Boolean disability;
+	private String age;
+	 private List<MultipartFile> files;
 
 }

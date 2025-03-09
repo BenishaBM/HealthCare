@@ -14,9 +14,9 @@ import lombok.NoArgsConstructor;
 public class FileOutputWebModel {
 	private Integer id; // MySQL Primary key field
 
-	private String fileId;
+	private Integer fileId;
 	private String fileName;
-	private long fileSize;
+	private String fileSize;
 	private String fileType;
 	private String filePath;
 	private String description;

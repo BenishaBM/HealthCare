@@ -10,6 +10,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -54,5 +55,7 @@ public class HospitalDataListWebModel {
 	private Date dateOfBirth;
 	private List<Integer> roles; // Add this field to hold the roles (e.g., ["ROLE_DOCTOR", "ROLE_ADMIN"])
 	private ArrayList<FileInputWebModel> filesInputWebModel;
+	 // For document uploads (Insurance card, Aadhaar, PAN etc.)
+    private List<MultipartFile> files;
 
 }
