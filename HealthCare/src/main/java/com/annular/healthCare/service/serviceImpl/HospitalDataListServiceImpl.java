@@ -218,6 +218,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	                    if (doctorRole.getUserIsActive()) { // Check if the role is active
 	                        Map<String, Object> roleMap = new HashMap<>();
 	                        roleMap.put("roleId", doctorRole.getRoleId());
+	                        roleMap.put("doctorRoleId", doctorRole.getDoctorRoleId());
 
 	                        try {
 	                            String specialtyName = doctorSpecialityRepository.findSpecialtyNameByRoleId(doctorRole.getRoleId());
