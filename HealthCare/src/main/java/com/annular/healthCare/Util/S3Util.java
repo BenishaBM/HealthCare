@@ -52,9 +52,9 @@ public class S3Util {
     	    ProfileCredentialsProvider customProfileProvider = ProfileCredentialsProvider.builder()
     	            .profileFile(ProfileFile.builder()
     	                    .type(ProfileFile.Type.CREDENTIALS)  // Specify the type!
-    	                    .content(Paths.get("C:\\Users\\.aws\\credentials.txt"))
+    	                    //.content(Paths.get("C:\\Users\\.aws\\credentials.txt"))
  // Your custom credentials file path
-    	                   // .content(Paths.get("/home/ubuntu/.aws/credentials.txt"))
+    	                   .content(Paths.get("/home/ubuntu/.aws/credentials.txt"))
     	                    .build())
     	            .build();
         return AwsCredentialsProviderChain.builder()
