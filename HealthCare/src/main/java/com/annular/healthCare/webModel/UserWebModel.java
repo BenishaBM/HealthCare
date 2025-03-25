@@ -44,6 +44,7 @@ public class UserWebModel {
 	private String token;
 	private String hospitalName;
 	private ArrayList<FileInputWebModel> filesInputWebModel;
+	private List<DoctorDaySlotWebModel> doctorDaySlots;
 	
 
 }

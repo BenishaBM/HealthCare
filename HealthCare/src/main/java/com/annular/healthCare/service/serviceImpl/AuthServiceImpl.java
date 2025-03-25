@@ -25,7 +25,10 @@ import org.springframework.stereotype.Service;
 import com.annular.healthCare.Response;
 import com.annular.healthCare.Util.Base64FileUpload;
 import com.annular.healthCare.Util.HealthCareConstant;
+import com.annular.healthCare.model.DoctorDaySlot;
 import com.annular.healthCare.model.DoctorRole;
+import com.annular.healthCare.model.DoctorSlot;
+import com.annular.healthCare.model.DoctorSlotTime;
 import com.annular.healthCare.model.DoctorSpecialty;
 import com.annular.healthCare.model.HospitalAdmin;
 import com.annular.healthCare.model.HospitalDataList;
@@ -33,7 +36,10 @@ import com.annular.healthCare.model.MediaFile;
 import com.annular.healthCare.model.MediaFileCategory;
 import com.annular.healthCare.model.RefreshToken;
 import com.annular.healthCare.model.User;
+import com.annular.healthCare.repository.DoctorDaySlotRepository;
 import com.annular.healthCare.repository.DoctorRoleRepository;
+import com.annular.healthCare.repository.DoctorSlotRepository;
+import com.annular.healthCare.repository.DoctorSlotTimeRepository;
 import com.annular.healthCare.repository.DoctorSpecialityRepository;
 import com.annular.healthCare.repository.HospitalAdminRepository;
 import com.annular.healthCare.repository.HospitalDataListRepository;
@@ -41,6 +47,8 @@ import com.annular.healthCare.repository.MediaFileRepository;
 import com.annular.healthCare.repository.RefreshTokenRepository;
 import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.AuthService;
+import com.annular.healthCare.webModel.DoctorDaySlotWebModel;
+import com.annular.healthCare.webModel.DoctorSlotTimeWebModel;
 import com.annular.healthCare.webModel.FileInputWebModel;
 import com.annular.healthCare.webModel.HospitalDataListWebModel;
 import com.annular.healthCare.webModel.UserWebModel;
@@ -63,10 +71,19 @@ public class AuthServiceImpl implements AuthService {
 	MediaFileRepository mediaFileRepository;
 	
 	@Autowired
+	DoctorSlotTimeRepository doctorSlotTimeRepository;
+	
+	@Autowired
 	HospitalDataListRepository hospitalDataListRepository;
 	
 	@Autowired
 	DoctorRoleRepository doctorRoleRepository;
+	
+	@Autowired
+	DoctorSlotRepository doctorSlotRepository;
+	
+	@Autowired
+	DoctorDaySlotRepository doctorDaySlotRepository;
 	
 	@Autowired
 	HospitalAdminRepository hospitalAdminRepository;
@@ -125,7 +142,45 @@ public class AuthServiceImpl implements AuthService {
 	                doctorRoleRepository.save(doctorRole);
 	            }
 	        }
+	     // If user is a doctor, create default slot structure
+	        if (userWebModel.getUserType().equalsIgnoreCase("DOCTOR")) {
+	            DoctorSlot doctorSlot = DoctorSlot.builder()
+	                    .user(savedUser)
+	                    .createdBy(savedUser.getCreatedBy())
+	                    .isActive(true)
+	                    .build();
+	            doctorSlot = doctorSlotRepository.save(doctorSlot); // Save doctor slot
 
+	            // Loop through the provided days and create day slots
+	            if (userWebModel.getDoctorDaySlots() != null) {
+	                for (DoctorDaySlotWebModel daySlotModel : userWebModel.getDoctorDaySlots()) {
+	                    DoctorDaySlot doctorDaySlot = DoctorDaySlot.builder()
+	                            .doctorSlot(doctorSlot)
+	                            .day(daySlotModel.getDay())
+	                            .startSlotDate(daySlotModel.getStartSlotDate())
+	                            .endSlotDate(daySlotModel.getEndSlotDate())
+	                            .createdBy(savedUser.getCreatedBy())
+	                            .isActive(true)
+	                            .build();
+	                    doctorDaySlot = doctorDaySlotRepository.save(doctorDaySlot); // Save day slot
+
+	                    // Create time slots for each day slot
+	                    if (daySlotModel.getDoctorSlotTimes() != null) {
+	                        for (DoctorSlotTimeWebModel slotTimeModel : daySlotModel.getDoctorSlotTimes()) {
+	                            DoctorSlotTime doctorSlotTime = DoctorSlotTime.builder()
+	                                    .doctorDaySlot(doctorDaySlot)
+	                                    .slotStartTime(slotTimeModel.getSlotStartTime())
+	                                    .slotEndTime(slotTimeModel.getSlotEndTime())
+	                                    .slotTime(slotTimeModel.getSlotTime())
+	                                    .createdBy(savedUser.getCreatedBy())
+	                                    .isActive(true)
+	                                    .build();
+	                            doctorSlotTimeRepository.save(doctorSlotTime);
+	                        }
+	                    }
+	                }
+	            }
+	        }
 
 
 			return ResponseEntity.ok(new Response(1, "success", "User registered successfully"));
