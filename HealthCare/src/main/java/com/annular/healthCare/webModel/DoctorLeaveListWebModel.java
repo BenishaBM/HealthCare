@@ -18,6 +18,6 @@ import lombok.ToString;
 public class DoctorLeaveListWebModel {
 	
     private Date doctorLeaveDate;
-    private Boolean userIsActive;
+
 
 }
