@@ -3,9 +3,12 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -32,8 +35,10 @@ public class DoctorLeaveList {
 	@Column(name = "doctorLeaveDate")
 	private Date doctorLeaveDate;
 	
-	@Column(name = "userId")
-	private Integer userId;
+    // Correcting relationship: Many DoctorRole records can belong to one User
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "userId", referencedColumnName = "userId", insertable = true, updatable = true)
+    private User user;
 	
 	@Column(name = "created_by")
 	private Integer createdBy;

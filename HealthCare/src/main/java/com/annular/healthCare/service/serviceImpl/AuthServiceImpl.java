@@ -28,6 +28,7 @@ import com.annular.healthCare.Response;
 import com.annular.healthCare.Util.Base64FileUpload;
 import com.annular.healthCare.Util.HealthCareConstant;
 import com.annular.healthCare.model.DoctorDaySlot;
+import com.annular.healthCare.model.DoctorLeaveList;
 import com.annular.healthCare.model.DoctorRole;
 import com.annular.healthCare.model.DoctorSlot;
 import com.annular.healthCare.model.DoctorSlotTime;
@@ -39,6 +40,7 @@ import com.annular.healthCare.model.MediaFileCategory;
 import com.annular.healthCare.model.RefreshToken;
 import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.DoctorDaySlotRepository;
+import com.annular.healthCare.repository.DoctorLeaveListRepository;
 import com.annular.healthCare.repository.DoctorRoleRepository;
 import com.annular.healthCare.repository.DoctorSlotRepository;
 import com.annular.healthCare.repository.DoctorSlotTimeRepository;
@@ -50,6 +52,7 @@ import com.annular.healthCare.repository.RefreshTokenRepository;
 import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.AuthService;
 import com.annular.healthCare.webModel.DoctorDaySlotWebModel;
+import com.annular.healthCare.webModel.DoctorLeaveListWebModel;
 import com.annular.healthCare.webModel.DoctorSlotTimeWebModel;
 import com.annular.healthCare.webModel.FileInputWebModel;
 import com.annular.healthCare.webModel.HospitalDataListWebModel;
@@ -89,6 +92,9 @@ public class AuthServiceImpl implements AuthService {
 	
 	@Autowired
 	HospitalAdminRepository hospitalAdminRepository;
+	
+	@Autowired
+	DoctorLeaveListRepository doctorLeaveListRepository;
 	
 	@Autowired
 	DoctorSpecialityRepository doctorSpecialtyRepository;
@@ -182,7 +188,20 @@ public class AuthServiceImpl implements AuthService {
 	                    }
 	                }
 	            }
+	            // Save doctor leaves if provided
+	            if (userWebModel.getDoctorLeaveList() != null) {
+	                for (DoctorLeaveListWebModel leaveModel : userWebModel.getDoctorLeaveList()) {
+	                    DoctorLeaveList doctorLeave = DoctorLeaveList.builder()
+	                            .user(savedUser)
+	                            .doctorLeaveDate(leaveModel.getDoctorLeaveDate())
+	                            .createdBy(savedUser.getCreatedBy())
+	                            .userIsActive(true)
+	                            .build();
+	                    doctorLeaveListRepository.save(doctorLeave);
+	                }
+	            }
 	        }
+	        
 
 
 			return ResponseEntity.ok(new Response(1, "success", "User registered successfully"));
@@ -655,7 +674,21 @@ public class AuthServiceImpl implements AuthService {
 	                doctorSlotList.add(slotData);
 	            }
 	            data.put("doctorSlots", doctorSlotList);
-	        }
+	                   // Fetch doctor leave details
+            List<Map<String, Object>> doctorLeaveList = new ArrayList<>();
+            List<DoctorLeaveList> doctorLeaves = doctorLeaveListRepository.findByUser(user);
+
+            for (DoctorLeaveList doctorLeave : doctorLeaves) {
+                Map<String, Object> leaveData = new HashMap<>();
+                leaveData.put("leaveId", doctorLeave.getDoctorLeaveListId());
+                leaveData.put("doctorLeaveDate", doctorLeave.getDoctorLeaveDate());
+                leaveData.put("userIsActive", doctorLeave.getUserIsActive());
+                doctorLeaveList.add(leaveData);
+            }
+
+            data.put("doctorLeaveList", doctorLeaveList);
+        }
+
 
 	        return ResponseEntity.ok(data);
 

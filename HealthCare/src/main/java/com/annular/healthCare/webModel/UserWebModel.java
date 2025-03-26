@@ -45,6 +45,7 @@ public class UserWebModel {
 	private String hospitalName;
 	private ArrayList<FileInputWebModel> filesInputWebModel;
 	private List<DoctorDaySlotWebModel> doctorDaySlots;
+	private List<DoctorLeaveListWebModel> doctorLeaveList;
 	
 
 }
