@@ -233,5 +233,19 @@ public class AuthenticationController {
 	    }
 	}
 	
+	@GetMapping("getDoctorSlotById")
+	public ResponseEntity<?> getDoctorSlotById(@RequestParam("userId")Integer userId) {
+	    try {
+	        // Call the service to perform the update
+	        return authService.getDoctorSlotById(userId);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("getDoctorSlotById Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+	
+	
 
 }

@@ -759,4 +759,80 @@ public class AuthServiceImpl implements AuthService {
 	    }
 	}
 
+	@Override
+	public ResponseEntity<?> getDoctorSlotById(Integer userId) {
+		 try {
+		        Optional<User> userData = userRepository.findById(userId);
+
+		        if (!userData.isPresent()) {
+		            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+		                    .body(Collections.singletonMap("message", "User not found"));
+		        }
+
+		        User user = userData.get();
+		        Map<String, Object> data = new HashMap<>();
+		        data.put("userId", user.getUserId());
+		        data.put("userName", user.getUserName());
+		        
+
+		        // Fetch slot details if the user is a doctor
+		        if ("DOCTOR".equalsIgnoreCase(user.getUserType())) {
+		            List<Map<String, Object>> doctorSlotList = new ArrayList<>();
+
+		            List<DoctorSlot> doctorSlots = doctorSlotRepository.findByUser(user);
+		            for (DoctorSlot doctorSlot : doctorSlots) {
+		                Map<String, Object> slotData = new HashMap<>();
+		                slotData.put("slotId", doctorSlot.getDoctorSlotId());
+		                slotData.put("isActive", doctorSlot.getIsActive());
+
+		                // Fetch day slots
+		                List<Map<String, Object>> daySlotList = new ArrayList<>();
+		                List<DoctorDaySlot> doctorDaySlots = doctorDaySlotRepository.findByDoctorSlot(doctorSlot);
+		                for (DoctorDaySlot daySlot : doctorDaySlots) {
+		                    Map<String, Object> daySlotData = new HashMap<>();
+		                    daySlotData.put("daySlotId", daySlot.getDoctorDaySlotId());
+		                    daySlotData.put("day", daySlot.getDay());
+		                    daySlotData.put("startSlotDate", daySlot.getStartSlotDate());
+		                    daySlotData.put("endSlotDate", daySlot.getEndSlotDate());
+		                    daySlotData.put("isActive", daySlot.getIsActive());
+
+		                    // Fetch time slots
+		                    List<Map<String, Object>> timeSlotList = new ArrayList<>();
+		                    List<DoctorSlotTime> doctorSlotTimes = doctorSlotTimeRepository.findByDoctorDaySlot(daySlot);
+		                    for (DoctorSlotTime slotTime : doctorSlotTimes) {
+		                        Map<String, Object> timeSlotData = new HashMap<>();
+		                        timeSlotData.put("timeSlotId", slotTime.getDoctorSlotTimeId());
+		                        timeSlotData.put("slotStartTime", slotTime.getSlotStartTime());
+		                        timeSlotData.put("slotEndTime", slotTime.getSlotEndTime());
+		                        timeSlotData.put("slotTime", slotTime.getSlotTime());
+		                        timeSlotData.put("isActive", slotTime.getIsActive());
+
+		                        // Split slots
+		                        List<Map<String, String>> splitSlots = generateSplitSlots(
+		                                slotTime.getSlotStartTime(),
+		                                slotTime.getSlotEndTime(),
+		                                slotTime.getSlotTime()
+		                        );
+
+		                        timeSlotData.put("splitSlotDuration", splitSlots);
+		                        timeSlotList.add(timeSlotData);
+		                    }
+		                    daySlotData.put("slotTimes", timeSlotList);
+		                    daySlotList.add(daySlotData);
+		                }
+		                slotData.put("daySlots", daySlotList);
+		                doctorSlotList.add(slotData);
+		            }
+		            data.put("doctorSlots", doctorSlotList);
+		        }
+	        
+		        return ResponseEntity.ok(data);
+
+		    } catch (Exception e) {
+		        logger.error("Exception while retrieving user details: ", e);
+		        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+		                .body(Collections.singletonMap("message", "Error retrieving user details"));
+		    }
+	}
+
 }

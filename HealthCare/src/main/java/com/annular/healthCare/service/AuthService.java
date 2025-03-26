@@ -30,4 +30,6 @@ public interface AuthService {
 
 	ResponseEntity<?> deleteDoctorRoleById(Integer doctorRoleId);
 
+	ResponseEntity<?> getDoctorSlotById(Integer userId);
+
 }
