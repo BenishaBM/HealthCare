@@ -1,5 +1,6 @@
 package com.annular.healthCare.controller;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 import java.util.Optional;
@@ -7,6 +8,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -234,17 +236,17 @@ public class AuthenticationController {
 	}
 	
 	@GetMapping("getDoctorSlotById")
-	public ResponseEntity<?> getDoctorSlotById(@RequestParam("userId")Integer userId) {
+	public ResponseEntity<?> getDoctorSlotById(@RequestParam("userId") Integer userId, 
+	                                           @RequestParam("date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
 	    try {
-	        // Call the service to perform the update
-	        return authService.getDoctorSlotById(userId);
+	        return authService.getDoctorSlotById(userId, date);
 	    } catch (Exception e) {
-	        // Handle errors and return a meaningful response
 	        logger.error("getDoctorSlotById Method Exception: {}", e.getMessage(), e);
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+
 	
 	
 

@@ -2,6 +2,8 @@ package com.annular.healthCare.service.serviceImpl;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -760,79 +762,126 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	@Override
-	public ResponseEntity<?> getDoctorSlotById(Integer userId) {
-		 try {
-		        Optional<User> userData = userRepository.findById(userId);
+	public ResponseEntity<?> getDoctorSlotById(Integer userId, LocalDate requestDate) {
+	    try {
+	        // Validate input parameters
+	        if (userId == null || requestDate == null) {
+	            return ResponseEntity.badRequest()
+	                    .body(Collections.singletonMap("message", "Invalid user ID or request date"));
+	        }
 
-		        if (!userData.isPresent()) {
-		            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-		                    .body(Collections.singletonMap("message", "User not found"));
-		        }
+	        // Find user with optional check
+	        Optional<User> userData = userRepository.findById(userId);
+	        if (userData.isEmpty()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body(Collections.singletonMap("message", "User not found"));
+	        }
 
-		        User user = userData.get();
-		        Map<String, Object> data = new HashMap<>();
-		        data.put("userId", user.getUserId());
-		        data.put("userName", user.getUserName());
-		        
+	        User user = userData.get();
+	        Map<String, Object> response = new HashMap<>();
+	        response.put("userId", user.getUserId());
+	        response.put("userName", user.getUserName());
 
-		        // Fetch slot details if the user is a doctor
-		        if ("DOCTOR".equalsIgnoreCase(user.getUserType())) {
-		            List<Map<String, Object>> doctorSlotList = new ArrayList<>();
+	        // If user is not a doctor, return basic user info
+	        if (!"DOCTOR".equalsIgnoreCase(user.getUserType())) {
+	            return ResponseEntity.ok(response);
+	        }
 
-		            List<DoctorSlot> doctorSlots = doctorSlotRepository.findByUser(user);
-		            for (DoctorSlot doctorSlot : doctorSlots) {
-		                Map<String, Object> slotData = new HashMap<>();
-		                slotData.put("slotId", doctorSlot.getDoctorSlotId());
-		                slotData.put("isActive", doctorSlot.getIsActive());
+	        // Fetch and filter doctor slots
+	        List<Map<String, Object>> doctorSlotList = doctorDaySlotRepository.findByDoctorSlot_User(user)
+	                .stream()
+	                .filter(slot -> isValidSlot(slot, requestDate))
+	                .map(this::mapDoctorSlot)
+	                .filter(slot -> !((List<?>) slot.get("daySlots")).isEmpty())
+	                .collect(Collectors.toList());
 
-		                // Fetch day slots
-		                List<Map<String, Object>> daySlotList = new ArrayList<>();
-		                List<DoctorDaySlot> doctorDaySlots = doctorDaySlotRepository.findByDoctorSlot(doctorSlot);
-		                for (DoctorDaySlot daySlot : doctorDaySlots) {
-		                    Map<String, Object> daySlotData = new HashMap<>();
-		                    daySlotData.put("daySlotId", daySlot.getDoctorDaySlotId());
-		                    daySlotData.put("day", daySlot.getDay());
-		                    daySlotData.put("startSlotDate", daySlot.getStartSlotDate());
-		                    daySlotData.put("endSlotDate", daySlot.getEndSlotDate());
-		                    daySlotData.put("isActive", daySlot.getIsActive());
-
-		                    // Fetch time slots
-		                    List<Map<String, Object>> timeSlotList = new ArrayList<>();
-		                    List<DoctorSlotTime> doctorSlotTimes = doctorSlotTimeRepository.findByDoctorDaySlot(daySlot);
-		                    for (DoctorSlotTime slotTime : doctorSlotTimes) {
-		                        Map<String, Object> timeSlotData = new HashMap<>();
-		                        timeSlotData.put("timeSlotId", slotTime.getDoctorSlotTimeId());
-		                        timeSlotData.put("slotStartTime", slotTime.getSlotStartTime());
-		                        timeSlotData.put("slotEndTime", slotTime.getSlotEndTime());
-		                        timeSlotData.put("slotTime", slotTime.getSlotTime());
-		                        timeSlotData.put("isActive", slotTime.getIsActive());
-
-		                        // Split slots
-		                        List<Map<String, String>> splitSlots = generateSplitSlots(
-		                                slotTime.getSlotStartTime(),
-		                                slotTime.getSlotEndTime(),
-		                                slotTime.getSlotTime()
-		                        );
-
-		                        timeSlotData.put("splitSlotDuration", splitSlots);
-		                        timeSlotList.add(timeSlotData);
-		                    }
-		                    daySlotData.put("slotTimes", timeSlotList);
-		                    daySlotList.add(daySlotData);
-		                }
-		                slotData.put("daySlots", daySlotList);
-		                doctorSlotList.add(slotData);
-		            }
-		            data.put("doctorSlots", doctorSlotList);
-		        }
-	        
-		        return ResponseEntity.ok(data);
-
-		    } catch (Exception e) {
-		        logger.error("Exception while retrieving user details: ", e);
-		        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-		                .body(Collections.singletonMap("message", "Error retrieving user details"));
-		    }
+	        response.put("doctorSlots", doctorSlotList);
+	        return ResponseEntity.ok(response);
+	    } catch (Exception e) {
+	        logger.error("Exception while retrieving doctor slots for user {}: ", userId, e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(Collections.singletonMap("message", "Error retrieving doctor slots"));
+	    }
 	}
 
+	private boolean isValidSlot(DoctorDaySlot doctorSlot, LocalDate requestDate) {
+	    if (doctorSlot == null || requestDate == null) {
+	        return false;
+	    }
+
+	    LocalDate startDate = convertToLocalDate(doctorSlot.getStartSlotDate());
+	    LocalDate endDate = convertToLocalDate(doctorSlot.getEndSlotDate());
+
+	    return doctorSlot.getIsActive() != null 
+	           && doctorSlot.getIsActive() 
+	           && !requestDate.isBefore(startDate) 
+	           && !requestDate.isAfter(endDate);
+	}
+
+	private Map<String, Object> mapDoctorSlot(DoctorDaySlot daySlot) {
+	    List<Map<String, Object>> daySlotList = doctorDaySlotRepository.findByDoctorSlot(daySlot.getDoctorSlot())
+	            .stream()
+	            .filter(this::isValidDaySlot)
+	            .map(this::mapDoctorDaySlot)
+	            .collect(Collectors.toList());
+
+	    Map<String, Object> doctorSlotData = new HashMap<>();
+	    doctorSlotData.put("doctorSlotId", daySlot.getDoctorSlot().getDoctorSlotId());
+	    doctorSlotData.put("daySlots", daySlotList);
+	    return doctorSlotData;
+	}
+
+	private boolean isValidDaySlot(DoctorDaySlot daySlot) {
+	    if (daySlot == null) {
+	        return false;
+	    }
+
+	    LocalDate startDate = convertToLocalDate(daySlot.getStartSlotDate());
+	    LocalDate endDate = convertToLocalDate(daySlot.getEndSlotDate());
+	    LocalDate now = LocalDate.now();
+
+	    return daySlot.getIsActive() != null 
+	           && daySlot.getIsActive() 
+	           && !now.isBefore(startDate) 
+	           && !now.isAfter(endDate);
+	}
+
+	private Map<String, Object> mapDoctorDaySlot(DoctorDaySlot daySlot) {
+	    Map<String, Object> daySlotData = new HashMap<>();
+	    daySlotData.put("daySlotId", daySlot.getDoctorDaySlotId());
+	    daySlotData.put("day", daySlot.getDay());
+	    daySlotData.put("startSlotDate", daySlot.getStartSlotDate());
+	    daySlotData.put("endSlotDate", daySlot.getEndSlotDate());
+	    daySlotData.put("isActive", daySlot.getIsActive());
+
+	    List<Map<String, Object>> timeSlotList = doctorSlotTimeRepository.findByDoctorDaySlot(daySlot)
+	            .stream()
+	            .filter(slotTime -> slotTime.getIsActive() != null && slotTime.getIsActive())
+	            .map(this::mapDoctorSlotTime)
+	            .collect(Collectors.toList());
+
+	    daySlotData.put("slotTimes", timeSlotList);
+	    return daySlotData;
+	}
+
+	private Map<String, Object> mapDoctorSlotTime(DoctorSlotTime slotTime) {
+	    Map<String, Object> timeSlotData = new HashMap<>();
+	    timeSlotData.put("timeSlotId", slotTime.getDoctorSlotTimeId());
+	    timeSlotData.put("slotStartTime", slotTime.getSlotStartTime());
+	    timeSlotData.put("slotEndTime", slotTime.getSlotEndTime());
+	    timeSlotData.put("slotTime", slotTime.getSlotTime());
+	    timeSlotData.put("isActive", slotTime.getIsActive());
+	    timeSlotData.put("splitSlotDuration", generateSplitSlots(
+	            slotTime.getSlotStartTime(),
+	            slotTime.getSlotEndTime(),
+	            slotTime.getSlotTime()));
+	    return timeSlotData;
+	}
+
+	// Utility method to convert Date to LocalDate
+	private LocalDate convertToLocalDate(Date date) {
+	    return date != null 
+	           ? date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() 
+	           : null;
+	}
 }

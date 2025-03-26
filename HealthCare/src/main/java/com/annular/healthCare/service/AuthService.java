@@ -1,5 +1,7 @@
 package com.annular.healthCare.service;
 
+import java.time.LocalDate;
+
 import org.springframework.http.ResponseEntity;
 
 import com.annular.healthCare.Response;
@@ -30,6 +32,6 @@ public interface AuthService {
 
 	ResponseEntity<?> deleteDoctorRoleById(Integer doctorRoleId);
 
-	ResponseEntity<?> getDoctorSlotById(Integer userId);
+	ResponseEntity<?> getDoctorSlotById(Integer userId, LocalDate date);
 
 }
