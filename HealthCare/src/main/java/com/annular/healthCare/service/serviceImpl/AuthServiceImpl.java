@@ -1,7 +1,9 @@
 package com.annular.healthCare.service.serviceImpl;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -538,6 +540,7 @@ public class AuthServiceImpl implements AuthService {
 	        data.put("yearOfExperience", user.getYearOfExperiences());
 	        Integer hospitalId = user.getHospitalId();
 	        data.put("hospitalId", hospitalId);
+
 	        if (hospitalId != null) {
 	            try {
 	                Optional<HospitalDataList> hospitalData = hospitalDataListRepository.findByHospitalId(hospitalId);
@@ -549,13 +552,14 @@ public class AuthServiceImpl implements AuthService {
 	        } else {
 	            data.put("hospitalName", "N/A");
 	        }
+
 	        data.put("userIsActive", user.getUserIsActive());
 
-	        //  Filter only active doctor roles
+	        // Fetch role details if user is a doctor
 	        List<Map<String, Object>> roleDetails = new ArrayList<>();
 	        if (user.getDoctorRoles() != null) {
 	            for (DoctorRole doctorRole : user.getDoctorRoles()) {
-	                if (doctorRole.getUserIsActive()) { // Check if the role is active
+	                if (doctorRole.getUserIsActive()) {
 	                    Map<String, Object> roleMap = new HashMap<>();
 	                    roleMap.put("roleId", doctorRole.getRoleId());
 
@@ -573,7 +577,7 @@ public class AuthServiceImpl implements AuthService {
 	        }
 	        data.put("roles", roleDetails);
 
-	        //  Fetch media files for profile photos
+	        // Fetch media files for profile photos
 	        List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
 	                HealthCareConstant.ProfilePhoto, user.getUserId());
 	        if (files == null) {
@@ -602,6 +606,57 @@ public class AuthServiceImpl implements AuthService {
 
 	        data.put("profilePhotos", filesInputWebModel);
 
+	        // Fetch slot details if the user is a doctor
+	        if ("DOCTOR".equalsIgnoreCase(user.getUserType())) {
+	            List<Map<String, Object>> doctorSlotList = new ArrayList<>();
+
+	            List<DoctorSlot> doctorSlots = doctorSlotRepository.findByUser(user);
+	            for (DoctorSlot doctorSlot : doctorSlots) {
+	                Map<String, Object> slotData = new HashMap<>();
+	                slotData.put("slotId", doctorSlot.getDoctorSlotId());
+	                slotData.put("isActive", doctorSlot.getIsActive());
+
+	                // Fetch day slots
+	                List<Map<String, Object>> daySlotList = new ArrayList<>();
+	                List<DoctorDaySlot> doctorDaySlots = doctorDaySlotRepository.findByDoctorSlot(doctorSlot);
+	                for (DoctorDaySlot daySlot : doctorDaySlots) {
+	                    Map<String, Object> daySlotData = new HashMap<>();
+	                    daySlotData.put("daySlotId", daySlot.getDoctorDaySlotId());
+	                    daySlotData.put("day", daySlot.getDay());
+	                    daySlotData.put("startSlotDate", daySlot.getStartSlotDate());
+	                    daySlotData.put("endSlotDate", daySlot.getEndSlotDate());
+	                    daySlotData.put("isActive", daySlot.getIsActive());
+
+	                    // Fetch time slots
+	                    List<Map<String, Object>> timeSlotList = new ArrayList<>();
+	                    List<DoctorSlotTime> doctorSlotTimes = doctorSlotTimeRepository.findByDoctorDaySlot(daySlot);
+	                    for (DoctorSlotTime slotTime : doctorSlotTimes) {
+	                        Map<String, Object> timeSlotData = new HashMap<>();
+	                        timeSlotData.put("timeSlotId", slotTime.getDoctorSlotTimeId());
+	                        timeSlotData.put("slotStartTime", slotTime.getSlotStartTime());
+	                        timeSlotData.put("slotEndTime", slotTime.getSlotEndTime());
+	                        timeSlotData.put("slotTime", slotTime.getSlotTime());
+	                        timeSlotData.put("isActive", slotTime.getIsActive());
+
+	                        // Split slots
+	                        List<Map<String, String>> splitSlots = generateSplitSlots(
+	                                slotTime.getSlotStartTime(),
+	                                slotTime.getSlotEndTime(),
+	                                slotTime.getSlotTime()
+	                        );
+
+	                        timeSlotData.put("splitSlotDuration", splitSlots);
+	                        timeSlotList.add(timeSlotData);
+	                    }
+	                    daySlotData.put("slotTimes", timeSlotList);
+	                    daySlotList.add(daySlotData);
+	                }
+	                slotData.put("daySlots", daySlotList);
+	                doctorSlotList.add(slotData);
+	            }
+	            data.put("doctorSlots", doctorSlotList);
+	        }
+
 	        return ResponseEntity.ok(data);
 
 	    } catch (Exception e) {
@@ -610,6 +665,37 @@ public class AuthServiceImpl implements AuthService {
 	                .body(Collections.singletonMap("message", "Error retrieving user details"));
 	    }
 	}
+
+	// Helper method to generate split slots
+	private List<Map<String, String>> generateSplitSlots(String startTime, String endTime, String slotDuration) {
+	    List<Map<String, String>> splitSlots = new ArrayList<>();
+	    try {
+	        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm a");
+	        Date start = sdf.parse(startTime);
+	        Date end = sdf.parse(endTime);
+	        int duration = Integer.parseInt(slotDuration.replaceAll("\\D+", "")); // Extracts numeric value from "30 minutes"
+
+	        Calendar cal = Calendar.getInstance();
+	        cal.setTime(start);
+
+	        while (cal.getTime().before(end)) {
+	            Date splitStart = cal.getTime();
+	            cal.add(Calendar.MINUTE, duration);
+	            Date splitEnd = cal.getTime();
+
+	            if (splitEnd.after(end)) break;
+
+	            Map<String, String> splitSlot = new HashMap<>();
+	            splitSlot.put("startTime", sdf.format(splitStart));
+	            splitSlot.put("endTime", sdf.format(splitEnd));
+	            splitSlots.add(splitSlot);
+	        }
+	    } catch (Exception e) {
+	        logger.error("Error parsing slot time: {}", e.getMessage());
+	    }
+	    return splitSlots;
+	}
+
 	@Override
 	public ResponseEntity<?> deleteDoctorRoleById(Integer doctorRoleId) {
 	    try {

@@ -3021,3 +3021,1305 @@ Caused by: javax.persistence.NonUniqueResultException: query did not return a un
  java.base@17.0.4.1/java.lang.Thread.run(Thread.java:833)
 2025-03-06 12:16:56.029  INFO 548 --- [RMI TCP Connection(10)-127.0.0.1] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
 2025-03-06 12:16:56.031  INFO 548 --- [RMI TCP Connection(10)-127.0.0.1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2025-03-26 15:04:29.224  INFO 11836 --- [main] c.a.healthCare.HealthCareApplication     : Starting HealthCareApplication using Java 17.0.4.1 on Annular with PID 11836 (C:\Users\Benisha\git\HealthCares\HealthCare\target\classes started by Benisha in C:\Users\Benisha\git\HealthCares\HealthCare)
+2025-03-26 15:04:29.228  INFO 11836 --- [main] c.a.healthCare.HealthCareApplication     : No active profile set, falling back to 1 default profile: "default"
+2025-03-26 15:04:29.917  INFO 11836 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-03-26 15:04:30.012  INFO 11836 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 86 ms. Found 11 JPA repository interfaces.
+2025-03-26 15:04:30.562  INFO 11836 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2025-03-26 15:04:30.570  INFO 11836 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-03-26 15:04:30.571  INFO 11836 --- [main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.71]
+2025-03-26 15:04:30.768  INFO 11836 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-03-26 15:04:30.768  INFO 11836 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1487 ms
+2025-03-26 15:04:30.952  INFO 11836 --- [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-03-26 15:04:30.998  INFO 11836 --- [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 5.6.14.Final
+2025-03-26 15:04:31.147  INFO 11836 --- [main] o.hibernate.annotations.common.Version   : HCANN000001: Hibernate Commons Annotations {5.1.2.Final}
+2025-03-26 15:04:31.265  INFO 11836 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-03-26 15:04:31.991  INFO 11836 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-03-26 15:04:32.007  INFO 11836 --- [main] org.hibernate.dialect.Dialect            : HHH000400: Using dialect: org.hibernate.dialect.PostgreSQLDialect
+2025-03-26 15:04:33.019 DEBUG 11836 --- [main] org.hibernate.SQL                        : 
+    
+    create table doctor_leave_list (
+       doctor_leave_list_id  serial not null,
+        created_by int4,
+        doctor_leave_date timestamp,
+        user_created_on timestamp,
+        user_id int4,
+        user_is_active boolean,
+        user_updated_by int4,
+        user_updated_on timestamp,
+        primary key (doctor_leave_list_id)
+    )
+2025-03-26 15:04:33.813  INFO 11836 --- [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform]
+2025-03-26 15:04:33.822  INFO 11836 --- [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-03-26 15:04:34.748  INFO 11836 --- [main] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@2b69ff13, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@7136ad9a, org.springframework.security.web.context.SecurityContextPersistenceFilter@689fcf08, org.springframework.security.web.header.HeaderWriterFilter@33ce081a, org.springframework.web.filter.CorsFilter@4fb42efa, org.springframework.security.web.authentication.logout.LogoutFilter@427c2c96, com.annular.healthCare.security.Jwt.AuthTokenFilter@4b37d1a4, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@1a3272e0, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@7bc3c59f, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@35599228, org.springframework.security.web.session.SessionManagementFilter@6e3acd7, org.springframework.security.web.access.ExceptionTranslationFilter@1d5fc340, org.springframework.security.web.access.intercept.FilterSecurityInterceptor@d4dbb34]
+2025-03-26 15:04:34.799  WARN 11836 --- [main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-03-26 15:04:34.915 DEBUG 11836 --- [main] s.w.s.m.m.a.RequestMappingHandlerAdapter : ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-03-26 15:04:34.986 DEBUG 11836 --- [main] s.w.s.m.m.a.RequestMappingHandlerMapping : 25 mappings in 'requestMappingHandlerMapping'
+2025-03-26 15:04:35.014 DEBUG 11836 --- [main] o.s.w.s.handler.SimpleUrlHandlerMapping  : Patterns [/webjars/**, /**] in 'resourceHandlerMapping'
+2025-03-26 15:04:35.030 DEBUG 11836 --- [main] .m.m.a.ExceptionHandlerExceptionResolver : ControllerAdvice beans: 0 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-03-26 15:04:35.157  INFO 11836 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2025-03-26 15:04:35.166  INFO 11836 --- [main] c.a.healthCare.HealthCareApplication     : Started HealthCareApplication in 6.389 seconds (JVM running for 7.74)
+2025-03-26 15:05:20.180  INFO 11836 --- [http-nio-8080-exec-2] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-03-26 15:05:20.180  INFO 11836 --- [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-03-26 15:05:20.180 DEBUG 11836 --- [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Detected StandardServletMultipartResolver
+2025-03-26 15:05:20.180 DEBUG 11836 --- [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Detected AcceptHeaderLocaleResolver
+2025-03-26 15:05:20.180 DEBUG 11836 --- [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Detected FixedThemeResolver
+2025-03-26 15:05:20.181 DEBUG 11836 --- [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@66011fbc
+2025-03-26 15:05:20.182 DEBUG 11836 --- [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.support.SessionFlashMapManager@57fb6900
+2025-03-26 15:05:20.182 DEBUG 11836 --- [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : enableLoggingRequestDetails='false': request parameters and headers will be masked to prevent unsafe logging of potentially sensitive data
+2025-03-26 15:05:20.182  INFO 11836 --- [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+2025-03-26 15:05:20.186  INFO 11836 --- [http-nio-8080-exec-2] com.annular.healthCare.security.MyCors   : Request URI -> null
+2025-03-26 15:05:20.200  INFO 11836 --- [http-nio-8080-exec-2] c.a.h.security.Jwt.AuthTokenFilter       : JWT from request :- eyJhbGciOiJIUzUxMiJ9.eyJ1c2VyRW1haWxJZCI6InN1cGVyYWRtaW5AZ21haWwuY29tIiwidXNlclR5cGUiOiJTVVBFUkFETUlOIiwiaWF0IjoxNzQyOTgxNzAxLCJleHAiOjE3NDI5ODIzMDF9.mzOXlK9Q7fAcgN5l00_joYT3_8TO7PEQxf9gQ23BTRMiDIbegP22sJ67xO-ZwQFosIjRQU4Xx8zDuUJ2TcanRw
+2025-03-26 15:05:20.255  INFO 11836 --- [http-nio-8080-exec-2] c.a.h.security.Jwt.AuthTokenFilter       : JWT available...
+2025-03-26 15:05:20.256  INFO 11836 --- [http-nio-8080-exec-2] c.a.h.security.Jwt.AuthTokenFilter       : Username with UserType : superadmin@gmail.com^SUPERADMIN
+2025-03-26 15:05:20.256  INFO 11836 --- [http-nio-8080-exec-2] c.a.h.s.s.UserDetailsServiceImpl         : I am from loadUserByUsername() !!! 
+2025-03-26 15:05:20.257  INFO 11836 --- [http-nio-8080-exec-2] c.a.h.s.s.UserDetailsServiceImpl         : Email :- superadmin@gmail.com^SUPERADMIN, UserType from LoginConstants :- null
+2025-03-26 15:05:20.283 DEBUG 11836 --- [http-nio-8080-exec-2] org.hibernate.SQL                        : 
+    select
+        user0_.user_id as user_id1_11_,
+        user0_.created_by as created_2_11_,
+        user0_.current_address as current_3_11_,
+        user0_.dob as dob4_11_,
+        user0_.email_id as email_id5_11_,
+        user0_.emp_id as emp_id6_11_,
+        user0_.first_name as first_na7_11_,
+        user0_.gender as gender8_11_,
+        user0_.hospital_id as hospital9_11_,
+        user0_.last_name as last_na10_11_,
+        user0_.password as passwor11_11_,
+        user0_.phone_number as phone_n12_11_,
+        user0_.user_created_on as user_cr13_11_,
+        user0_.user_is_active as user_is14_11_,
+        user0_.user_name as user_na15_11_,
+        user0_.user_type as user_ty16_11_,
+        user0_.user_updated_by as user_up17_11_,
+        user0_.user_updated_on as user_up18_11_,
+        user0_.year_of_experience as year_of19_11_ 
+    from
+        users user0_ 
+    where
+        user0_.email_id=? 
+        and user0_.user_is_active=true
+2025-03-26 15:05:20.309 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [VARCHAR] - [superadmin@gmail.com]
+2025-03-26 15:05:20.337 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id1_11_] : [INTEGER]) - [1]
+2025-03-26 15:05:20.342 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_11_] : [INTEGER]) - [1]
+2025-03-26 15:05:20.342 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([current_3_11_] : [VARCHAR]) - [123 Main Street, City]
+2025-03-26 15:05:20.342 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([dob4_11_] : [VARCHAR]) - [null]
+2025-03-26 15:05:20.342 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([email_id5_11_] : [VARCHAR]) - [superadmin@gmail.com]
+2025-03-26 15:05:20.342 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([emp_id6_11_] : [VARCHAR]) - [EMP001]
+2025-03-26 15:05:20.343 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([first_na7_11_] : [VARCHAR]) - [Super]
+2025-03-26 15:05:20.343 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([gender8_11_] : [VARCHAR]) - [Male]
+2025-03-26 15:05:20.343 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([hospital9_11_] : [INTEGER]) - [98]
+2025-03-26 15:05:20.343 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([last_na10_11_] : [VARCHAR]) - [Admin]
+2025-03-26 15:05:20.343 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([passwor11_11_] : [VARCHAR]) - [$2a$10$jW52gOeK7kedxGaymQCXE.F40gQ.Bf8rxTBiiTcNTlAJL9jrgeHZ.]
+2025-03-26 15:05:20.343 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([phone_n12_11_] : [VARCHAR]) - [1234567890]
+2025-03-26 15:05:20.344 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_cr13_11_] : [TIMESTAMP]) - [2025-03-06 12:56:55.149]
+2025-03-26 15:05:20.345 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_is14_11_] : [BOOLEAN]) - [true]
+2025-03-26 15:05:20.345 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_na15_11_] : [VARCHAR]) - [Super Admin]
+2025-03-26 15:05:20.345 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_ty16_11_] : [VARCHAR]) - [SUPERADMIN]
+2025-03-26 15:05:20.345 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_up17_11_] : [INTEGER]) - [null]
+2025-03-26 15:05:20.345 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_up18_11_] : [TIMESTAMP]) - [2025-03-06 12:56:55.149]
+2025-03-26 15:05:20.346 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([year_of19_11_] : [VARCHAR]) - [null]
+2025-03-26 15:05:20.362  INFO 11836 --- [http-nio-8080-exec-2] c.a.h.s.s.UserDetailsServiceImpl         : User from DB --> 1 -- superadmin@gmail.com -- SUPERADMIN
+2025-03-26 15:05:20.374 DEBUG 11836 --- [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : GET "/auth/getUserDetailsByUserId?userId=29", parameters={masked}
+2025-03-26 15:05:20.379 DEBUG 11836 --- [http-nio-8080-exec-2] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.annular.healthCare.controller.AuthenticationController#getUserDetailsByUserId(Integer)
+2025-03-26 15:05:20.414 DEBUG 11836 --- [http-nio-8080-exec-2] org.hibernate.SQL                        : 
+    select
+        user0_.user_id as user_id1_11_0_,
+        user0_.created_by as created_2_11_0_,
+        user0_.current_address as current_3_11_0_,
+        user0_.dob as dob4_11_0_,
+        user0_.email_id as email_id5_11_0_,
+        user0_.emp_id as emp_id6_11_0_,
+        user0_.first_name as first_na7_11_0_,
+        user0_.gender as gender8_11_0_,
+        user0_.hospital_id as hospital9_11_0_,
+        user0_.last_name as last_na10_11_0_,
+        user0_.password as passwor11_11_0_,
+        user0_.phone_number as phone_n12_11_0_,
+        user0_.user_created_on as user_cr13_11_0_,
+        user0_.user_is_active as user_is14_11_0_,
+        user0_.user_name as user_na15_11_0_,
+        user0_.user_type as user_ty16_11_0_,
+        user0_.user_updated_by as user_up17_11_0_,
+        user0_.user_updated_on as user_up18_11_0_,
+        user0_.year_of_experience as year_of19_11_0_ 
+    from
+        users user0_ 
+    where
+        user0_.user_id=?
+2025-03-26 15:05:20.415 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [29]
+2025-03-26 15:05:20.443 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_11_0_] : [INTEGER]) - [1]
+2025-03-26 15:05:20.443 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([current_3_11_0_] : [VARCHAR]) - [tambaramn]
+2025-03-26 15:05:20.443 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([dob4_11_0_] : [VARCHAR]) - [null]
+2025-03-26 15:05:20.443 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([email_id5_11_0_] : [VARCHAR]) - [rrrg@gmail.com]
+2025-03-26 15:05:20.443 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([emp_id6_11_0_] : [VARCHAR]) - [as3m456]
+2025-03-26 15:05:20.443 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([first_na7_11_0_] : [VARCHAR]) - [doctor]
+2025-03-26 15:05:20.443 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([gender8_11_0_] : [VARCHAR]) - [Male]
+2025-03-26 15:05:20.443 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([hospital9_11_0_] : [INTEGER]) - [86]
+2025-03-26 15:05:20.443 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([last_na10_11_0_] : [VARCHAR]) - [ggg]
+2025-03-26 15:05:20.443 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([passwor11_11_0_] : [VARCHAR]) - [$2a$10$nCZISqPAcb4STkkRl.Awa.vHLjGaWNzrJGnSO08pWA0QBaiQHXCCC]
+2025-03-26 15:05:20.443 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([phone_n12_11_0_] : [VARCHAR]) - [7856658669]
+2025-03-26 15:05:20.443 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_cr13_11_0_] : [TIMESTAMP]) - [2025-03-07 23:46:04.972]
+2025-03-26 15:05:20.443 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_is14_11_0_] : [BOOLEAN]) - [false]
+2025-03-26 15:05:20.443 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_na15_11_0_] : [VARCHAR]) - [doctor ggg]
+2025-03-26 15:05:20.443 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_ty16_11_0_] : [VARCHAR]) - [Doctor]
+2025-03-26 15:05:20.443 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_up17_11_0_] : [INTEGER]) - [null]
+2025-03-26 15:05:20.444 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_up18_11_0_] : [TIMESTAMP]) - [2025-03-08 16:46:10.097]
+2025-03-26 15:05:20.444 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([year_of19_11_0_] : [VARCHAR]) - [null]
+2025-03-26 15:05:20.470 DEBUG 11836 --- [http-nio-8080-exec-2] org.hibernate.SQL                        : 
+    select
+        hospitalda0_.hospital_data_id as hospital1_7_,
+        hospitalda0_.created_by as created_2_7_,
+        hospitalda0_.current_address as current_3_7_,
+        hospitalda0_.email_id as email_id4_7_,
+        hospitalda0_.hospital_name as hospital5_7_,
+        hospitalda0_.phone_number as phone_nu6_7_,
+        hospitalda0_.user_created_on as user_cre7_7_,
+        hospitalda0_.user_is_active as user_is_8_7_,
+        hospitalda0_.user_updated_by as user_upd9_7_,
+        hospitalda0_.user_updated_on as user_up10_7_ 
+    from
+        hospital_data_list hospitalda0_ 
+    where
+        hospitalda0_.hospital_data_id=?
+2025-03-26 15:05:20.470 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [86]
+2025-03-26 15:05:20.497 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([hospital1_7_] : [INTEGER]) - [86]
+2025-03-26 15:05:20.498 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_7_] : [INTEGER]) - [1]
+2025-03-26 15:05:20.498 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([current_3_7_] : [VARCHAR]) - [nhjjj]
+2025-03-26 15:05:20.498 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([email_id4_7_] : [VARCHAR]) - [ddd@gmail.com]
+2025-03-26 15:05:20.498 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([hospital5_7_] : [VARCHAR]) - [Gems]
+2025-03-26 15:05:20.498 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([phone_nu6_7_] : [VARCHAR]) - [1111111111166]
+2025-03-26 15:05:20.498 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_cre7_7_] : [TIMESTAMP]) - [2025-03-07 23:00:34.414]
+2025-03-26 15:05:20.498 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_is_8_7_] : [BOOLEAN]) - [false]
+2025-03-26 15:05:20.498 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_upd9_7_] : [INTEGER]) - [1]
+2025-03-26 15:05:20.499 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_up10_7_] : [TIMESTAMP]) - [2025-03-10 14:36:58.497]
+2025-03-26 15:05:20.501 DEBUG 11836 --- [http-nio-8080-exec-2] org.hibernate.SQL                        : 
+    select
+        doctorrole0_.user_id as user_id8_1_0_,
+        doctorrole0_.doctor_role_id as doctor_r1_1_0_,
+        doctorrole0_.doctor_role_id as doctor_r1_1_1_,
+        doctorrole0_.created_by as created_2_1_1_,
+        doctorrole0_.role_id as role_id3_1_1_,
+        doctorrole0_.user_id as user_id8_1_1_,
+        doctorrole0_.user_created_on as user_cre4_1_1_,
+        doctorrole0_.user_is_active as user_is_5_1_1_,
+        doctorrole0_.user_updated_by as user_upd6_1_1_,
+        doctorrole0_.user_updated_on as user_upd7_1_1_ 
+    from
+        doctor_role doctorrole0_ 
+    where
+        doctorrole0_.user_id=?
+2025-03-26 15:05:20.502 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [29]
+2025-03-26 15:05:20.554 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_r1_1_1_] : [INTEGER]) - [12]
+2025-03-26 15:05:20.554 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_1_1_] : [INTEGER]) - [1]
+2025-03-26 15:05:20.554 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([role_id3_1_1_] : [INTEGER]) - [2]
+2025-03-26 15:05:20.554 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id8_1_1_] : [INTEGER]) - [29]
+2025-03-26 15:05:20.554 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_cre4_1_1_] : [TIMESTAMP]) - [2025-03-07 23:46:06.114]
+2025-03-26 15:05:20.554 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_is_5_1_1_] : [BOOLEAN]) - [false]
+2025-03-26 15:05:20.554 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_upd6_1_1_] : [INTEGER]) - [null]
+2025-03-26 15:05:20.554 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_upd7_1_1_] : [TIMESTAMP]) - [2025-03-08 16:46:10.254]
+2025-03-26 15:05:20.554 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id8_1_0_] : [INTEGER]) - [29]
+2025-03-26 15:05:20.555 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_r1_1_0_] : [INTEGER]) - [12]
+2025-03-26 15:05:20.555 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_r1_1_1_] : [INTEGER]) - [13]
+2025-03-26 15:05:20.555 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_1_1_] : [INTEGER]) - [1]
+2025-03-26 15:05:20.555 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([role_id3_1_1_] : [INTEGER]) - [3]
+2025-03-26 15:05:20.555 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id8_1_1_] : [INTEGER]) - [29]
+2025-03-26 15:05:20.555 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_cre4_1_1_] : [TIMESTAMP]) - [2025-03-07 23:46:06.119]
+2025-03-26 15:05:20.555 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_is_5_1_1_] : [BOOLEAN]) - [false]
+2025-03-26 15:05:20.555 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_upd6_1_1_] : [INTEGER]) - [null]
+2025-03-26 15:05:20.555 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_upd7_1_1_] : [TIMESTAMP]) - [2025-03-08 16:46:10.328]
+2025-03-26 15:05:20.555 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id8_1_0_] : [INTEGER]) - [29]
+2025-03-26 15:05:20.555 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_r1_1_0_] : [INTEGER]) - [13]
+2025-03-26 15:05:20.556 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_r1_1_1_] : [INTEGER]) - [14]
+2025-03-26 15:05:20.556 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_1_1_] : [INTEGER]) - [1]
+2025-03-26 15:05:20.556 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([role_id3_1_1_] : [INTEGER]) - [5]
+2025-03-26 15:05:20.556 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id8_1_1_] : [INTEGER]) - [29]
+2025-03-26 15:05:20.556 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_cre4_1_1_] : [TIMESTAMP]) - [2025-03-07 23:46:06.127]
+2025-03-26 15:05:20.556 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_is_5_1_1_] : [BOOLEAN]) - [false]
+2025-03-26 15:05:20.556 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_upd6_1_1_] : [INTEGER]) - [null]
+2025-03-26 15:05:20.556 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_upd7_1_1_] : [TIMESTAMP]) - [2025-03-08 16:46:10.396]
+2025-03-26 15:05:20.556 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id8_1_0_] : [INTEGER]) - [29]
+2025-03-26 15:05:20.556 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_r1_1_0_] : [INTEGER]) - [14]
+2025-03-26 15:05:20.558 DEBUG 11836 --- [http-nio-8080-exec-2] org.hibernate.SQL                        : 
+    select
+        mediafile0_.file_id as file_id1_8_,
+        mediafile0_.category as category2_8_,
+        mediafile0_.category_ref_id as category3_8_,
+        mediafile0_.file_created_by as file_cre4_8_,
+        mediafile0_.file_created_on as file_cre5_8_,
+        mediafile0_.file_domain_id as file_dom6_8_,
+        mediafile0_.file_domain_reference_id as file_dom7_8_,
+        mediafile0_.file_ids as file_ids8_8_,
+        mediafile0_.file_is_active as file_is_9_8_,
+        mediafile0_.file_name as file_na10_8_,
+        mediafile0_.file_original_name as file_or11_8_,
+        mediafile0_.file_path as file_pa12_8_,
+        mediafile0_.file_size as file_si13_8_,
+        mediafile0_.file_type as file_ty14_8_,
+        mediafile0_.file_updated_by as file_up15_8_,
+        mediafile0_.file_updated_on as file_up16_8_,
+        mediafile0_.user_id as user_id17_8_ 
+    from
+        media_files mediafile0_ 
+    where
+        mediafile0_.file_domain_id=? 
+        and mediafile0_.file_domain_reference_id=?
+2025-03-26 15:05:20.559 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [2]
+2025-03-26 15:05:20.559 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicBinder      : binding parameter [2] as [INTEGER] - [29]
+2025-03-26 15:05:20.583 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_id1_8_] : [INTEGER]) - [98]
+2025-03-26 15:05:20.583 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([category2_8_] : [VARCHAR]) - [null]
+2025-03-26 15:05:20.583 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([category3_8_] : [INTEGER]) - [null]
+2025-03-26 15:05:20.583 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_cre4_8_] : [INTEGER]) - [1]
+2025-03-26 15:05:20.584 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_cre5_8_] : [TIMESTAMP]) - [2025-03-07 23:46:04.977]
+2025-03-26 15:05:20.584 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_dom6_8_] : [INTEGER]) - [2]
+2025-03-26 15:05:20.584 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_dom7_8_] : [INTEGER]) - [29]
+2025-03-26 15:05:20.584 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_ids8_8_] : [VARCHAR]) - [null]
+2025-03-26 15:05:20.584 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_is_9_8_] : [BOOLEAN]) - [true]
+2025-03-26 15:05:20.584 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_na10_8_] : [VARCHAR]) - [db7a49f9-186a-46f8-8f7c-7c88888a99d5]
+2025-03-26 15:05:20.584 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_or11_8_] : [VARCHAR]) - [aadharCard.png]
+2025-03-26 15:05:20.584 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_pa12_8_] : [VARCHAR]) - [null]
+2025-03-26 15:05:20.584 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_si13_8_] : [VARCHAR]) - [5997]
+2025-03-26 15:05:20.584 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_ty14_8_] : [VARCHAR]) - [image/png]
+2025-03-26 15:05:20.584 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_up15_8_] : [INTEGER]) - [null]
+2025-03-26 15:05:20.585 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_up16_8_] : [TIMESTAMP]) - [2025-03-07 23:46:04.977]
+2025-03-26 15:05:20.585 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id17_8_] : [INTEGER]) - [null]
+2025-03-26 15:05:20.588 ERROR 11836 --- [http-nio-8080-exec-2] c.a.h.s.serviceImpl.AuthServiceImpl      : Error encoding file db7a49f9-186a-46f8-8f7c-7c88888a99d5: \home\ubuntu\HealthCare\images\ProfilePhoto\db7a49f9-186a-46f8-8f7c-7c88888a99d5
+2025-03-26 15:05:20.596 DEBUG 11836 --- [http-nio-8080-exec-2] org.hibernate.SQL                        : 
+    select
+        doctorslot0_.doctor_slot_id as doctor_s1_4_,
+        doctorslot0_.created_by as created_2_4_,
+        doctorslot0_.created_on as created_3_4_,
+        doctorslot0_.is_active as is_activ4_4_,
+        doctorslot0_.updated_by as updated_5_4_,
+        doctorslot0_.updated_on as updated_6_4_,
+        doctorslot0_.user_id as user_id7_4_ 
+    from
+        doctor_slot doctorslot0_ 
+    where
+        doctorslot0_.user_id=?
+2025-03-26 15:05:20.597 TRACE 11836 --- [http-nio-8080-exec-2] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [29]
+2025-03-26 15:05:20.634 DEBUG 11836 --- [http-nio-8080-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/json, application/*+json]
+2025-03-26 15:05:20.636 DEBUG 11836 --- [http-nio-8080-exec-2] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [{lastName=ggg, gender=Male, roles=[], emailId=rrrg@gmail.com, hospitalName=Gems, userName=doctor ggg (truncated)...]
+2025-03-26 15:05:20.678 DEBUG 11836 --- [http-nio-8080-exec-2] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2025-03-26 15:06:00.396  INFO 11836 --- [http-nio-8080-exec-3] com.annular.healthCare.security.MyCors   : Request URI -> null
+2025-03-26 15:06:00.397  INFO 11836 --- [http-nio-8080-exec-3] c.a.h.security.Jwt.AuthTokenFilter       : JWT from request :- eyJhbGciOiJIUzUxMiJ9.eyJ1c2VyRW1haWxJZCI6InN1cGVyYWRtaW5AZ21haWwuY29tIiwidXNlclR5cGUiOiJTVVBFUkFETUlOIiwiaWF0IjoxNzQyOTgxNzAxLCJleHAiOjE3NDI5ODIzMDF9.mzOXlK9Q7fAcgN5l00_joYT3_8TO7PEQxf9gQ23BTRMiDIbegP22sJ67xO-ZwQFosIjRQU4Xx8zDuUJ2TcanRw
+2025-03-26 15:06:00.398  INFO 11836 --- [http-nio-8080-exec-3] c.a.h.security.Jwt.AuthTokenFilter       : JWT available...
+2025-03-26 15:06:00.400  INFO 11836 --- [http-nio-8080-exec-3] c.a.h.security.Jwt.AuthTokenFilter       : Username with UserType : superadmin@gmail.com^SUPERADMIN
+2025-03-26 15:06:00.400  INFO 11836 --- [http-nio-8080-exec-3] c.a.h.s.s.UserDetailsServiceImpl         : I am from loadUserByUsername() !!! 
+2025-03-26 15:06:00.400  INFO 11836 --- [http-nio-8080-exec-3] c.a.h.s.s.UserDetailsServiceImpl         : Email :- superadmin@gmail.com^SUPERADMIN, UserType from LoginConstants :- null
+2025-03-26 15:06:00.402 DEBUG 11836 --- [http-nio-8080-exec-3] org.hibernate.SQL                        : 
+    select
+        user0_.user_id as user_id1_11_,
+        user0_.created_by as created_2_11_,
+        user0_.current_address as current_3_11_,
+        user0_.dob as dob4_11_,
+        user0_.email_id as email_id5_11_,
+        user0_.emp_id as emp_id6_11_,
+        user0_.first_name as first_na7_11_,
+        user0_.gender as gender8_11_,
+        user0_.hospital_id as hospital9_11_,
+        user0_.last_name as last_na10_11_,
+        user0_.password as passwor11_11_,
+        user0_.phone_number as phone_n12_11_,
+        user0_.user_created_on as user_cr13_11_,
+        user0_.user_is_active as user_is14_11_,
+        user0_.user_name as user_na15_11_,
+        user0_.user_type as user_ty16_11_,
+        user0_.user_updated_by as user_up17_11_,
+        user0_.user_updated_on as user_up18_11_,
+        user0_.year_of_experience as year_of19_11_ 
+    from
+        users user0_ 
+    where
+        user0_.email_id=? 
+        and user0_.user_is_active=true
+2025-03-26 15:06:00.428 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [VARCHAR] - [superadmin@gmail.com]
+2025-03-26 15:06:00.457 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id1_11_] : [INTEGER]) - [1]
+2025-03-26 15:06:00.457 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_11_] : [INTEGER]) - [1]
+2025-03-26 15:06:00.457 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([current_3_11_] : [VARCHAR]) - [123 Main Street, City]
+2025-03-26 15:06:00.457 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([dob4_11_] : [VARCHAR]) - [null]
+2025-03-26 15:06:00.457 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([email_id5_11_] : [VARCHAR]) - [superadmin@gmail.com]
+2025-03-26 15:06:00.457 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([emp_id6_11_] : [VARCHAR]) - [EMP001]
+2025-03-26 15:06:00.457 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([first_na7_11_] : [VARCHAR]) - [Super]
+2025-03-26 15:06:00.457 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([gender8_11_] : [VARCHAR]) - [Male]
+2025-03-26 15:06:00.457 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([hospital9_11_] : [INTEGER]) - [98]
+2025-03-26 15:06:00.457 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([last_na10_11_] : [VARCHAR]) - [Admin]
+2025-03-26 15:06:00.457 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([passwor11_11_] : [VARCHAR]) - [$2a$10$jW52gOeK7kedxGaymQCXE.F40gQ.Bf8rxTBiiTcNTlAJL9jrgeHZ.]
+2025-03-26 15:06:00.457 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([phone_n12_11_] : [VARCHAR]) - [1234567890]
+2025-03-26 15:06:00.457 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_cr13_11_] : [TIMESTAMP]) - [2025-03-06 12:56:55.149]
+2025-03-26 15:06:00.457 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_is14_11_] : [BOOLEAN]) - [true]
+2025-03-26 15:06:00.458 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_na15_11_] : [VARCHAR]) - [Super Admin]
+2025-03-26 15:06:00.458 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_ty16_11_] : [VARCHAR]) - [SUPERADMIN]
+2025-03-26 15:06:00.458 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_up17_11_] : [INTEGER]) - [null]
+2025-03-26 15:06:00.458 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_up18_11_] : [TIMESTAMP]) - [2025-03-06 12:56:55.149]
+2025-03-26 15:06:00.458 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([year_of19_11_] : [VARCHAR]) - [null]
+2025-03-26 15:06:00.458  INFO 11836 --- [http-nio-8080-exec-3] c.a.h.s.s.UserDetailsServiceImpl         : User from DB --> 1 -- superadmin@gmail.com -- SUPERADMIN
+2025-03-26 15:06:00.458 DEBUG 11836 --- [http-nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : GET "/auth/getUserDetailsByUserId?userId=100", parameters={masked}
+2025-03-26 15:06:00.459 DEBUG 11836 --- [http-nio-8080-exec-3] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.annular.healthCare.controller.AuthenticationController#getUserDetailsByUserId(Integer)
+2025-03-26 15:06:00.459 DEBUG 11836 --- [http-nio-8080-exec-3] org.hibernate.SQL                        : 
+    select
+        user0_.user_id as user_id1_11_0_,
+        user0_.created_by as created_2_11_0_,
+        user0_.current_address as current_3_11_0_,
+        user0_.dob as dob4_11_0_,
+        user0_.email_id as email_id5_11_0_,
+        user0_.emp_id as emp_id6_11_0_,
+        user0_.first_name as first_na7_11_0_,
+        user0_.gender as gender8_11_0_,
+        user0_.hospital_id as hospital9_11_0_,
+        user0_.last_name as last_na10_11_0_,
+        user0_.password as passwor11_11_0_,
+        user0_.phone_number as phone_n12_11_0_,
+        user0_.user_created_on as user_cr13_11_0_,
+        user0_.user_is_active as user_is14_11_0_,
+        user0_.user_name as user_na15_11_0_,
+        user0_.user_type as user_ty16_11_0_,
+        user0_.user_updated_by as user_up17_11_0_,
+        user0_.user_updated_on as user_up18_11_0_,
+        user0_.year_of_experience as year_of19_11_0_ 
+    from
+        users user0_ 
+    where
+        user0_.user_id=?
+2025-03-26 15:06:00.460 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [100]
+2025-03-26 15:06:00.486 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_11_0_] : [INTEGER]) - [1]
+2025-03-26 15:06:00.486 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([current_3_11_0_] : [VARCHAR]) - [chennaii]
+2025-03-26 15:06:00.486 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([dob4_11_0_] : [VARCHAR]) - [null]
+2025-03-26 15:06:00.486 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([email_id5_11_0_] : [VARCHAR]) - [karthik@gmail.com]
+2025-03-26 15:06:00.486 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([emp_id6_11_0_] : [VARCHAR]) - [Za123]
+2025-03-26 15:06:00.486 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([first_na7_11_0_] : [VARCHAR]) - [karthik ]
+2025-03-26 15:06:00.486 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([gender8_11_0_] : [VARCHAR]) - [Male]
+2025-03-26 15:06:00.487 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([hospital9_11_0_] : [INTEGER]) - [86]
+2025-03-26 15:06:00.487 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([last_na10_11_0_] : [VARCHAR]) - [raji]
+2025-03-26 15:06:00.487 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([passwor11_11_0_] : [VARCHAR]) - [$2a$10$U8LYgTeDiAgh16U0O1htturFh5VLb806r.PFywYjIz/TDeRRRHYQy]
+2025-03-26 15:06:00.487 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([phone_n12_11_0_] : [VARCHAR]) - [918798766787]
+2025-03-26 15:06:00.487 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_cr13_11_0_] : [TIMESTAMP]) - [2025-03-26 12:09:37.836]
+2025-03-26 15:06:00.487 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_is14_11_0_] : [BOOLEAN]) - [true]
+2025-03-26 15:06:00.487 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_na15_11_0_] : [VARCHAR]) - [karthik  raji]
+2025-03-26 15:06:00.487 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_ty16_11_0_] : [VARCHAR]) - [Doctor]
+2025-03-26 15:06:00.487 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_up17_11_0_] : [INTEGER]) - [null]
+2025-03-26 15:06:00.488 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_up18_11_0_] : [TIMESTAMP]) - [2025-03-26 12:09:37.836]
+2025-03-26 15:06:00.488 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([year_of19_11_0_] : [VARCHAR]) - [null]
+2025-03-26 15:06:00.511 DEBUG 11836 --- [http-nio-8080-exec-3] org.hibernate.SQL                        : 
+    select
+        hospitalda0_.hospital_data_id as hospital1_7_,
+        hospitalda0_.created_by as created_2_7_,
+        hospitalda0_.current_address as current_3_7_,
+        hospitalda0_.email_id as email_id4_7_,
+        hospitalda0_.hospital_name as hospital5_7_,
+        hospitalda0_.phone_number as phone_nu6_7_,
+        hospitalda0_.user_created_on as user_cre7_7_,
+        hospitalda0_.user_is_active as user_is_8_7_,
+        hospitalda0_.user_updated_by as user_upd9_7_,
+        hospitalda0_.user_updated_on as user_up10_7_ 
+    from
+        hospital_data_list hospitalda0_ 
+    where
+        hospitalda0_.hospital_data_id=?
+2025-03-26 15:06:00.511 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [86]
+2025-03-26 15:06:00.536 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([hospital1_7_] : [INTEGER]) - [86]
+2025-03-26 15:06:00.536 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_7_] : [INTEGER]) - [1]
+2025-03-26 15:06:00.536 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([current_3_7_] : [VARCHAR]) - [nhjjj]
+2025-03-26 15:06:00.536 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([email_id4_7_] : [VARCHAR]) - [ddd@gmail.com]
+2025-03-26 15:06:00.536 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([hospital5_7_] : [VARCHAR]) - [Gems]
+2025-03-26 15:06:00.536 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([phone_nu6_7_] : [VARCHAR]) - [1111111111166]
+2025-03-26 15:06:00.536 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_cre7_7_] : [TIMESTAMP]) - [2025-03-07 23:00:34.414]
+2025-03-26 15:06:00.536 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_is_8_7_] : [BOOLEAN]) - [false]
+2025-03-26 15:06:00.536 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_upd9_7_] : [INTEGER]) - [1]
+2025-03-26 15:06:00.536 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_up10_7_] : [TIMESTAMP]) - [2025-03-10 14:36:58.497]
+2025-03-26 15:06:00.537 DEBUG 11836 --- [http-nio-8080-exec-3] org.hibernate.SQL                        : 
+    select
+        doctorrole0_.user_id as user_id8_1_0_,
+        doctorrole0_.doctor_role_id as doctor_r1_1_0_,
+        doctorrole0_.doctor_role_id as doctor_r1_1_1_,
+        doctorrole0_.created_by as created_2_1_1_,
+        doctorrole0_.role_id as role_id3_1_1_,
+        doctorrole0_.user_id as user_id8_1_1_,
+        doctorrole0_.user_created_on as user_cre4_1_1_,
+        doctorrole0_.user_is_active as user_is_5_1_1_,
+        doctorrole0_.user_updated_by as user_upd6_1_1_,
+        doctorrole0_.user_updated_on as user_upd7_1_1_ 
+    from
+        doctor_role doctorrole0_ 
+    where
+        doctorrole0_.user_id=?
+2025-03-26 15:06:00.537 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [100]
+2025-03-26 15:06:00.560 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_r1_1_1_] : [INTEGER]) - [59]
+2025-03-26 15:06:00.560 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_1_1_] : [INTEGER]) - [1]
+2025-03-26 15:06:00.560 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([role_id3_1_1_] : [INTEGER]) - [21]
+2025-03-26 15:06:00.560 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id8_1_1_] : [INTEGER]) - [100]
+2025-03-26 15:06:00.560 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_cre4_1_1_] : [TIMESTAMP]) - [2025-03-26 12:09:37.867]
+2025-03-26 15:06:00.560 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_is_5_1_1_] : [BOOLEAN]) - [true]
+2025-03-26 15:06:00.561 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_upd6_1_1_] : [INTEGER]) - [null]
+2025-03-26 15:06:00.561 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_upd7_1_1_] : [TIMESTAMP]) - [2025-03-26 12:09:37.867]
+2025-03-26 15:06:00.561 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id8_1_0_] : [INTEGER]) - [100]
+2025-03-26 15:06:00.561 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_r1_1_0_] : [INTEGER]) - [59]
+2025-03-26 15:06:00.561 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_r1_1_1_] : [INTEGER]) - [60]
+2025-03-26 15:06:00.561 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_1_1_] : [INTEGER]) - [1]
+2025-03-26 15:06:00.561 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([role_id3_1_1_] : [INTEGER]) - [51]
+2025-03-26 15:06:00.561 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id8_1_1_] : [INTEGER]) - [100]
+2025-03-26 15:06:00.561 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_cre4_1_1_] : [TIMESTAMP]) - [2025-03-26 12:09:37.881]
+2025-03-26 15:06:00.561 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_is_5_1_1_] : [BOOLEAN]) - [true]
+2025-03-26 15:06:00.561 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_upd6_1_1_] : [INTEGER]) - [null]
+2025-03-26 15:06:00.561 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_upd7_1_1_] : [TIMESTAMP]) - [2025-03-26 12:09:37.881]
+2025-03-26 15:06:00.561 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id8_1_0_] : [INTEGER]) - [100]
+2025-03-26 15:06:00.561 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_r1_1_0_] : [INTEGER]) - [60]
+2025-03-26 15:06:00.562 DEBUG 11836 --- [http-nio-8080-exec-3] org.hibernate.SQL                        : 
+    select
+        doctorspec0_.specialty_name as col_0_0_ 
+    from
+        doctor_specialties doctorspec0_ 
+    where
+        doctorspec0_.doctor_specialties_id=?
+2025-03-26 15:06:00.563 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [21]
+2025-03-26 15:06:00.585 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([col_0_0_] : [VARCHAR]) - [Allergy and Immunology]
+2025-03-26 15:06:00.586 DEBUG 11836 --- [http-nio-8080-exec-3] org.hibernate.SQL                        : 
+    select
+        doctorspec0_.specialty_name as col_0_0_ 
+    from
+        doctor_specialties doctorspec0_ 
+    where
+        doctorspec0_.doctor_specialties_id=?
+2025-03-26 15:06:00.586 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [51]
+2025-03-26 15:06:00.609 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([col_0_0_] : [VARCHAR]) - [Adult Neurology]
+2025-03-26 15:06:00.609 DEBUG 11836 --- [http-nio-8080-exec-3] org.hibernate.SQL                        : 
+    select
+        mediafile0_.file_id as file_id1_8_,
+        mediafile0_.category as category2_8_,
+        mediafile0_.category_ref_id as category3_8_,
+        mediafile0_.file_created_by as file_cre4_8_,
+        mediafile0_.file_created_on as file_cre5_8_,
+        mediafile0_.file_domain_id as file_dom6_8_,
+        mediafile0_.file_domain_reference_id as file_dom7_8_,
+        mediafile0_.file_ids as file_ids8_8_,
+        mediafile0_.file_is_active as file_is_9_8_,
+        mediafile0_.file_name as file_na10_8_,
+        mediafile0_.file_original_name as file_or11_8_,
+        mediafile0_.file_path as file_pa12_8_,
+        mediafile0_.file_size as file_si13_8_,
+        mediafile0_.file_type as file_ty14_8_,
+        mediafile0_.file_updated_by as file_up15_8_,
+        mediafile0_.file_updated_on as file_up16_8_,
+        mediafile0_.user_id as user_id17_8_ 
+    from
+        media_files mediafile0_ 
+    where
+        mediafile0_.file_domain_id=? 
+        and mediafile0_.file_domain_reference_id=?
+2025-03-26 15:06:00.610 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [2]
+2025-03-26 15:06:00.610 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicBinder      : binding parameter [2] as [INTEGER] - [100]
+2025-03-26 15:06:00.645 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_id1_8_] : [INTEGER]) - [203]
+2025-03-26 15:06:00.645 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([category2_8_] : [VARCHAR]) - [patientDocument]
+2025-03-26 15:06:00.645 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([category3_8_] : [INTEGER]) - [null]
+2025-03-26 15:06:00.645 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_cre4_8_] : [INTEGER]) - [1]
+2025-03-26 15:06:00.645 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_cre5_8_] : [TIMESTAMP]) - [2025-03-26 12:09:37.851]
+2025-03-26 15:06:00.645 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_dom6_8_] : [INTEGER]) - [2]
+2025-03-26 15:06:00.646 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_dom7_8_] : [INTEGER]) - [100]
+2025-03-26 15:06:00.646 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_ids8_8_] : [VARCHAR]) - [null]
+2025-03-26 15:06:00.646 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_is_9_8_] : [BOOLEAN]) - [true]
+2025-03-26 15:06:00.646 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_na10_8_] : [VARCHAR]) - [3deba0bf-d775-4d39-ac87-c3da8d0cf232]
+2025-03-26 15:06:00.646 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_or11_8_] : [VARCHAR]) - [boldicon.png]
+2025-03-26 15:06:00.646 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_pa12_8_] : [VARCHAR]) - [null]
+2025-03-26 15:06:00.646 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_si13_8_] : [VARCHAR]) - [176882]
+2025-03-26 15:06:00.646 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_ty14_8_] : [VARCHAR]) - [image/png]
+2025-03-26 15:06:00.646 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_up15_8_] : [INTEGER]) - [null]
+2025-03-26 15:06:00.646 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([file_up16_8_] : [TIMESTAMP]) - [2025-03-26 12:09:37.851]
+2025-03-26 15:06:00.646 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id17_8_] : [INTEGER]) - [100]
+2025-03-26 15:06:00.647 ERROR 11836 --- [http-nio-8080-exec-3] c.a.h.s.serviceImpl.AuthServiceImpl      : Error encoding file 3deba0bf-d775-4d39-ac87-c3da8d0cf232: \home\ubuntu\HealthCare\images\ProfilePhoto\3deba0bf-d775-4d39-ac87-c3da8d0cf232
+2025-03-26 15:06:00.647 DEBUG 11836 --- [http-nio-8080-exec-3] org.hibernate.SQL                        : 
+    select
+        doctorslot0_.doctor_slot_id as doctor_s1_4_,
+        doctorslot0_.created_by as created_2_4_,
+        doctorslot0_.created_on as created_3_4_,
+        doctorslot0_.is_active as is_activ4_4_,
+        doctorslot0_.updated_by as updated_5_4_,
+        doctorslot0_.updated_on as updated_6_4_,
+        doctorslot0_.user_id as user_id7_4_ 
+    from
+        doctor_slot doctorslot0_ 
+    where
+        doctorslot0_.user_id=?
+2025-03-26 15:06:00.648 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [100]
+2025-03-26 15:06:00.671 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_s1_4_] : [INTEGER]) - [24]
+2025-03-26 15:06:00.671 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_4_] : [INTEGER]) - [1]
+2025-03-26 15:06:00.671 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_3_4_] : [TIMESTAMP]) - [2025-03-26 12:09:37.895]
+2025-03-26 15:06:00.671 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([is_activ4_4_] : [BOOLEAN]) - [true]
+2025-03-26 15:06:00.671 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_5_4_] : [INTEGER]) - [null]
+2025-03-26 15:06:00.671 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_6_4_] : [TIMESTAMP]) - [2025-03-26 12:09:37.895]
+2025-03-26 15:06:00.671 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id7_4_] : [INTEGER]) - [100]
+2025-03-26 15:06:00.673 DEBUG 11836 --- [http-nio-8080-exec-3] org.hibernate.SQL                        : 
+    select
+        doctordays0_.doctor_day_slot_id as doctor_d1_3_,
+        doctordays0_.created_by as created_2_3_,
+        doctordays0_.created_on as created_3_3_,
+        doctordays0_.day as day4_3_,
+        doctordays0_.doctor_slot_id as doctor_10_3_,
+        doctordays0_.end_slot_date as end_slot5_3_,
+        doctordays0_.is_active as is_activ6_3_,
+        doctordays0_.start_slot_date as start_sl7_3_,
+        doctordays0_.updated_by as updated_8_3_,
+        doctordays0_.updated_on as updated_9_3_ 
+    from
+        doctor_day_slot doctordays0_ 
+    where
+        doctordays0_.doctor_slot_id=?
+2025-03-26 15:06:00.674 TRACE 11836 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [24]
+2025-03-26 15:06:00.697 DEBUG 11836 --- [http-nio-8080-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/json, application/*+json]
+2025-03-26 15:06:00.697 DEBUG 11836 --- [http-nio-8080-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [{lastName=raji, gender=Male, roles=[{specialtyName=Allergy and Immunology, roleId=21}, {specialtyNam (truncated)...]
+2025-03-26 15:06:00.698 DEBUG 11836 --- [http-nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2025-03-26 15:07:21.595  INFO 11836 --- [http-nio-8080-exec-6] com.annular.healthCare.security.MyCors   : Request URI -> null
+2025-03-26 15:07:21.596  INFO 11836 --- [http-nio-8080-exec-6] c.a.h.security.Jwt.AuthTokenFilter       : JWT from request :- eyJhbGciOiJIUzUxMiJ9.eyJ1c2VyRW1haWxJZCI6InN1cGVyYWRtaW5AZ21haWwuY29tIiwidXNlclR5cGUiOiJTVVBFUkFETUlOIiwiaWF0IjoxNzQyOTgxNzAxLCJleHAiOjE3NDI5ODIzMDF9.mzOXlK9Q7fAcgN5l00_joYT3_8TO7PEQxf9gQ23BTRMiDIbegP22sJ67xO-ZwQFosIjRQU4Xx8zDuUJ2TcanRw
+2025-03-26 15:07:21.597  INFO 11836 --- [http-nio-8080-exec-6] c.a.h.security.Jwt.AuthTokenFilter       : JWT available...
+2025-03-26 15:07:21.598  INFO 11836 --- [http-nio-8080-exec-6] c.a.h.security.Jwt.AuthTokenFilter       : Username with UserType : superadmin@gmail.com^SUPERADMIN
+2025-03-26 15:07:21.598  INFO 11836 --- [http-nio-8080-exec-6] c.a.h.s.s.UserDetailsServiceImpl         : I am from loadUserByUsername() !!! 
+2025-03-26 15:07:21.598  INFO 11836 --- [http-nio-8080-exec-6] c.a.h.s.s.UserDetailsServiceImpl         : Email :- superadmin@gmail.com^SUPERADMIN, UserType from LoginConstants :- null
+2025-03-26 15:07:21.598 DEBUG 11836 --- [http-nio-8080-exec-6] org.hibernate.SQL                        : 
+    select
+        user0_.user_id as user_id1_11_,
+        user0_.created_by as created_2_11_,
+        user0_.current_address as current_3_11_,
+        user0_.dob as dob4_11_,
+        user0_.email_id as email_id5_11_,
+        user0_.emp_id as emp_id6_11_,
+        user0_.first_name as first_na7_11_,
+        user0_.gender as gender8_11_,
+        user0_.hospital_id as hospital9_11_,
+        user0_.last_name as last_na10_11_,
+        user0_.password as passwor11_11_,
+        user0_.phone_number as phone_n12_11_,
+        user0_.user_created_on as user_cr13_11_,
+        user0_.user_is_active as user_is14_11_,
+        user0_.user_name as user_na15_11_,
+        user0_.user_type as user_ty16_11_,
+        user0_.user_updated_by as user_up17_11_,
+        user0_.user_updated_on as user_up18_11_,
+        user0_.year_of_experience as year_of19_11_ 
+    from
+        users user0_ 
+    where
+        user0_.email_id=? 
+        and user0_.user_is_active=true
+2025-03-26 15:07:21.624 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [VARCHAR] - [superadmin@gmail.com]
+2025-03-26 15:07:21.647 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id1_11_] : [INTEGER]) - [1]
+2025-03-26 15:07:21.647 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_11_] : [INTEGER]) - [1]
+2025-03-26 15:07:21.647 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([current_3_11_] : [VARCHAR]) - [123 Main Street, City]
+2025-03-26 15:07:21.647 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([dob4_11_] : [VARCHAR]) - [null]
+2025-03-26 15:07:21.647 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([email_id5_11_] : [VARCHAR]) - [superadmin@gmail.com]
+2025-03-26 15:07:21.647 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([emp_id6_11_] : [VARCHAR]) - [EMP001]
+2025-03-26 15:07:21.647 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([first_na7_11_] : [VARCHAR]) - [Super]
+2025-03-26 15:07:21.647 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([gender8_11_] : [VARCHAR]) - [Male]
+2025-03-26 15:07:21.647 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([hospital9_11_] : [INTEGER]) - [98]
+2025-03-26 15:07:21.648 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([last_na10_11_] : [VARCHAR]) - [Admin]
+2025-03-26 15:07:21.648 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([passwor11_11_] : [VARCHAR]) - [$2a$10$jW52gOeK7kedxGaymQCXE.F40gQ.Bf8rxTBiiTcNTlAJL9jrgeHZ.]
+2025-03-26 15:07:21.648 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([phone_n12_11_] : [VARCHAR]) - [1234567890]
+2025-03-26 15:07:21.648 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_cr13_11_] : [TIMESTAMP]) - [2025-03-06 12:56:55.149]
+2025-03-26 15:07:21.648 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_is14_11_] : [BOOLEAN]) - [true]
+2025-03-26 15:07:21.648 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_na15_11_] : [VARCHAR]) - [Super Admin]
+2025-03-26 15:07:21.648 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_ty16_11_] : [VARCHAR]) - [SUPERADMIN]
+2025-03-26 15:07:21.648 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_up17_11_] : [INTEGER]) - [null]
+2025-03-26 15:07:21.648 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_up18_11_] : [TIMESTAMP]) - [2025-03-06 12:56:55.149]
+2025-03-26 15:07:21.648 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([year_of19_11_] : [VARCHAR]) - [null]
+2025-03-26 15:07:21.648  INFO 11836 --- [http-nio-8080-exec-6] c.a.h.s.s.UserDetailsServiceImpl         : User from DB --> 1 -- superadmin@gmail.com -- SUPERADMIN
+2025-03-26 15:07:21.649 DEBUG 11836 --- [http-nio-8080-exec-6] o.s.web.servlet.DispatcherServlet        : GET "/auth/getUserDetailsByUserId?userId=98", parameters={masked}
+2025-03-26 15:07:21.649 DEBUG 11836 --- [http-nio-8080-exec-6] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.annular.healthCare.controller.AuthenticationController#getUserDetailsByUserId(Integer)
+2025-03-26 15:07:21.650 DEBUG 11836 --- [http-nio-8080-exec-6] org.hibernate.SQL                        : 
+    select
+        user0_.user_id as user_id1_11_0_,
+        user0_.created_by as created_2_11_0_,
+        user0_.current_address as current_3_11_0_,
+        user0_.dob as dob4_11_0_,
+        user0_.email_id as email_id5_11_0_,
+        user0_.emp_id as emp_id6_11_0_,
+        user0_.first_name as first_na7_11_0_,
+        user0_.gender as gender8_11_0_,
+        user0_.hospital_id as hospital9_11_0_,
+        user0_.last_name as last_na10_11_0_,
+        user0_.password as passwor11_11_0_,
+        user0_.phone_number as phone_n12_11_0_,
+        user0_.user_created_on as user_cr13_11_0_,
+        user0_.user_is_active as user_is14_11_0_,
+        user0_.user_name as user_na15_11_0_,
+        user0_.user_type as user_ty16_11_0_,
+        user0_.user_updated_by as user_up17_11_0_,
+        user0_.user_updated_on as user_up18_11_0_,
+        user0_.year_of_experience as year_of19_11_0_ 
+    from
+        users user0_ 
+    where
+        user0_.user_id=?
+2025-03-26 15:07:21.650 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [98]
+2025-03-26 15:07:21.674 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_11_0_] : [INTEGER]) - [1]
+2025-03-26 15:07:21.674 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([current_3_11_0_] : [VARCHAR]) - [New York]
+2025-03-26 15:07:21.674 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([dob4_11_0_] : [VARCHAR]) - [null]
+2025-03-26 15:07:21.674 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([email_id5_11_0_] : [VARCHAR]) - [docttoonnr@example.com]
+2025-03-26 15:07:21.674 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([emp_id6_11_0_] : [VARCHAR]) - [D1234]
+2025-03-26 15:07:21.674 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([first_na7_11_0_] : [VARCHAR]) - [Joohhnn]
+2025-03-26 15:07:21.674 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([gender8_11_0_] : [VARCHAR]) - [Male]
+2025-03-26 15:07:21.674 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([hospital9_11_0_] : [INTEGER]) - [86]
+2025-03-26 15:07:21.675 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([last_na10_11_0_] : [VARCHAR]) - [Doe]
+2025-03-26 15:07:21.675 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([passwor11_11_0_] : [VARCHAR]) - [$2a$10$ygQDpM4IB.1Jn.5Tk30lXuVD7IgdFGaLCfmr49sAkE6yzSQ0f4Mm6]
+2025-03-26 15:07:21.675 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([phone_n12_11_0_] : [VARCHAR]) - [9876543210]
+2025-03-26 15:07:21.675 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_cr13_11_0_] : [TIMESTAMP]) - [2025-03-26 11:45:26.519]
+2025-03-26 15:07:21.675 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_is14_11_0_] : [BOOLEAN]) - [false]
+2025-03-26 15:07:21.675 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_na15_11_0_] : [VARCHAR]) - [Joohhnn Doe]
+2025-03-26 15:07:21.675 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_ty16_11_0_] : [VARCHAR]) - [Doctor]
+2025-03-26 15:07:21.675 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_up17_11_0_] : [INTEGER]) - [null]
+2025-03-26 15:07:21.675 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_up18_11_0_] : [TIMESTAMP]) - [2025-03-26 11:47:47.43]
+2025-03-26 15:07:21.675 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([year_of19_11_0_] : [VARCHAR]) - [99]
+2025-03-26 15:07:21.703 DEBUG 11836 --- [http-nio-8080-exec-6] org.hibernate.SQL                        : 
+    select
+        hospitalda0_.hospital_data_id as hospital1_7_,
+        hospitalda0_.created_by as created_2_7_,
+        hospitalda0_.current_address as current_3_7_,
+        hospitalda0_.email_id as email_id4_7_,
+        hospitalda0_.hospital_name as hospital5_7_,
+        hospitalda0_.phone_number as phone_nu6_7_,
+        hospitalda0_.user_created_on as user_cre7_7_,
+        hospitalda0_.user_is_active as user_is_8_7_,
+        hospitalda0_.user_updated_by as user_upd9_7_,
+        hospitalda0_.user_updated_on as user_up10_7_ 
+    from
+        hospital_data_list hospitalda0_ 
+    where
+        hospitalda0_.hospital_data_id=?
+2025-03-26 15:07:21.703 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [86]
+2025-03-26 15:07:21.727 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([hospital1_7_] : [INTEGER]) - [86]
+2025-03-26 15:07:21.727 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_7_] : [INTEGER]) - [1]
+2025-03-26 15:07:21.727 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([current_3_7_] : [VARCHAR]) - [nhjjj]
+2025-03-26 15:07:21.727 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([email_id4_7_] : [VARCHAR]) - [ddd@gmail.com]
+2025-03-26 15:07:21.727 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([hospital5_7_] : [VARCHAR]) - [Gems]
+2025-03-26 15:07:21.727 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([phone_nu6_7_] : [VARCHAR]) - [1111111111166]
+2025-03-26 15:07:21.727 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_cre7_7_] : [TIMESTAMP]) - [2025-03-07 23:00:34.414]
+2025-03-26 15:07:21.727 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_is_8_7_] : [BOOLEAN]) - [false]
+2025-03-26 15:07:21.727 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_upd9_7_] : [INTEGER]) - [1]
+2025-03-26 15:07:21.727 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_up10_7_] : [TIMESTAMP]) - [2025-03-10 14:36:58.497]
+2025-03-26 15:07:21.728 DEBUG 11836 --- [http-nio-8080-exec-6] org.hibernate.SQL                        : 
+    select
+        doctorrole0_.user_id as user_id8_1_0_,
+        doctorrole0_.doctor_role_id as doctor_r1_1_0_,
+        doctorrole0_.doctor_role_id as doctor_r1_1_1_,
+        doctorrole0_.created_by as created_2_1_1_,
+        doctorrole0_.role_id as role_id3_1_1_,
+        doctorrole0_.user_id as user_id8_1_1_,
+        doctorrole0_.user_created_on as user_cre4_1_1_,
+        doctorrole0_.user_is_active as user_is_5_1_1_,
+        doctorrole0_.user_updated_by as user_upd6_1_1_,
+        doctorrole0_.user_updated_on as user_upd7_1_1_ 
+    from
+        doctor_role doctorrole0_ 
+    where
+        doctorrole0_.user_id=?
+2025-03-26 15:07:21.728 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [98]
+2025-03-26 15:07:21.760 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_r1_1_1_] : [INTEGER]) - [58]
+2025-03-26 15:07:21.760 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_1_1_] : [INTEGER]) - [1]
+2025-03-26 15:07:21.760 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([role_id3_1_1_] : [INTEGER]) - [42]
+2025-03-26 15:07:21.760 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id8_1_1_] : [INTEGER]) - [98]
+2025-03-26 15:07:21.760 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_cre4_1_1_] : [TIMESTAMP]) - [2025-03-26 11:45:26.523]
+2025-03-26 15:07:21.760 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_is_5_1_1_] : [BOOLEAN]) - [false]
+2025-03-26 15:07:21.760 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_upd6_1_1_] : [INTEGER]) - [null]
+2025-03-26 15:07:21.760 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_upd7_1_1_] : [TIMESTAMP]) - [2025-03-26 11:47:47.44]
+2025-03-26 15:07:21.760 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id8_1_0_] : [INTEGER]) - [98]
+2025-03-26 15:07:21.761 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_r1_1_0_] : [INTEGER]) - [58]
+2025-03-26 15:07:21.761 DEBUG 11836 --- [http-nio-8080-exec-6] org.hibernate.SQL                        : 
+    select
+        mediafile0_.file_id as file_id1_8_,
+        mediafile0_.category as category2_8_,
+        mediafile0_.category_ref_id as category3_8_,
+        mediafile0_.file_created_by as file_cre4_8_,
+        mediafile0_.file_created_on as file_cre5_8_,
+        mediafile0_.file_domain_id as file_dom6_8_,
+        mediafile0_.file_domain_reference_id as file_dom7_8_,
+        mediafile0_.file_ids as file_ids8_8_,
+        mediafile0_.file_is_active as file_is_9_8_,
+        mediafile0_.file_name as file_na10_8_,
+        mediafile0_.file_original_name as file_or11_8_,
+        mediafile0_.file_path as file_pa12_8_,
+        mediafile0_.file_size as file_si13_8_,
+        mediafile0_.file_type as file_ty14_8_,
+        mediafile0_.file_updated_by as file_up15_8_,
+        mediafile0_.file_updated_on as file_up16_8_,
+        mediafile0_.user_id as user_id17_8_ 
+    from
+        media_files mediafile0_ 
+    where
+        mediafile0_.file_domain_id=? 
+        and mediafile0_.file_domain_reference_id=?
+2025-03-26 15:07:21.762 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [2]
+2025-03-26 15:07:21.762 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicBinder      : binding parameter [2] as [INTEGER] - [98]
+2025-03-26 15:07:21.786 DEBUG 11836 --- [http-nio-8080-exec-6] org.hibernate.SQL                        : 
+    select
+        doctorslot0_.doctor_slot_id as doctor_s1_4_,
+        doctorslot0_.created_by as created_2_4_,
+        doctorslot0_.created_on as created_3_4_,
+        doctorslot0_.is_active as is_activ4_4_,
+        doctorslot0_.updated_by as updated_5_4_,
+        doctorslot0_.updated_on as updated_6_4_,
+        doctorslot0_.user_id as user_id7_4_ 
+    from
+        doctor_slot doctorslot0_ 
+    where
+        doctorslot0_.user_id=?
+2025-03-26 15:07:21.787 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [98]
+2025-03-26 15:07:21.813 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_s1_4_] : [INTEGER]) - [22]
+2025-03-26 15:07:21.813 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_4_] : [INTEGER]) - [1]
+2025-03-26 15:07:21.813 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_3_4_] : [TIMESTAMP]) - [2025-03-26 11:45:26.527]
+2025-03-26 15:07:21.813 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([is_activ4_4_] : [BOOLEAN]) - [true]
+2025-03-26 15:07:21.814 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_5_4_] : [INTEGER]) - [null]
+2025-03-26 15:07:21.814 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_6_4_] : [TIMESTAMP]) - [2025-03-26 11:45:26.527]
+2025-03-26 15:07:21.814 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id7_4_] : [INTEGER]) - [98]
+2025-03-26 15:07:21.815 DEBUG 11836 --- [http-nio-8080-exec-6] org.hibernate.SQL                        : 
+    select
+        doctordays0_.doctor_day_slot_id as doctor_d1_3_,
+        doctordays0_.created_by as created_2_3_,
+        doctordays0_.created_on as created_3_3_,
+        doctordays0_.day as day4_3_,
+        doctordays0_.doctor_slot_id as doctor_10_3_,
+        doctordays0_.end_slot_date as end_slot5_3_,
+        doctordays0_.is_active as is_activ6_3_,
+        doctordays0_.start_slot_date as start_sl7_3_,
+        doctordays0_.updated_by as updated_8_3_,
+        doctordays0_.updated_on as updated_9_3_ 
+    from
+        doctor_day_slot doctordays0_ 
+    where
+        doctordays0_.doctor_slot_id=?
+2025-03-26 15:07:21.815 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [22]
+2025-03-26 15:07:21.871 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_d1_3_] : [INTEGER]) - [27]
+2025-03-26 15:07:21.871 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_3_] : [INTEGER]) - [1]
+2025-03-26 15:07:21.871 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_3_3_] : [TIMESTAMP]) - [2025-03-26 11:45:26.53]
+2025-03-26 15:07:21.871 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([day4_3_] : [VARCHAR]) - [Monday]
+2025-03-26 15:07:21.871 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_10_3_] : [INTEGER]) - [22]
+2025-03-26 15:07:21.871 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([end_slot5_3_] : [TIMESTAMP]) - [2024-04-30 00:00:00.0]
+2025-03-26 15:07:21.871 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([is_activ6_3_] : [BOOLEAN]) - [true]
+2025-03-26 15:07:21.872 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([start_sl7_3_] : [TIMESTAMP]) - [2024-04-01 00:00:00.0]
+2025-03-26 15:07:21.872 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_8_3_] : [INTEGER]) - [null]
+2025-03-26 15:07:21.872 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_9_3_] : [TIMESTAMP]) - [2025-03-26 11:45:26.53]
+2025-03-26 15:07:21.872 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_d1_3_] : [INTEGER]) - [28]
+2025-03-26 15:07:21.872 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_3_] : [INTEGER]) - [1]
+2025-03-26 15:07:21.872 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_3_3_] : [TIMESTAMP]) - [2025-03-26 11:45:26.54]
+2025-03-26 15:07:21.872 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([day4_3_] : [VARCHAR]) - [Wednesday]
+2025-03-26 15:07:21.872 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_10_3_] : [INTEGER]) - [22]
+2025-03-26 15:07:21.872 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([end_slot5_3_] : [TIMESTAMP]) - [2024-04-30 00:00:00.0]
+2025-03-26 15:07:21.872 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([is_activ6_3_] : [BOOLEAN]) - [true]
+2025-03-26 15:07:21.872 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([start_sl7_3_] : [TIMESTAMP]) - [2024-04-01 00:00:00.0]
+2025-03-26 15:07:21.872 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_8_3_] : [INTEGER]) - [null]
+2025-03-26 15:07:21.872 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_9_3_] : [TIMESTAMP]) - [2025-03-26 11:45:26.54]
+2025-03-26 15:07:21.875 DEBUG 11836 --- [http-nio-8080-exec-6] org.hibernate.SQL                        : 
+    select
+        doctorslot0_.doctor_slot_time_id as doctor_s1_5_,
+        doctorslot0_.created_by as created_2_5_,
+        doctorslot0_.created_on as created_3_5_,
+        doctorslot0_.doctor_day_slot_id as doctor_10_5_,
+        doctorslot0_.is_active as is_activ4_5_,
+        doctorslot0_.slot_end_time as slot_end5_5_,
+        doctorslot0_.slot_start_time as slot_sta6_5_,
+        doctorslot0_.slot_time as slot_tim7_5_,
+        doctorslot0_.updated_by as updated_8_5_,
+        doctorslot0_.updated_on as updated_9_5_ 
+    from
+        doctor_slot_time doctorslot0_ 
+    where
+        doctorslot0_.doctor_day_slot_id=?
+2025-03-26 15:07:21.875 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [27]
+2025-03-26 15:07:21.899 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_s1_5_] : [INTEGER]) - [44]
+2025-03-26 15:07:21.899 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_5_] : [INTEGER]) - [1]
+2025-03-26 15:07:21.899 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_3_5_] : [TIMESTAMP]) - [2025-03-26 11:45:26.533]
+2025-03-26 15:07:21.899 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_10_5_] : [INTEGER]) - [27]
+2025-03-26 15:07:21.899 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([is_activ4_5_] : [BOOLEAN]) - [true]
+2025-03-26 15:07:21.899 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([slot_end5_5_] : [VARCHAR]) - [10:00 AM]
+2025-03-26 15:07:21.899 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([slot_sta6_5_] : [VARCHAR]) - [08:00 AM]
+2025-03-26 15:07:21.900 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([slot_tim7_5_] : [VARCHAR]) - [30 mins]
+2025-03-26 15:07:21.900 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_8_5_] : [INTEGER]) - [null]
+2025-03-26 15:07:21.900 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_9_5_] : [TIMESTAMP]) - [2025-03-26 11:45:26.533]
+2025-03-26 15:07:21.900 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_s1_5_] : [INTEGER]) - [45]
+2025-03-26 15:07:21.900 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_5_] : [INTEGER]) - [1]
+2025-03-26 15:07:21.900 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_3_5_] : [TIMESTAMP]) - [2025-03-26 11:45:26.536]
+2025-03-26 15:07:21.900 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_10_5_] : [INTEGER]) - [27]
+2025-03-26 15:07:21.900 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([is_activ4_5_] : [BOOLEAN]) - [true]
+2025-03-26 15:07:21.900 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([slot_end5_5_] : [VARCHAR]) - [04:00 PM]
+2025-03-26 15:07:21.900 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([slot_sta6_5_] : [VARCHAR]) - [02:00 PM]
+2025-03-26 15:07:21.900 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([slot_tim7_5_] : [VARCHAR]) - [30 mins]
+2025-03-26 15:07:21.900 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_8_5_] : [INTEGER]) - [null]
+2025-03-26 15:07:21.900 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_9_5_] : [TIMESTAMP]) - [2025-03-26 11:45:26.536]
+2025-03-26 15:07:21.901 DEBUG 11836 --- [http-nio-8080-exec-6] org.hibernate.SQL                        : 
+    select
+        doctorslot0_.doctor_slot_time_id as doctor_s1_5_,
+        doctorslot0_.created_by as created_2_5_,
+        doctorslot0_.created_on as created_3_5_,
+        doctorslot0_.doctor_day_slot_id as doctor_10_5_,
+        doctorslot0_.is_active as is_activ4_5_,
+        doctorslot0_.slot_end_time as slot_end5_5_,
+        doctorslot0_.slot_start_time as slot_sta6_5_,
+        doctorslot0_.slot_time as slot_tim7_5_,
+        doctorslot0_.updated_by as updated_8_5_,
+        doctorslot0_.updated_on as updated_9_5_ 
+    from
+        doctor_slot_time doctorslot0_ 
+    where
+        doctorslot0_.doctor_day_slot_id=?
+2025-03-26 15:07:21.901 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [28]
+2025-03-26 15:07:21.925 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_s1_5_] : [INTEGER]) - [46]
+2025-03-26 15:07:21.925 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_5_] : [INTEGER]) - [1]
+2025-03-26 15:07:21.925 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_3_5_] : [TIMESTAMP]) - [2025-03-26 11:45:26.543]
+2025-03-26 15:07:21.925 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_10_5_] : [INTEGER]) - [28]
+2025-03-26 15:07:21.926 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([is_activ4_5_] : [BOOLEAN]) - [true]
+2025-03-26 15:07:21.926 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([slot_end5_5_] : [VARCHAR]) - [11:00 AM]
+2025-03-26 15:07:21.926 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([slot_sta6_5_] : [VARCHAR]) - [09:00 AM]
+2025-03-26 15:07:21.926 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([slot_tim7_5_] : [VARCHAR]) - [30 mins]
+2025-03-26 15:07:21.926 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_8_5_] : [INTEGER]) - [null]
+2025-03-26 15:07:21.926 TRACE 11836 --- [http-nio-8080-exec-6] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_9_5_] : [TIMESTAMP]) - [2025-03-26 11:45:26.543]
+2025-03-26 15:07:21.927 DEBUG 11836 --- [http-nio-8080-exec-6] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/json, application/*+json]
+2025-03-26 15:07:21.927 DEBUG 11836 --- [http-nio-8080-exec-6] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [{lastName=Doe, gender=Male, roles=[], emailId=docttoonnr@example.com, hospitalName=Gems, userName=Jo (truncated)...]
+2025-03-26 15:07:21.930 DEBUG 11836 --- [http-nio-8080-exec-6] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2025-03-26 15:13:29.887  INFO 11836 --- [RMI TCP Connection(11)-127.0.0.1] inMXBeanRegistrar$SpringApplicationAdmin : Application shutdown requested.
+2025-03-26 15:13:29.902  INFO 11836 --- [RMI TCP Connection(11)-127.0.0.1] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
+2025-03-26 15:13:29.918  INFO 11836 --- [RMI TCP Connection(11)-127.0.0.1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Destroying Spring FrameworkServlet 'dispatcherServlet'
+2025-03-26 15:13:29.918  WARN 11836 --- [RMI TCP Connection(11)-127.0.0.1] o.a.c.loader.WebappClassLoaderBase       : The web application [ROOT] appears to have started a thread named [HikariPool-1 housekeeper] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:
+ java.base@17.0.4.1/jdk.internal.misc.Unsafe.park(Native Method)
+ java.base@17.0.4.1/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:252)
+ java.base@17.0.4.1/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitNanos(AbstractQueuedSynchronizer.java:1672)
+ java.base@17.0.4.1/java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:1182)
+ java.base@17.0.4.1/java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:899)
+ java.base@17.0.4.1/java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1062)
+ java.base@17.0.4.1/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1122)
+ java.base@17.0.4.1/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+ java.base@17.0.4.1/java.lang.Thread.run(Thread.java:833)
+2025-03-26 15:13:29.918  INFO 11836 --- [RMI TCP Connection(11)-127.0.0.1] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-03-26 15:13:29.918  INFO 11836 --- [RMI TCP Connection(11)-127.0.0.1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2025-03-26 15:13:30.059  INFO 11836 --- [RMI TCP Connection(11)-127.0.0.1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2025-03-26 15:28:40.395  INFO 4784 --- [main] c.a.healthCare.HealthCareApplication     : Starting HealthCareApplication using Java 17.0.4.1 on Annular with PID 4784 (C:\Users\Benisha\git\HealthCares\HealthCare\target\classes started by Benisha in C:\Users\Benisha\git\HealthCares\HealthCare)
+2025-03-26 15:28:40.398  INFO 4784 --- [main] c.a.healthCare.HealthCareApplication     : No active profile set, falling back to 1 default profile: "default"
+2025-03-26 15:28:41.052  INFO 4784 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-03-26 15:28:41.162  INFO 4784 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 100 ms. Found 11 JPA repository interfaces.
+2025-03-26 15:28:41.689  INFO 4784 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)
+2025-03-26 15:28:41.698  INFO 4784 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-03-26 15:28:41.698  INFO 4784 --- [main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.71]
+2025-03-26 15:28:41.822  INFO 4784 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-03-26 15:28:41.822  INFO 4784 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1373 ms
+2025-03-26 15:28:42.002  INFO 4784 --- [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-03-26 15:28:42.048  INFO 4784 --- [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 5.6.14.Final
+2025-03-26 15:28:42.207  INFO 4784 --- [main] o.hibernate.annotations.common.Version   : HCANN000001: Hibernate Commons Annotations {5.1.2.Final}
+2025-03-26 15:28:42.320  INFO 4784 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-03-26 15:28:42.905  INFO 4784 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-03-26 15:28:42.922  INFO 4784 --- [main] org.hibernate.dialect.Dialect            : HHH000400: Using dialect: org.hibernate.dialect.PostgreSQLDialect
+2025-03-26 15:28:45.038  INFO 4784 --- [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform]
+2025-03-26 15:28:45.049  INFO 4784 --- [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-03-26 15:28:45.948  INFO 4784 --- [main] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@2284058a, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@5b11d0d8, org.springframework.security.web.context.SecurityContextPersistenceFilter@195888a6, org.springframework.security.web.header.HeaderWriterFilter@238d27ef, org.springframework.web.filter.CorsFilter@5cf39df6, org.springframework.security.web.authentication.logout.LogoutFilter@6e6bd43b, com.annular.healthCare.security.Jwt.AuthTokenFilter@893081e, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@580c4c0b, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@439b0198, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@46ae897c, org.springframework.security.web.session.SessionManagementFilter@3545c913, org.springframework.security.web.access.ExceptionTranslationFilter@419ece7a, org.springframework.security.web.access.intercept.FilterSecurityInterceptor@237824b0]
+2025-03-26 15:28:45.987  WARN 4784 --- [main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-03-26 15:28:46.111 DEBUG 4784 --- [main] s.w.s.m.m.a.RequestMappingHandlerAdapter : ControllerAdvice beans: 0 @ModelAttribute, 0 @InitBinder, 1 RequestBodyAdvice, 1 ResponseBodyAdvice
+2025-03-26 15:28:46.195 DEBUG 4784 --- [main] s.w.s.m.m.a.RequestMappingHandlerMapping : 25 mappings in 'requestMappingHandlerMapping'
+2025-03-26 15:28:46.226 DEBUG 4784 --- [main] o.s.w.s.handler.SimpleUrlHandlerMapping  : Patterns [/webjars/**, /**] in 'resourceHandlerMapping'
+2025-03-26 15:28:46.243 DEBUG 4784 --- [main] .m.m.a.ExceptionHandlerExceptionResolver : ControllerAdvice beans: 0 @ExceptionHandler, 1 ResponseBodyAdvice
+2025-03-26 15:28:46.392  INFO 4784 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8080 (http) with context path ''
+2025-03-26 15:28:46.401  INFO 4784 --- [main] c.a.healthCare.HealthCareApplication     : Started HealthCareApplication in 6.454 seconds (JVM running for 7.221)
+2025-03-26 15:28:51.175  INFO 4784 --- [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-03-26 15:28:51.176  INFO 4784 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-03-26 15:28:51.176 DEBUG 4784 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected StandardServletMultipartResolver
+2025-03-26 15:28:51.176 DEBUG 4784 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected AcceptHeaderLocaleResolver
+2025-03-26 15:28:51.176 DEBUG 4784 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected FixedThemeResolver
+2025-03-26 15:28:51.177 DEBUG 4784 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator@20e25bf7
+2025-03-26 15:28:51.177 DEBUG 4784 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Detected org.springframework.web.servlet.support.SessionFlashMapManager@30b075b9
+2025-03-26 15:28:51.178 DEBUG 4784 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : enableLoggingRequestDetails='false': request parameters and headers will be masked to prevent unsafe logging of potentially sensitive data
+2025-03-26 15:28:51.178  INFO 4784 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+2025-03-26 15:28:51.182  INFO 4784 --- [http-nio-8080-exec-1] com.annular.healthCare.security.MyCors   : Request URI -> null
+2025-03-26 15:28:51.196  INFO 4784 --- [http-nio-8080-exec-1] c.a.h.security.Jwt.AuthTokenFilter       : JWT from request :- eyJhbGciOiJIUzUxMiJ9.eyJ1c2VyRW1haWxJZCI6InN1cGVyYWRtaW5AZ21haWwuY29tIiwidXNlclR5cGUiOiJTVVBFUkFETUlOIiwiaWF0IjoxNzQyOTgxNzAxLCJleHAiOjE3NDI5ODIzMDF9.mzOXlK9Q7fAcgN5l00_joYT3_8TO7PEQxf9gQ23BTRMiDIbegP22sJ67xO-ZwQFosIjRQU4Xx8zDuUJ2TcanRw
+2025-03-26 15:28:51.245 ERROR 4784 --- [http-nio-8080-exec-1] c.a.healthCare.security.Jwt.JwtUtils     : JWT token is expired: JWT expired at 2025-03-26T15:15:01Z. Current time: 2025-03-26T15:28:51Z, a difference of 830245 milliseconds.  Allowed clock skew: 0 milliseconds.
+2025-03-26 15:28:51.245  INFO 4784 --- [http-nio-8080-exec-1] c.a.h.security.Jwt.AuthTokenFilter       : JWT not available...
+2025-03-26 15:28:51.259 ERROR 4784 --- [http-nio-8080-exec-1] c.a.h.security.Jwt.AuthEntryPointJwt     : Unauthorized error...
+
+org.springframework.security.authentication.InsufficientAuthenticationException: Full authentication is required to access this resource
+	at org.springframework.security.web.access.ExceptionTranslationFilter.handleAccessDeniedException(ExceptionTranslationFilter.java:195) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.access.ExceptionTranslationFilter.handleSpringSecurityException(ExceptionTranslationFilter.java:174) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:143) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:116) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:346) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:126) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:81) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:346) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.authentication.AnonymousAuthenticationFilter.doFilter(AnonymousAuthenticationFilter.java:109) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:346) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter.doFilter(SecurityContextHolderAwareRequestFilter.java:149) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:346) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.savedrequest.RequestCacheAwareFilter.doFilter(RequestCacheAwareFilter.java:63) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:346) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at com.annular.healthCare.security.Jwt.AuthTokenFilter.doFilterInternal(AuthTokenFilter.java:65) ~[classes/:na]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117) ~[spring-web-5.3.25.jar:5.3.25]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:346) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:103) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:89) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:346) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91) ~[spring-web-5.3.25.jar:5.3.25]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117) ~[spring-web-5.3.25.jar:5.3.25]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:346) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117) ~[spring-web-5.3.25.jar:5.3.25]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:346) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.context.SecurityContextPersistenceFilter.doFilter(SecurityContextPersistenceFilter.java:112) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.context.SecurityContextPersistenceFilter.doFilter(SecurityContextPersistenceFilter.java:82) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:346) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:55) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117) ~[spring-web-5.3.25.jar:5.3.25]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:346) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117) ~[spring-web-5.3.25.jar:5.3.25]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:346) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:221) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:186) ~[spring-security-web-5.7.6.jar:5.7.6]
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:354) ~[spring-web-5.3.25.jar:5.3.25]
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:267) ~[spring-web-5.3.25.jar:5.3.25]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:189) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100) ~[spring-web-5.3.25.jar:5.3.25]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117) ~[spring-web-5.3.25.jar:5.3.25]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:189) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93) ~[spring-web-5.3.25.jar:5.3.25]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117) ~[spring-web-5.3.25.jar:5.3.25]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:189) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201) ~[spring-web-5.3.25.jar:5.3.25]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:117) ~[spring-web-5.3.25.jar:5.3.25]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:189) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at com.annular.healthCare.security.MyCors.doFilter(MyCors.java:35) ~[classes/:na]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:189) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:162) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:177) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:97) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:541) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:135) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:92) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:78) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:360) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:399) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:65) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:891) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1784) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:49) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1191) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61) ~[tomcat-embed-core-9.0.71.jar:9.0.71]
+	at java.base/java.lang.Thread.run(Thread.java:833) ~[na:na]
+
+2025-03-26 15:29:06.984  INFO 4784 --- [http-nio-8080-exec-3] com.annular.healthCare.security.MyCors   : Request URI -> null
+2025-03-26 15:29:06.984  INFO 4784 --- [http-nio-8080-exec-3] c.a.h.security.Jwt.AuthTokenFilter       : JWT from request :- eyJhbGciOiJIUzUxMiJ9.eyJ1c2VyRW1haWxJZCI6InN1cGVyYWRtaW5AZ21haWwuY29tIiwidXNlclR5cGUiOiJTVVBFUkFETUlOIiwiaWF0IjoxNzQyOTgzMTM0LCJleHAiOjE3NDI5ODM3MzR9.X_UoXSeTkarOspBm4DVWnffMigmnv0cxlgjTG6z9dShcNeroD6H-A83HHafMZp_LFU6lgETEG6X7EiDYXsshcA
+2025-03-26 15:29:06.985  INFO 4784 --- [http-nio-8080-exec-3] c.a.h.security.Jwt.AuthTokenFilter       : JWT available...
+2025-03-26 15:29:06.987  INFO 4784 --- [http-nio-8080-exec-3] c.a.h.security.Jwt.AuthTokenFilter       : Username with UserType : superadmin@gmail.com^SUPERADMIN
+2025-03-26 15:29:06.987  INFO 4784 --- [http-nio-8080-exec-3] c.a.h.s.s.UserDetailsServiceImpl         : I am from loadUserByUsername() !!! 
+2025-03-26 15:29:06.987  INFO 4784 --- [http-nio-8080-exec-3] c.a.h.s.s.UserDetailsServiceImpl         : Email :- superadmin@gmail.com^SUPERADMIN, UserType from LoginConstants :- null
+2025-03-26 15:29:07.017 DEBUG 4784 --- [http-nio-8080-exec-3] org.hibernate.SQL                        : 
+    select
+        user0_.user_id as user_id1_11_,
+        user0_.created_by as created_2_11_,
+        user0_.current_address as current_3_11_,
+        user0_.dob as dob4_11_,
+        user0_.email_id as email_id5_11_,
+        user0_.emp_id as emp_id6_11_,
+        user0_.first_name as first_na7_11_,
+        user0_.gender as gender8_11_,
+        user0_.hospital_id as hospital9_11_,
+        user0_.last_name as last_na10_11_,
+        user0_.password as passwor11_11_,
+        user0_.phone_number as phone_n12_11_,
+        user0_.user_created_on as user_cr13_11_,
+        user0_.user_is_active as user_is14_11_,
+        user0_.user_name as user_na15_11_,
+        user0_.user_type as user_ty16_11_,
+        user0_.user_updated_by as user_up17_11_,
+        user0_.user_updated_on as user_up18_11_,
+        user0_.year_of_experience as year_of19_11_ 
+    from
+        users user0_ 
+    where
+        user0_.email_id=? 
+        and user0_.user_is_active=true
+2025-03-26 15:29:07.043 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [VARCHAR] - [superadmin@gmail.com]
+2025-03-26 15:29:07.076 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id1_11_] : [INTEGER]) - [1]
+2025-03-26 15:29:07.082 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_11_] : [INTEGER]) - [1]
+2025-03-26 15:29:07.082 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([current_3_11_] : [VARCHAR]) - [123 Main Street, City]
+2025-03-26 15:29:07.082 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([dob4_11_] : [VARCHAR]) - [null]
+2025-03-26 15:29:07.082 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([email_id5_11_] : [VARCHAR]) - [superadmin@gmail.com]
+2025-03-26 15:29:07.082 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([emp_id6_11_] : [VARCHAR]) - [EMP001]
+2025-03-26 15:29:07.082 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([first_na7_11_] : [VARCHAR]) - [Super]
+2025-03-26 15:29:07.082 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([gender8_11_] : [VARCHAR]) - [Male]
+2025-03-26 15:29:07.082 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([hospital9_11_] : [INTEGER]) - [98]
+2025-03-26 15:29:07.082 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([last_na10_11_] : [VARCHAR]) - [Admin]
+2025-03-26 15:29:07.082 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([passwor11_11_] : [VARCHAR]) - [$2a$10$jW52gOeK7kedxGaymQCXE.F40gQ.Bf8rxTBiiTcNTlAJL9jrgeHZ.]
+2025-03-26 15:29:07.082 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([phone_n12_11_] : [VARCHAR]) - [1234567890]
+2025-03-26 15:29:07.084 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_cr13_11_] : [TIMESTAMP]) - [2025-03-06 12:56:55.149]
+2025-03-26 15:29:07.084 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_is14_11_] : [BOOLEAN]) - [true]
+2025-03-26 15:29:07.084 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_na15_11_] : [VARCHAR]) - [Super Admin]
+2025-03-26 15:29:07.084 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_ty16_11_] : [VARCHAR]) - [SUPERADMIN]
+2025-03-26 15:29:07.085 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_up17_11_] : [INTEGER]) - [null]
+2025-03-26 15:29:07.085 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_up18_11_] : [TIMESTAMP]) - [2025-03-06 12:56:55.149]
+2025-03-26 15:29:07.085 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([year_of19_11_] : [VARCHAR]) - [null]
+2025-03-26 15:29:07.100  INFO 4784 --- [http-nio-8080-exec-3] c.a.h.s.s.UserDetailsServiceImpl         : User from DB --> 1 -- superadmin@gmail.com -- SUPERADMIN
+2025-03-26 15:29:07.103 DEBUG 4784 --- [http-nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : GET "/auth/getUserDetailsByUserId?userId=98", parameters={masked}
+2025-03-26 15:29:07.109 DEBUG 4784 --- [http-nio-8080-exec-3] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped to com.annular.healthCare.controller.AuthenticationController#getUserDetailsByUserId(Integer)
+2025-03-26 15:29:07.141 DEBUG 4784 --- [http-nio-8080-exec-3] org.hibernate.SQL                        : 
+    select
+        user0_.user_id as user_id1_11_0_,
+        user0_.created_by as created_2_11_0_,
+        user0_.current_address as current_3_11_0_,
+        user0_.dob as dob4_11_0_,
+        user0_.email_id as email_id5_11_0_,
+        user0_.emp_id as emp_id6_11_0_,
+        user0_.first_name as first_na7_11_0_,
+        user0_.gender as gender8_11_0_,
+        user0_.hospital_id as hospital9_11_0_,
+        user0_.last_name as last_na10_11_0_,
+        user0_.password as passwor11_11_0_,
+        user0_.phone_number as phone_n12_11_0_,
+        user0_.user_created_on as user_cr13_11_0_,
+        user0_.user_is_active as user_is14_11_0_,
+        user0_.user_name as user_na15_11_0_,
+        user0_.user_type as user_ty16_11_0_,
+        user0_.user_updated_by as user_up17_11_0_,
+        user0_.user_updated_on as user_up18_11_0_,
+        user0_.year_of_experience as year_of19_11_0_ 
+    from
+        users user0_ 
+    where
+        user0_.user_id=?
+2025-03-26 15:29:07.142 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [98]
+2025-03-26 15:29:07.173 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_11_0_] : [INTEGER]) - [1]
+2025-03-26 15:29:07.173 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([current_3_11_0_] : [VARCHAR]) - [New York]
+2025-03-26 15:29:07.173 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([dob4_11_0_] : [VARCHAR]) - [null]
+2025-03-26 15:29:07.173 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([email_id5_11_0_] : [VARCHAR]) - [docttoonnr@example.com]
+2025-03-26 15:29:07.173 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([emp_id6_11_0_] : [VARCHAR]) - [D1234]
+2025-03-26 15:29:07.173 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([first_na7_11_0_] : [VARCHAR]) - [Joohhnn]
+2025-03-26 15:29:07.173 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([gender8_11_0_] : [VARCHAR]) - [Male]
+2025-03-26 15:29:07.173 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([hospital9_11_0_] : [INTEGER]) - [86]
+2025-03-26 15:29:07.173 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([last_na10_11_0_] : [VARCHAR]) - [Doe]
+2025-03-26 15:29:07.173 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([passwor11_11_0_] : [VARCHAR]) - [$2a$10$ygQDpM4IB.1Jn.5Tk30lXuVD7IgdFGaLCfmr49sAkE6yzSQ0f4Mm6]
+2025-03-26 15:29:07.173 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([phone_n12_11_0_] : [VARCHAR]) - [9876543210]
+2025-03-26 15:29:07.174 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_cr13_11_0_] : [TIMESTAMP]) - [2025-03-26 11:45:26.519]
+2025-03-26 15:29:07.174 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_is14_11_0_] : [BOOLEAN]) - [false]
+2025-03-26 15:29:07.174 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_na15_11_0_] : [VARCHAR]) - [Joohhnn Doe]
+2025-03-26 15:29:07.174 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_ty16_11_0_] : [VARCHAR]) - [Doctor]
+2025-03-26 15:29:07.174 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_up17_11_0_] : [INTEGER]) - [null]
+2025-03-26 15:29:07.174 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_up18_11_0_] : [TIMESTAMP]) - [2025-03-26 11:47:47.43]
+2025-03-26 15:29:07.174 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([year_of19_11_0_] : [VARCHAR]) - [99]
+2025-03-26 15:29:07.200 DEBUG 4784 --- [http-nio-8080-exec-3] org.hibernate.SQL                        : 
+    select
+        hospitalda0_.hospital_data_id as hospital1_7_,
+        hospitalda0_.created_by as created_2_7_,
+        hospitalda0_.current_address as current_3_7_,
+        hospitalda0_.email_id as email_id4_7_,
+        hospitalda0_.hospital_name as hospital5_7_,
+        hospitalda0_.phone_number as phone_nu6_7_,
+        hospitalda0_.user_created_on as user_cre7_7_,
+        hospitalda0_.user_is_active as user_is_8_7_,
+        hospitalda0_.user_updated_by as user_upd9_7_,
+        hospitalda0_.user_updated_on as user_up10_7_ 
+    from
+        hospital_data_list hospitalda0_ 
+    where
+        hospitalda0_.hospital_data_id=?
+2025-03-26 15:29:07.200 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [86]
+2025-03-26 15:29:07.224 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([hospital1_7_] : [INTEGER]) - [86]
+2025-03-26 15:29:07.224 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_7_] : [INTEGER]) - [1]
+2025-03-26 15:29:07.224 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([current_3_7_] : [VARCHAR]) - [nhjjj]
+2025-03-26 15:29:07.224 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([email_id4_7_] : [VARCHAR]) - [ddd@gmail.com]
+2025-03-26 15:29:07.224 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([hospital5_7_] : [VARCHAR]) - [Gems]
+2025-03-26 15:29:07.224 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([phone_nu6_7_] : [VARCHAR]) - [1111111111166]
+2025-03-26 15:29:07.225 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_cre7_7_] : [TIMESTAMP]) - [2025-03-07 23:00:34.414]
+2025-03-26 15:29:07.225 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_is_8_7_] : [BOOLEAN]) - [false]
+2025-03-26 15:29:07.225 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_upd9_7_] : [INTEGER]) - [1]
+2025-03-26 15:29:07.225 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_up10_7_] : [TIMESTAMP]) - [2025-03-10 14:36:58.497]
+2025-03-26 15:29:07.227 DEBUG 4784 --- [http-nio-8080-exec-3] org.hibernate.SQL                        : 
+    select
+        doctorrole0_.user_id as user_id8_1_0_,
+        doctorrole0_.doctor_role_id as doctor_r1_1_0_,
+        doctorrole0_.doctor_role_id as doctor_r1_1_1_,
+        doctorrole0_.created_by as created_2_1_1_,
+        doctorrole0_.role_id as role_id3_1_1_,
+        doctorrole0_.user_id as user_id8_1_1_,
+        doctorrole0_.user_created_on as user_cre4_1_1_,
+        doctorrole0_.user_is_active as user_is_5_1_1_,
+        doctorrole0_.user_updated_by as user_upd6_1_1_,
+        doctorrole0_.user_updated_on as user_upd7_1_1_ 
+    from
+        doctor_role doctorrole0_ 
+    where
+        doctorrole0_.user_id=?
+2025-03-26 15:29:07.227 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [98]
+2025-03-26 15:29:07.254 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_r1_1_1_] : [INTEGER]) - [58]
+2025-03-26 15:29:07.254 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_1_1_] : [INTEGER]) - [1]
+2025-03-26 15:29:07.254 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([role_id3_1_1_] : [INTEGER]) - [42]
+2025-03-26 15:29:07.254 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id8_1_1_] : [INTEGER]) - [98]
+2025-03-26 15:29:07.254 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_cre4_1_1_] : [TIMESTAMP]) - [2025-03-26 11:45:26.523]
+2025-03-26 15:29:07.254 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_is_5_1_1_] : [BOOLEAN]) - [false]
+2025-03-26 15:29:07.254 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_upd6_1_1_] : [INTEGER]) - [null]
+2025-03-26 15:29:07.254 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_upd7_1_1_] : [TIMESTAMP]) - [2025-03-26 11:47:47.44]
+2025-03-26 15:29:07.254 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id8_1_0_] : [INTEGER]) - [98]
+2025-03-26 15:29:07.255 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_r1_1_0_] : [INTEGER]) - [58]
+2025-03-26 15:29:07.257 DEBUG 4784 --- [http-nio-8080-exec-3] org.hibernate.SQL                        : 
+    select
+        mediafile0_.file_id as file_id1_8_,
+        mediafile0_.category as category2_8_,
+        mediafile0_.category_ref_id as category3_8_,
+        mediafile0_.file_created_by as file_cre4_8_,
+        mediafile0_.file_created_on as file_cre5_8_,
+        mediafile0_.file_domain_id as file_dom6_8_,
+        mediafile0_.file_domain_reference_id as file_dom7_8_,
+        mediafile0_.file_ids as file_ids8_8_,
+        mediafile0_.file_is_active as file_is_9_8_,
+        mediafile0_.file_name as file_na10_8_,
+        mediafile0_.file_original_name as file_or11_8_,
+        mediafile0_.file_path as file_pa12_8_,
+        mediafile0_.file_size as file_si13_8_,
+        mediafile0_.file_type as file_ty14_8_,
+        mediafile0_.file_updated_by as file_up15_8_,
+        mediafile0_.file_updated_on as file_up16_8_,
+        mediafile0_.user_id as user_id17_8_ 
+    from
+        media_files mediafile0_ 
+    where
+        mediafile0_.file_domain_id=? 
+        and mediafile0_.file_domain_reference_id=?
+2025-03-26 15:29:07.258 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [2]
+2025-03-26 15:29:07.258 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicBinder      : binding parameter [2] as [INTEGER] - [98]
+2025-03-26 15:29:07.290 DEBUG 4784 --- [http-nio-8080-exec-3] org.hibernate.SQL                        : 
+    select
+        doctorslot0_.doctor_slot_id as doctor_s1_4_,
+        doctorslot0_.created_by as created_2_4_,
+        doctorslot0_.created_on as created_3_4_,
+        doctorslot0_.is_active as is_activ4_4_,
+        doctorslot0_.updated_by as updated_5_4_,
+        doctorslot0_.updated_on as updated_6_4_,
+        doctorslot0_.user_id as user_id7_4_ 
+    from
+        doctor_slot doctorslot0_ 
+    where
+        doctorslot0_.user_id=?
+2025-03-26 15:29:07.292 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [98]
+2025-03-26 15:29:07.315 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_s1_4_] : [INTEGER]) - [22]
+2025-03-26 15:29:07.315 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_4_] : [INTEGER]) - [1]
+2025-03-26 15:29:07.315 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_3_4_] : [TIMESTAMP]) - [2025-03-26 11:45:26.527]
+2025-03-26 15:29:07.315 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([is_activ4_4_] : [BOOLEAN]) - [true]
+2025-03-26 15:29:07.315 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_5_4_] : [INTEGER]) - [null]
+2025-03-26 15:29:07.316 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_6_4_] : [TIMESTAMP]) - [2025-03-26 11:45:26.527]
+2025-03-26 15:29:07.316 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([user_id7_4_] : [INTEGER]) - [98]
+2025-03-26 15:29:07.317 DEBUG 4784 --- [http-nio-8080-exec-3] org.hibernate.SQL                        : 
+    select
+        doctordays0_.doctor_day_slot_id as doctor_d1_3_,
+        doctordays0_.created_by as created_2_3_,
+        doctordays0_.created_on as created_3_3_,
+        doctordays0_.day as day4_3_,
+        doctordays0_.doctor_slot_id as doctor_10_3_,
+        doctordays0_.end_slot_date as end_slot5_3_,
+        doctordays0_.is_active as is_activ6_3_,
+        doctordays0_.start_slot_date as start_sl7_3_,
+        doctordays0_.updated_by as updated_8_3_,
+        doctordays0_.updated_on as updated_9_3_ 
+    from
+        doctor_day_slot doctordays0_ 
+    where
+        doctordays0_.doctor_slot_id=?
+2025-03-26 15:29:07.318 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [22]
+2025-03-26 15:29:07.342 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_d1_3_] : [INTEGER]) - [27]
+2025-03-26 15:29:07.343 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_3_] : [INTEGER]) - [1]
+2025-03-26 15:29:07.343 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_3_3_] : [TIMESTAMP]) - [2025-03-26 11:45:26.53]
+2025-03-26 15:29:07.343 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([day4_3_] : [VARCHAR]) - [Monday]
+2025-03-26 15:29:07.343 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_10_3_] : [INTEGER]) - [22]
+2025-03-26 15:29:07.343 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([end_slot5_3_] : [TIMESTAMP]) - [2024-04-30 00:00:00.0]
+2025-03-26 15:29:07.343 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([is_activ6_3_] : [BOOLEAN]) - [true]
+2025-03-26 15:29:07.343 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([start_sl7_3_] : [TIMESTAMP]) - [2024-04-01 00:00:00.0]
+2025-03-26 15:29:07.343 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_8_3_] : [INTEGER]) - [null]
+2025-03-26 15:29:07.343 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_9_3_] : [TIMESTAMP]) - [2025-03-26 11:45:26.53]
+2025-03-26 15:29:07.343 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_d1_3_] : [INTEGER]) - [28]
+2025-03-26 15:29:07.343 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_3_] : [INTEGER]) - [1]
+2025-03-26 15:29:07.344 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_3_3_] : [TIMESTAMP]) - [2025-03-26 11:45:26.54]
+2025-03-26 15:29:07.344 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([day4_3_] : [VARCHAR]) - [Wednesday]
+2025-03-26 15:29:07.344 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_10_3_] : [INTEGER]) - [22]
+2025-03-26 15:29:07.344 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([end_slot5_3_] : [TIMESTAMP]) - [2024-04-30 00:00:00.0]
+2025-03-26 15:29:07.344 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([is_activ6_3_] : [BOOLEAN]) - [true]
+2025-03-26 15:29:07.344 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([start_sl7_3_] : [TIMESTAMP]) - [2024-04-01 00:00:00.0]
+2025-03-26 15:29:07.344 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_8_3_] : [INTEGER]) - [null]
+2025-03-26 15:29:07.344 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_9_3_] : [TIMESTAMP]) - [2025-03-26 11:45:26.54]
+2025-03-26 15:29:07.346 DEBUG 4784 --- [http-nio-8080-exec-3] org.hibernate.SQL                        : 
+    select
+        doctorslot0_.doctor_slot_time_id as doctor_s1_5_,
+        doctorslot0_.created_by as created_2_5_,
+        doctorslot0_.created_on as created_3_5_,
+        doctorslot0_.doctor_day_slot_id as doctor_10_5_,
+        doctorslot0_.is_active as is_activ4_5_,
+        doctorslot0_.slot_end_time as slot_end5_5_,
+        doctorslot0_.slot_start_time as slot_sta6_5_,
+        doctorslot0_.slot_time as slot_tim7_5_,
+        doctorslot0_.updated_by as updated_8_5_,
+        doctorslot0_.updated_on as updated_9_5_ 
+    from
+        doctor_slot_time doctorslot0_ 
+    where
+        doctorslot0_.doctor_day_slot_id=?
+2025-03-26 15:29:07.346 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [27]
+2025-03-26 15:29:07.370 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_s1_5_] : [INTEGER]) - [44]
+2025-03-26 15:29:07.370 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_5_] : [INTEGER]) - [1]
+2025-03-26 15:29:07.370 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_3_5_] : [TIMESTAMP]) - [2025-03-26 11:45:26.533]
+2025-03-26 15:29:07.370 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_10_5_] : [INTEGER]) - [27]
+2025-03-26 15:29:07.371 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([is_activ4_5_] : [BOOLEAN]) - [true]
+2025-03-26 15:29:07.371 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([slot_end5_5_] : [VARCHAR]) - [10:00 AM]
+2025-03-26 15:29:07.371 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([slot_sta6_5_] : [VARCHAR]) - [08:00 AM]
+2025-03-26 15:29:07.371 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([slot_tim7_5_] : [VARCHAR]) - [30 mins]
+2025-03-26 15:29:07.371 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_8_5_] : [INTEGER]) - [null]
+2025-03-26 15:29:07.371 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_9_5_] : [TIMESTAMP]) - [2025-03-26 11:45:26.533]
+2025-03-26 15:29:07.371 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_s1_5_] : [INTEGER]) - [45]
+2025-03-26 15:29:07.371 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_5_] : [INTEGER]) - [1]
+2025-03-26 15:29:07.372 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_3_5_] : [TIMESTAMP]) - [2025-03-26 11:45:26.536]
+2025-03-26 15:29:07.372 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_10_5_] : [INTEGER]) - [27]
+2025-03-26 15:29:07.372 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([is_activ4_5_] : [BOOLEAN]) - [true]
+2025-03-26 15:29:07.372 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([slot_end5_5_] : [VARCHAR]) - [04:00 PM]
+2025-03-26 15:29:07.372 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([slot_sta6_5_] : [VARCHAR]) - [02:00 PM]
+2025-03-26 15:29:07.372 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([slot_tim7_5_] : [VARCHAR]) - [30 mins]
+2025-03-26 15:29:07.372 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_8_5_] : [INTEGER]) - [null]
+2025-03-26 15:29:07.372 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_9_5_] : [TIMESTAMP]) - [2025-03-26 11:45:26.536]
+2025-03-26 15:29:07.377 DEBUG 4784 --- [http-nio-8080-exec-3] org.hibernate.SQL                        : 
+    select
+        doctorslot0_.doctor_slot_time_id as doctor_s1_5_,
+        doctorslot0_.created_by as created_2_5_,
+        doctorslot0_.created_on as created_3_5_,
+        doctorslot0_.doctor_day_slot_id as doctor_10_5_,
+        doctorslot0_.is_active as is_activ4_5_,
+        doctorslot0_.slot_end_time as slot_end5_5_,
+        doctorslot0_.slot_start_time as slot_sta6_5_,
+        doctorslot0_.slot_time as slot_tim7_5_,
+        doctorslot0_.updated_by as updated_8_5_,
+        doctorslot0_.updated_on as updated_9_5_ 
+    from
+        doctor_slot_time doctorslot0_ 
+    where
+        doctorslot0_.doctor_day_slot_id=?
+2025-03-26 15:29:07.377 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicBinder      : binding parameter [1] as [INTEGER] - [28]
+2025-03-26 15:29:07.400 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_s1_5_] : [INTEGER]) - [46]
+2025-03-26 15:29:07.400 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_2_5_] : [INTEGER]) - [1]
+2025-03-26 15:29:07.400 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([created_3_5_] : [TIMESTAMP]) - [2025-03-26 11:45:26.543]
+2025-03-26 15:29:07.400 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([doctor_10_5_] : [INTEGER]) - [28]
+2025-03-26 15:29:07.400 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([is_activ4_5_] : [BOOLEAN]) - [true]
+2025-03-26 15:29:07.400 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([slot_end5_5_] : [VARCHAR]) - [11:00 AM]
+2025-03-26 15:29:07.400 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([slot_sta6_5_] : [VARCHAR]) - [09:00 AM]
+2025-03-26 15:29:07.400 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([slot_tim7_5_] : [VARCHAR]) - [30 mins]
+2025-03-26 15:29:07.400 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_8_5_] : [INTEGER]) - [null]
+2025-03-26 15:29:07.401 TRACE 4784 --- [http-nio-8080-exec-3] o.h.type.descriptor.sql.BasicExtractor   : extracted value ([updated_9_5_] : [TIMESTAMP]) - [2025-03-26 11:45:26.543]
+2025-03-26 15:29:07.414 DEBUG 4784 --- [http-nio-8080-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Using 'application/json', given [*/*] and supported [application/json, application/*+json, application/json, application/*+json]
+2025-03-26 15:29:07.414 DEBUG 4784 --- [http-nio-8080-exec-3] o.s.w.s.m.m.a.HttpEntityMethodProcessor  : Writing [{lastName=Doe, gender=Male, roles=[], emailId=docttoonnr@example.com, hospitalName=Gems, userName=Jo (truncated)...]
+2025-03-26 15:29:07.446 DEBUG 4784 --- [http-nio-8080-exec-3] o.s.web.servlet.DispatcherServlet        : Completed 200 OK
+2025-03-26 15:32:05.990  INFO 4784 --- [RMI TCP Connection(7)-127.0.0.1] inMXBeanRegistrar$SpringApplicationAdmin : Application shutdown requested.
+2025-03-26 15:32:06.024  INFO 4784 --- [RMI TCP Connection(7)-127.0.0.1] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
+2025-03-26 15:32:06.025  INFO 4784 --- [RMI TCP Connection(7)-127.0.0.1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Destroying Spring FrameworkServlet 'dispatcherServlet'
+2025-03-26 15:32:06.028  WARN 4784 --- [RMI TCP Connection(7)-127.0.0.1] o.a.c.loader.WebappClassLoaderBase       : The web application [ROOT] appears to have started a thread named [HikariPool-1 housekeeper] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:
+ java.base@17.0.4.1/jdk.internal.misc.Unsafe.park(Native Method)
+ java.base@17.0.4.1/java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:252)
+ java.base@17.0.4.1/java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitNanos(AbstractQueuedSynchronizer.java:1672)
+ java.base@17.0.4.1/java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:1182)
+ java.base@17.0.4.1/java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:899)
+ java.base@17.0.4.1/java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1062)
+ java.base@17.0.4.1/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1122)
+ java.base@17.0.4.1/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+ java.base@17.0.4.1/java.lang.Thread.run(Thread.java:833)
+2025-03-26 15:32:06.035  INFO 4784 --- [RMI TCP Connection(7)-127.0.0.1] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-03-26 15:32:06.037  INFO 4784 --- [RMI TCP Connection(7)-127.0.0.1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2025-03-26 15:32:06.153  INFO 4784 --- [RMI TCP Connection(7)-127.0.0.1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

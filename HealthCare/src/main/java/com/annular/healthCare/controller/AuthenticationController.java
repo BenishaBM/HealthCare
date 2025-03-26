@@ -27,8 +27,10 @@ import com.annular.healthCare.webModel.HospitalDataListWebModel;
 import com.annular.healthCare.webModel.UserWebModel;
 import com.annular.healthCare.Response;
 import com.annular.healthCare.UserStatusConfig;
+import com.annular.healthCare.model.HospitalDataList;
 import com.annular.healthCare.model.RefreshToken;
 import com.annular.healthCare.model.User;
+import com.annular.healthCare.repository.HospitalDataListRepository;
 import com.annular.healthCare.repository.RefreshTokenRepository;
 import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.security.Jwt.JwtResponse;
@@ -55,6 +57,9 @@ public class AuthenticationController {
 
 	@Autowired
 	AuthenticationManager authenticationManager;
+	
+	@Autowired
+	HospitalDataListRepository hospitalDataListRepository;
 
 	@Autowired
 	UserRepository userRepository;
@@ -89,6 +94,14 @@ public class AuthenticationController {
 
 				// Generate refresh token
 				RefreshToken refreshToken = authService.createRefreshToken(user);
+				
+				   // Retrieve hospital name
+	            String hospitalName = "";
+	            if (user.getHospitalId() != null) {
+	                Optional<HospitalDataList> hospitalData = hospitalDataListRepository.findById(user.getHospitalId());
+	                hospitalName = hospitalData.map(HospitalDataList::getHospitalName).orElse("");
+	            }
+
 
 				// Generate JWT token
 				String jwt = jwtUtils.generateJwtToken(authentication);
@@ -99,7 +112,7 @@ public class AuthenticationController {
 				// Return response with JWT and refresh token
 				return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(), 1, // Assuming this is a status or
 																						// role value
-						refreshToken.getToken(), userDetails.getUserType(), userDetails.getUserEmailId(), user.getHospitalId()));
+						refreshToken.getToken(), userDetails.getUserType(), userDetails.getUserEmailId(), user.getHospitalId(),hospitalName));
 			} else {
 				return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Invalid email or password"));
 			}
@@ -122,11 +135,13 @@ public class AuthenticationController {
 			Optional<User> userData = userRepository.findById(data.get().getUserId());
 			String jwt = jwtUtils.generateJwtTokenForRefreshToken(userData.get());
 			RefreshToken refreshToken = data.get();
+			   // Retrieve hospital name
+
 			refreshToken.setExpiryToken(LocalTime.now().plusMinutes(17));
 			refreshTokenRepository.save(refreshToken);
 			return ResponseEntity.ok(new JwtResponse(jwt, userData.get().getUserId(),
 
-					1, token.getData().toString(), userData.get().getUserType(), userData.get().getEmailId(), userData.get().getHospitalId()));
+					1, token.getData().toString(), userData.get().getUserType(), userData.get().getEmailId(), userData.get().getHospitalId(),""));
 		}
 		return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Refresh Token Failed"));
 	}

@@ -25,5 +25,6 @@ public class JwtResponse {
     private String userType;
     private String emailId;
     private Integer hospitalId;
+    private String hospitalName;
    
 }
