@@ -21,7 +21,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PatientDetailsWebModel {
-	
+
 	private Integer patientDetailsId;
 	private String patientName;
 	private Date dob;
@@ -30,7 +30,7 @@ public class PatientDetailsWebModel {
 	private String mobileNumber;
 	private String emailId;
 	private String address;
-	private Integer hospitalId;//map the hospital
+	private Integer hospitalId;// map the hospital
 	private String purposeOfVisit;
 	private Integer doctorId;
 	private Boolean userIsActive;
@@ -48,8 +48,18 @@ public class PatientDetailsWebModel {
 	private String policyNumber;
 	private Boolean disability;
 	private String age;
-	 private List<MultipartFile> files;
-	 private List<FileOutputWebModel> filess;
+	private List<MultipartFile> files;
+	private List<FileOutputWebModel> filess;
 
+	// Appointment-related Fields
+	private Integer doctorSlotId;
+	private Integer daySlotId;
+	private Integer timeSlotId;
+	private String appointmentDate;
+
+	private String slotStartTime;
+	private String slotEndTime;
+	private String slotTime;
+	private String patientNotes;
 
 }
