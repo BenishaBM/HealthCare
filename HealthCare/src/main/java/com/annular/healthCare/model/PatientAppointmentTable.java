@@ -74,4 +74,10 @@ public class PatientAppointmentTable {
 
     @Column(name = "patient_notes")
     private String patientNotes;
+    
+    @Column(name = "doctorSlotStartTime")
+    private String doctorSlotStartTime;
+    
+    @Column(name = "doctorSlotEndTime")
+    private String doctorSlotEndTime;
 }

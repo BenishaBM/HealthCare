@@ -12,8 +12,15 @@ import com.annular.healthCare.model.PatientAppointmentTable;
 @Repository
 public interface PatientAppoitmentTablerepository extends JpaRepository<PatientAppointmentTable,Integer> {
 
-	@Query("SELECT COUNT(p) > 0 FROM PatientAppointmentTable p WHERE p.doctorSlotId = :doctorSlotId AND p.daySlotId = :daySlotId AND p.timeSlotId = :timeSlotId AND p.isActive = true")
-	boolean isSlotBooked(@Param("doctorSlotId") Integer doctorSlotId, @Param("daySlotId") Integer daySlotId, @Param("timeSlotId") Integer timeSlotId);
+	@Query("SELECT COUNT(p) > 0 FROM PatientAppointmentTable p " +
+		       "WHERE p.doctorSlotId = :doctorSlotId " +
+		       "AND p.daySlotId = :daySlotId " +
+		       "AND p.isActive = true " +
+		       "AND ((p.slotStartTime < :newSlotEndTime AND p.slotEndTime > :newSlotStartTime))")
+		boolean isSlotBooked(@Param("doctorSlotId") Integer doctorSlotId, 
+		                     @Param("daySlotId") Integer daySlotId, 
+		                     @Param("newSlotStartTime") String newSlotStartTime,
+		                     @Param("newSlotEndTime") String newSlotEndTime);
 
 	List<PatientAppointmentTable> findByPatient_UserId(Integer patientDetailsID);
 
