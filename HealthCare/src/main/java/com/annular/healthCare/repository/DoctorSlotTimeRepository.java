@@ -13,4 +13,8 @@ public interface DoctorSlotTimeRepository extends JpaRepository<DoctorSlotTime, 
 
 	List<DoctorSlotTime> findByDoctorDaySlot(DoctorDaySlot daySlot);
 
+	void deleteByDoctorDaySlot(DoctorDaySlot doctorDaySlot);
+
+	void deleteByDoctorDaySlot(Integer doctorSlot);
+
 }

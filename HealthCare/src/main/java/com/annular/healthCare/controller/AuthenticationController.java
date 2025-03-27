@@ -273,5 +273,31 @@ public class AuthenticationController {
 	    }
 	}
 	
+	@DeleteMapping("deleteTimeSlotById")
+	public ResponseEntity<?> deleteTimeSlotById(@RequestParam("doctorDaySlotId") Integer doctorDaySlotId) {
+	    try {
+	        // Call the service to perform the update
+	        return authService.deleteTimeSlotById(doctorDaySlotId);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("doctorDaySlotId Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+	
+	@DeleteMapping("doctorSlotById")
+	public ResponseEntity<?> doctorSlotById(@RequestParam("doctorSlotId") Integer doctorSlotId) {
+	    try {
+	        // Call the service to perform the update
+	        return authService.doctorSlotById(doctorSlotId);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("doctorSlotById Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+	
 
 }

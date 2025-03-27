@@ -38,4 +38,8 @@ public interface AuthService {
 
 	ResponseEntity<?> addTimeSlotByDoctor(HospitalDataListWebModel userWebModel);
 
+	ResponseEntity<?> deleteTimeSlotById(Integer doctorDaySlotId);
+
+	ResponseEntity<?> doctorSlotById(Integer doctorDaySlotId);
+
 }

@@ -26,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import com.annular.healthCare.Response;
@@ -1000,4 +1001,62 @@ public class AuthServiceImpl implements AuthService {
 	    }
 	}
 
+
+	@Transactional
+	@Override
+	public ResponseEntity<?> deleteTimeSlotById(Integer doctorDaySlotId) {
+	    try {
+	        // Fetch the DoctorDaySlot by ID
+	        DoctorDaySlot doctorDaySlot = doctorDaySlotRepository.findById(doctorDaySlotId)
+	                .orElseThrow(() -> new RuntimeException("DoctorDaySlot not found with ID: " + doctorDaySlotId));
+
+	        // Delete associated DoctorSlotTime records first
+	        doctorSlotTimeRepository.deleteByDoctorDaySlot(doctorDaySlot);
+
+	        // Delete the DoctorDaySlot
+	        doctorDaySlotRepository.delete(doctorDaySlot);
+
+	        return ResponseEntity.ok(new Response(1, "Success", "Time slot deleted successfully"));
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "Error", "An error occurred: " + e.getMessage()));
+	    }
+	}
+
+
+	@Override
+	@Transactional
+	public ResponseEntity<?> doctorSlotById(Integer doctorSlotId) {
+		return null;
+//	    try {
+//	        // Check if the DoctorDaySlot exists
+//	        DoctorSlot doctorDaySlot = doctorSlotRepository.findById(doctorSlotId)
+//	                .orElseThrow(() -> new RuntimeException("DoctorSlot not found with ID: " + doctorSlotId));
+//
+//	        // Get the associated DoctorSlot
+//	       Integer doctorSlot = doctorDaySlot.getDoctorSlotId(); // Correct method to get DoctorSlot object
+//
+//	        // Delete associated DoctorSlotTime records first
+//	        doctorSlotTimeRepository.deleteByDoctorDaySlot(doctorSlot);
+//
+//	        // Now delete the DoctorDaySlot
+//	        doctorDaySlotRepository.delete(doctorDaySlot);
+//
+//	        // Check if there are any remaining DoctorDaySlots linked to this DoctorSlot
+//	        boolean hasOtherDaySlots = doctorDaySlotRepository.existsByDoctorSlot(doctorSlot);
+//
+//	        // If no other DoctorDaySlots exist, delete the DoctorSlot
+//	        if (!hasOtherDaySlots) {
+//	            doctorSlotRepository.delete(doctorSlot);
+//	        }
+//
+//	        return ResponseEntity.ok("DoctorSlot and associated records deleted successfully.");
+//	    } catch (Exception e) {
+//	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//	                .body("Error deleting DoctorSlot: " + e.getMessage());
+//	    }
+//	}
+
+	}
 }
