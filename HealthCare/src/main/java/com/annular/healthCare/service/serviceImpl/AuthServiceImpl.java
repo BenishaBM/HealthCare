@@ -120,6 +120,7 @@ public class AuthServiceImpl implements AuthService {
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 			}
 
+
 			// Create new user entity
 			User newUser = User.builder().emailId(userWebModel.getEmailId()).firstName(userWebModel.getFirstName())
 					.lastName(userWebModel.getLastName()).password(passwordEncoder.encode(userWebModel.getPassword())) // Encrypt
