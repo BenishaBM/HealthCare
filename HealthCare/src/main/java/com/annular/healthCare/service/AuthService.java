@@ -36,4 +36,6 @@ public interface AuthService {
 
 	ResponseEntity<?> deleteDoctorLeaveByLeaveId(Integer doctorLeaveListId);
 
+	ResponseEntity<?> addTimeSlotByDoctor(HospitalDataListWebModel userWebModel);
+
 }

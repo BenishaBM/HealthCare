@@ -938,4 +938,66 @@ public class AuthServiceImpl implements AuthService {
 		                .body(new Response(0, "Fail", "Error disabling doctor role"));
 		    }
 	}
+
+	@Override
+	public ResponseEntity<?> addTimeSlotByDoctor(HospitalDataListWebModel userWebModel) {
+	    try {
+
+	        // Fetch the DoctorSlot manually
+	        DoctorSlot doctorSlot = doctorSlotRepository.findById(userWebModel.getDoctorSlotId())
+	                .orElseThrow(() -> new RuntimeException("DoctorSlot not found with ID: " + userWebModel.getDoctorSlotId()));
+
+	        // Loop through provided day slots and save them
+	        if (userWebModel.getDoctorDaySlots() != null) {
+	            for (DoctorDaySlotWebModel daySlotModel : userWebModel.getDoctorDaySlots()) {
+	                try {
+	                    DoctorDaySlot doctorDaySlot = DoctorDaySlot.builder()
+	                            .doctorSlot(doctorSlot) // Set doctorSlot object
+	                            .day(daySlotModel.getDay())
+	                            .startSlotDate(daySlotModel.getStartSlotDate())
+	                            .endSlotDate(daySlotModel.getEndSlotDate())
+	                            .createdBy(userWebModel.getCreatedBy())
+	                            .isActive(true)
+	                            .build();
+	                    
+	                    doctorDaySlot = doctorDaySlotRepository.save(doctorDaySlot);
+
+	                    // Create time slots for each day slot
+	                    if (daySlotModel.getDoctorSlotTimes() != null) {
+	                        for (DoctorSlotTimeWebModel slotTimeModel : daySlotModel.getDoctorSlotTimes()) {
+	                            try {
+	                                DoctorSlotTime doctorSlotTime = DoctorSlotTime.builder()
+	                                        .doctorDaySlot(doctorDaySlot) // Use saved day slot ID
+	                                        .slotStartTime(slotTimeModel.getSlotStartTime())
+	                                        .slotEndTime(slotTimeModel.getSlotEndTime())
+	                                        .slotTime(slotTimeModel.getSlotTime())
+	                                        .createdBy(userWebModel.getCreatedBy())
+	                                        .isActive(true)
+	                                        .build();
+	                                doctorSlotTimeRepository.save(doctorSlotTime);
+	                            } catch (Exception e) {
+	                                e.printStackTrace();
+	                                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                                        .body(new Response(0, "Error", "Failed to save time slot: " + e.getMessage()));
+	                            }
+	                        }
+	                    }
+	                } catch (Exception e) {
+	                    e.printStackTrace();
+	                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                            .body(new Response(0, "Error", "Failed to save day slot: " + e.getMessage()));
+	                }
+	            }
+	        }
+
+	      
+
+	        return ResponseEntity.ok(new Response(1, "Success", "Time slots and leaves added successfully"));
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "Error", "An error occurred: " + e.getMessage()));
+	    }
+	}
+
 }

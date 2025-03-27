@@ -47,6 +47,7 @@ public class UserWebModel {
 	private List<DoctorDaySlotWebModel> doctorDaySlots;
 	private List<DoctorLeaveListWebModel> doctorLeaveList;
 
+
 	
 
 }

@@ -58,5 +58,9 @@ public class HospitalDataListWebModel {
 	 // For document uploads (Insurance card, Aadhaar, PAN etc.)
     private List<MultipartFile> files;
     private List<DoctorLeaveListWebModel> doctorLeaveList;
+	private List<DoctorDaySlotWebModel> doctorDaySlots;
+	private Integer doctorSlotId;
+
+
 
 }
