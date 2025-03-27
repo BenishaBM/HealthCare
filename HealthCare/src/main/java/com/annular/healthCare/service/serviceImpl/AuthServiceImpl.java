@@ -15,6 +15,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -25,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import com.annular.healthCare.Response;
 import com.annular.healthCare.Util.Base64FileUpload;
@@ -58,7 +60,9 @@ import com.annular.healthCare.webModel.DoctorLeaveListWebModel;
 import com.annular.healthCare.webModel.DoctorSlotTimeWebModel;
 import com.annular.healthCare.webModel.FileInputWebModel;
 import com.annular.healthCare.webModel.HospitalDataListWebModel;
+import com.annular.healthCare.webModel.SplitSlotDurationWebModel;
 import com.annular.healthCare.webModel.UserWebModel;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -215,7 +219,9 @@ public class AuthServiceImpl implements AuthService {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
+
 	
+
 	// Helper method to handle file uploads (hospital logo)
 		public void handleFileUploads(User hospitalData, List<FileInputWebModel> filesInputWebModel)
 				throws IOException {

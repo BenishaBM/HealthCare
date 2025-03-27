@@ -1,5 +1,7 @@
 package com.annular.healthCare.webModel;
 
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,5 +23,6 @@ public class DoctorSlotTimeWebModel {
     private String slotTime;          // Duration of the slot (e.g., "30 mins")
     private Integer createdBy;
     private Boolean isActive;
+    private List<SplitSlotDurationWebModel> splitSlotDuration;
 
 }

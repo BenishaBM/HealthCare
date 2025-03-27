@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import com.annular.healthCare.Response;
 import com.annular.healthCare.Util.Utility;
@@ -59,7 +60,22 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	                new Response(0, "Fail", "Patient name and mobile number are required")
 	            );
 	        }
+	        
+	        // **Check if slot is available before booking an appointment**
+	        if (userWebModel.getDoctorId() != null && userWebModel.getAppointmentDate() != null) {
+	            String checkSlotUrl = "http://3.108.90.62/auth/getDoctorSlotById?userId=" 
+	                + userWebModel.getDoctorId() + "&date=" + userWebModel.getAppointmentDate();
 
+	            logger.info("Checking doctor slot availability: " + checkSlotUrl);
+
+	            boolean isSlotBooked = checkIfSlotIsBooked(checkSlotUrl);
+	            if (isSlotBooked) {
+	                logger.warn("Slot is already booked for date: " + userWebModel.getAppointmentDate());
+	                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+	                    .body(new Response(0, "Fail", "The selected slot on " 
+	                        + userWebModel.getAppointmentDate() + " is already booked."));
+	            }
+	        }
 	        // Create patient details
 	        PatientDetails savedPatient = createPatientDetails(userWebModel);
 	        
@@ -76,6 +92,20 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	                .body(new Response(0, "Fail", "Something went wrong during registration"));
 	    }
 	}
+	private boolean checkIfSlotIsBooked(String url) {
+	    try {
+	        RestTemplate restTemplate = new RestTemplate();
+	        ResponseEntity<Boolean> response = restTemplate.getForEntity(url, Boolean.class);
+
+	        logger.info("Slot check API response: " + response.getBody());
+
+	        return response.getBody() != null && response.getBody();
+	    } catch (Exception e) {
+	        logger.error("Error checking slot availability: " + e.getMessage(), e);
+	        return false; // Assume slot is not booked if API call fails
+	    }
+	}
+
 
 	private PatientDetails createPatientDetails(PatientDetailsWebModel userWebModel) {
 	    PatientDetails newPatient = PatientDetails.builder()

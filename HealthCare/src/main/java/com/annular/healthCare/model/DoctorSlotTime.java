@@ -67,4 +67,6 @@ public class DoctorSlotTime {
 	@Column(name = "slotTime")
 	private String slotTime;
 
+
+
 }
