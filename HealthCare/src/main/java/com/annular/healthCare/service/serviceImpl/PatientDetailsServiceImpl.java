@@ -260,66 +260,49 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	        DoctorSlotTime doctorSlotTime = doctorSlotTimeRepository.findById(userWebModel.getTimeSlotId())
 	                .orElseThrow(() -> new RuntimeException("Doctor slot time not found"));
 
-	        // Parse time slot details
-	        LocalTime startTime = parseTime(doctorSlotTime.getSlotStartTime());
-	        LocalTime endTime = parseTime(doctorSlotTime.getSlotEndTime());
+	        // Validate input slot times
+	        String inputSlotStartTime = userWebModel.getSlotStartTime();
+	        String inputSlotEndTime = userWebModel.getSlotEndTime();
 
-	        int slotDuration;
-	        try {
-	            slotDuration = Integer.parseInt(userWebModel.getSlotTime().replaceAll("[^0-9]", ""));
-	        } catch (NumberFormatException e) {
-	            logger.error("Invalid slot time format: {}", userWebModel.getSlotTime(), e);
-	            throw new IllegalArgumentException("Invalid slot time format. Please provide a numeric value (e.g., '15').");
+	        // First, check if the exact input slot is already booked
+	        boolean isSlotAlreadyBooked = patientAppointmentRepository.isSlotBooked(
+	                userWebModel.getDoctorSlotId(),
+	                userWebModel.getDaySlotId(),
+	                inputSlotStartTime,
+	                inputSlotEndTime
+	        );
+
+	        if (isSlotAlreadyBooked) {
+	            logger.warn("Slot is already booked: DoctorSlotId: {}, DaySlotId: {}, StartTime: {}, EndTime: {}",
+	                    userWebModel.getDoctorSlotId(), 
+	                    userWebModel.getDaySlotId(), 
+	                    inputSlotStartTime, 
+	                    inputSlotEndTime);
+	            
+	            return null; // Slot is already booked
 	        }
 
-	        while (startTime.isBefore(endTime)) {
-	            LocalTime nextSlotEndTime = startTime.plusMinutes(slotDuration);
-	            if (nextSlotEndTime.isAfter(endTime)) {
-	                break;
-	            }
+	        // If not booked, proceed with creating the appointment
+	        PatientAppointmentTable appointment = PatientAppointmentTable.builder()
+	                .doctor(doctor)
+	                .patient(patient)
+	                .doctorSlotId(userWebModel.getDoctorSlotId())
+	                .daySlotId(userWebModel.getDaySlotId())
+	                .timeSlotId(userWebModel.getTimeSlotId())
+	                .appointmentDate(userWebModel.getAppointmentDate())
+	                .slotStartTime(inputSlotStartTime)
+	                .slotEndTime(inputSlotEndTime)
+	                .slotTime(userWebModel.getSlotTime())
+	                .isActive(true)
+	                .doctorSlotStartTime(doctorSlotTime.getSlotStartTime())
+	                .doctorSlotEndTime(doctorSlotTime.getSlotEndTime())
+	                .createdBy(userWebModel.getCreatedBy())
+	                .appointmentStatus("SCHEDULED")
+	                .patientNotes(userWebModel.getPatientNotes())
+	                .build();
 
-	            boolean isBooked = patientAppointmentRepository.isSlotBooked(
-	                    userWebModel.getDoctorSlotId(),
-	                    userWebModel.getDaySlotId(),
-	                    formatTime(startTime),  // Save formatted time
-	                    formatTime(nextSlotEndTime)  // Save formatted time
-	            );
-
-	            if (!isBooked) {
-	                // Format times to "hh:mm a"
-	                String formattedStartTime = formatTime(startTime);
-	                String formattedEndTime = formatTime(nextSlotEndTime);
-
-	                // Create and return the appointment immediately
-	                PatientAppointmentTable appointment = PatientAppointmentTable.builder()
-	                        .doctor(doctor)
-	                        .patient(patient)
-	                        .doctorSlotId(userWebModel.getDoctorSlotId())
-	                        .daySlotId(userWebModel.getDaySlotId())
-	                        .timeSlotId(userWebModel.getTimeSlotId())
-	                        .appointmentDate(userWebModel.getAppointmentDate())
-	                        .slotStartTime(formattedStartTime)  // Saving formatted start time
-	                        .slotEndTime(formattedEndTime)  // Saving formatted end time
-	                        .slotTime(userWebModel.getSlotTime())
-	                        .isActive(true)
-	                        .doctorSlotStartTime(formatTime(parseTime(doctorSlotTime.getSlotStartTime())))
-	                        .doctorSlotEndTime(formatTime(parseTime(doctorSlotTime.getSlotEndTime())))
-	                        .createdBy(userWebModel.getCreatedBy())
-	                        .appointmentStatus("SCHEDULED")
-	                        .patientNotes(userWebModel.getPatientNotes())
-	                        .build();
-
-	                return patientAppointmentRepository.save(appointment);
-	            } else {
-	                logger.warn("Slot already booked: {} - {}", formatTime(startTime), formatTime(nextSlotEndTime));
-	            }
-
-	            startTime = nextSlotEndTime; // Move to next slot
-	        }
-
-	        return null; // No available slot found
+	        return patientAppointmentRepository.save(appointment);
 	    }
-
 
 	    private LocalTime parseTime(String timeString) {
 	        if (timeString == null || timeString.trim().isEmpty()) {

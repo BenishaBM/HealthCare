@@ -25,4 +25,6 @@ public interface PatientAppoitmentTablerepository extends JpaRepository<PatientA
 	List<PatientAppointmentTable> findByPatient_UserId(Integer patientDetailsID);
 
 
+
+
 }
