@@ -105,6 +105,8 @@ public class AuthServiceImpl implements AuthService {
 	@Autowired
 	DoctorSpecialityRepository doctorSpecialtyRepository;
 	
+
+	
 	@Value("${annular.app.imageLocation}")
 	private String imageLocation;
 
@@ -434,7 +436,20 @@ public class AuthServiceImpl implements AuthService {
 	                doctorRoleRepository.save(doctorRole);
 	            }
 	        }
-
+            // Save doctor leaves if provided
+            if (userWebModel.getDoctorLeaveList() != null) {
+                for (DoctorLeaveListWebModel leaveModel : userWebModel.getDoctorLeaveList()) {
+                    DoctorLeaveList doctorLeave = DoctorLeaveList.builder()
+                            .user(updatedUser)
+                            .doctorLeaveDate(leaveModel.getDoctorLeaveDate())
+                            .createdBy(updatedUser.getCreatedBy())
+                            .userIsActive(true)
+                            .build();
+                    doctorLeaveListRepository.save(doctorLeave);
+                }
+            }
+        
+        
 
 	        // Step 6: Return success response
 	        response.put("message", "User details updated successfully");
@@ -890,5 +905,37 @@ public class AuthServiceImpl implements AuthService {
 	    return date != null 
 	           ? date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() 
 	           : null;
+	}
+
+
+
+	@Override
+	public ResponseEntity<?> deleteDoctorLeaveByLeaveId(Integer doctorLeaveListId) {
+		   try {
+		        logger.info("Disabling doctor role with ID: {}", doctorLeaveListId);
+		        
+		        // Step 1: Retrieve the existing DoctorRole entity by doctorRoleId
+		        DoctorLeaveList doctorRole = doctorLeaveListRepository.findById(doctorLeaveListId)
+		                .orElseThrow(() -> new RuntimeException("deleteDoctorLeaveByLeaveId"));
+
+		        // Step 2: Set userIsActive to false
+		        doctorRole.setUserIsActive(false);
+		        doctorRole.setUserUpdatedOn(new Date());
+
+		        // Step 3: Save the updated entity
+		        doctorLeaveListRepository.save(doctorRole);
+
+		        // Step 4: Return success response
+		        return ResponseEntity.ok(new Response(1, "Success", "deleteDoctorLeaveByLeaveId"));
+
+		    } catch (RuntimeException e) {
+		        logger.warn("Doctor role not found: {}", e.getMessage());
+		        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+		                .body(new Response(0, "Fail", "deleteDoctorLeaveByLeaveId"));
+		    } catch (Exception e) {
+		        logger.error("Error disabling doctor role: {}", e.getMessage(), e);
+		        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+		                .body(new Response(0, "Fail", "Error disabling doctor role"));
+		    }
 	}
 }

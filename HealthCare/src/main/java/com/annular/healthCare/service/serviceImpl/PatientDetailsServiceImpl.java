@@ -29,6 +29,7 @@ import com.annular.healthCare.service.MediaFileService;
 import com.annular.healthCare.service.PatientDetailsService;
 import com.annular.healthCare.webModel.FileInputWebModel;
 import com.annular.healthCare.webModel.FileOutputWebModel;
+import com.annular.healthCare.webModel.PatientAppointmentWebModel;
 import com.annular.healthCare.webModel.PatientDetailsWebModel;
 
 @Service
@@ -346,6 +347,34 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	                MediaFileCategory.patientDocument, patient.getPatientDetailsId());
 	        webModel.setFiless(mediaFiles);
 
+	        // Fetch patient appointments
+	        List<PatientAppointmentTable> appointments = patientAppointmentRepository.findByPatient_UserId(patientDetailsID);
+
+	        // Convert appointment details to a list of WebModels
+	        List<PatientAppointmentWebModel> appointmentWebModels = appointments.stream().map(appointment -> {
+	            PatientAppointmentWebModel appointmentModel = new PatientAppointmentWebModel();
+	            appointmentModel.setAppointmentId(appointment.getAppointmentId());
+	            appointmentModel.setDoctorId(appointment.getDoctor().getUserId());
+	            appointmentModel.setDoctorSlotId(appointment.getDoctorSlotId());
+	            appointmentModel.setDaySlotId(appointment.getDaySlotId());
+	            appointmentModel.setTimeSlotId(appointment.getTimeSlotId());
+	            appointmentModel.setAppointmentDate(appointment.getAppointmentDate());
+	            appointmentModel.setSlotStartTime(appointment.getSlotStartTime());
+	            appointmentModel.setSlotEndTime(appointment.getSlotEndTime());
+	            appointmentModel.setSlotTime(appointment.getSlotTime());
+	            appointmentModel.setIsActive(appointment.getIsActive());
+	            appointmentModel.setCreatedBy(appointment.getCreatedBy());
+	            appointmentModel.setCreatedOn(appointment.getCreatedOn());
+	            appointmentModel.setUpdatedBy(appointment.getUpdatedBy());
+	            appointmentModel.setUpdatedOn(appointment.getUpdatedOn());
+	            appointmentModel.setAppointmentStatus(appointment.getAppointmentStatus());
+	            appointmentModel.setPatientNotes(appointment.getPatientNotes());
+	            return appointmentModel;
+	        }).collect(Collectors.toList());
+
+	        // Add appointments to response model
+	        webModel.setAppointments(appointmentWebModels);
+
 	        return ResponseEntity.ok(new Response(1, "Success", webModel));
 
 	    } catch (Exception e) {
@@ -354,6 +383,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	                .body(new Response(0, "Fail", "Something went wrong while retrieving patient details"));
 	    }
 	}
+
 
 	@Override
 	public ResponseEntity<?> getDoctorListByHospitalId(Integer hospitalId) {

@@ -34,4 +34,6 @@ public interface AuthService {
 
 	ResponseEntity<?> getDoctorSlotById(Integer userId, LocalDate date);
 
+	ResponseEntity<?> deleteDoctorLeaveByLeaveId(Integer doctorLeaveListId);
+
 }

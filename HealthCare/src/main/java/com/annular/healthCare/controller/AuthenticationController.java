@@ -247,7 +247,18 @@ public class AuthenticationController {
 	    }
 	}
 
-	
+	@DeleteMapping("deleteDoctorLeaveByLeaveId")
+	public ResponseEntity<?> deleteDoctorLeaveByLeaveId(@RequestParam("doctorLeaveListId") Integer doctorLeaveListId) {
+	    try {
+	        // Call the service to perform the update
+	        return authService.deleteDoctorLeaveByLeaveId(doctorLeaveListId);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("deleteDoctorLeaveByLeaveId Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 	
 
 }

@@ -17,6 +17,7 @@ import lombok.ToString;
 @NoArgsConstructor
 public class DoctorLeaveListWebModel {
 	
+	private Integer doctorLeaveListId;
     private Date doctorLeaveDate;
 
 
