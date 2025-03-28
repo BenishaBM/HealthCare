@@ -123,5 +123,28 @@ public class PatientDetailsController {
 	            return ResponseEntity.internalServerError().body(new Response(-1, "Fail", e.getMessage()));
 	        }
 	    }
+	  
+		@PostMapping("patientAppoitmentByOffline")
+		public ResponseEntity<?> patientAppoitmentByOffline(@RequestBody PatientDetailsWebModel patientDetailsWebModel) {
+			try {
+				logger.info("patientAppoitmentByOffline request for userType: {}");
+				return patientDetailService.patientAppoitmentByOffline(patientDetailsWebModel);
+			} catch (Exception e) {
+				logger.error("patientAppoitmentByOffline Method Exception: {}", e.getMessage(), e);
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+						.body(new Response(-1, "Fail", e.getMessage()));
+			}
+		}
+		@GetMapping("getPatientDetailsByMobileNumberAndHospitalId")
+		public ResponseEntity<?> getPatientDetailsByMobileNumberAndHospitalId(@RequestParam("phoneNumber") String phoneNumber,@RequestParam("hospitalId")Integer hospitalId) {
+			try {
+				logger.info("getPatientDetailsByMobileNumberAndHospitalId request for userType: {}", hospitalId);
+				return patientDetailService.getPatientDetailsByMobileNumberAndHospitalId(phoneNumber,hospitalId);
+			} catch (Exception e) {
+				logger.error("getPatientDetailsByMobileNumberAndHospitalId Method Exception: {}", e.getMessage(), e);
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+						.body(new Response(-1, "Fail", e.getMessage()));
+			}
+		}
 
 }

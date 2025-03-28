@@ -20,4 +20,8 @@ public interface PatientDetailsService {
 
 	ResponseEntity<?> adminPatientRegister(PatientDetailsWebModel userWebModel);
 
+	ResponseEntity<?> patientAppoitmentByOffline(PatientDetailsWebModel patientDetailsWebModel);
+
+	ResponseEntity<?> getPatientDetailsByMobileNumberAndHospitalId(String phoneNumber, Integer hospitalId);
+
 }

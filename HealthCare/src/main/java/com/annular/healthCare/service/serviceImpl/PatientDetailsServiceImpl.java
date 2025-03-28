@@ -306,6 +306,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	                .doctorSlotEndTime(doctorSlotTime.getSlotEndTime())
 	                .createdBy(userWebModel.getCreatedBy())
 	                .appointmentStatus("SCHEDULED")
+	                .appointmentType("ONLINE")
 	                .patientNotes(userWebModel.getPatientNotes())
 	                .build();
 
@@ -740,6 +741,111 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 		    }
 		}
 
-	
+        @Override
+	    public ResponseEntity<?> patientAppoitmentByOffline(PatientDetailsWebModel patientDetailsWebModel) {
+	        try {
+	            // Validate patient and doctor
+	            Optional<User> doctor = userRepository.findById(patientDetailsWebModel.getDoctorId());
+	            Optional<User> patient = userRepository.findById(patientDetailsWebModel.getPatientDetailsId());
+
+	            if (doctor.isEmpty() || patient.isEmpty()) {
+	                return ResponseEntity.badRequest().body("Doctor or Patient not found.");
+	            }
+
+	            // Create new appointment entry
+	            PatientAppointmentTable appointment = PatientAppointmentTable.builder()
+	                .doctor(doctor.get())
+	                .patient(patient.get())
+	                
+	                .appointmentDate(patientDetailsWebModel.getAppointmentDate())
+	                .slotStartTime(patientDetailsWebModel.getSlotStartTime())
+	                .slotEndTime(patientDetailsWebModel.getSlotEndTime())
+	                .slotTime(patientDetailsWebModel.getSlotTime())
+	                .isActive(true)
+	                .createdBy(patientDetailsWebModel.getCreatedBy())
+	                .appointmentStatus("SCHEDULED")
+	                .patientNotes(patientDetailsWebModel.getPatientNotes())
+	                .appointmentType("OFFLINE")
+	                .build();
+
+	            // Save the appointment
+	            patientAppointmentRepository.save(appointment);
+
+	            return ResponseEntity.ok(new Response(1, "Success","Offline appointment booked successfully."));
+	        } catch (Exception e) {
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred: " + e.getMessage());
+	        }
+	    }
+
+
+        @Override
+		public ResponseEntity<?> getPatientDetailsByMobileNumberAndHospitalId(String phoneNumber,
+				Integer hospitalId) {
+            try {
+                Optional<PatientDetails> patientDetailsOptional = patientDetailsRepository.findByMobileNumberAndHospitalId(phoneNumber, hospitalId);
+
+                if (patientDetailsOptional.isPresent()) {
+                    PatientDetails patient = patientDetailsOptional.get();
+
+                    // Fetch Patient's Appointments
+                    List<PatientAppointmentTable> appointments = patientAppointmentRepository.findByPatientDetailsId(patient.getPatientDetailsId());
+
+                    // Create Response HashMap
+                    Map<String, Object> responseMap = new HashMap<>();
+                    responseMap.put("patientDetailsId", patient.getPatientDetailsId());
+                    responseMap.put("patientName", patient.getPatientName());
+                    responseMap.put("dob", patient.getDob());
+                    responseMap.put("gender", patient.getGender());
+                    responseMap.put("bloodGroup", patient.getBloodGroup());
+                    responseMap.put("mobileNumber", patient.getMobileNumber());
+                    responseMap.put("emailId", patient.getEmailId());
+                    responseMap.put("address", patient.getAddress());
+                    responseMap.put("emergencyContact", patient.getEmergencyContact());
+                    responseMap.put("hospitalId", patient.getHospitalId());
+                    responseMap.put("doctorId", patient.getDoctorId());
+                    responseMap.put("userIsActive", patient.getUserIsActive());
+
+                    // Transform appointments into a list of HashMaps
+                    List<Map<String, Object>> appointmentList = new ArrayList<>();
+                    for (PatientAppointmentTable appointment : appointments) {
+                        Map<String, Object> appointmentMap = new HashMap<>();
+                        appointmentMap.put("appointmentId", appointment.getAppointmentId());
+                        appointmentMap.put("doctorId", appointment.getDoctor().getUserId());
+                        appointmentMap.put("patientId", appointment.getPatient().getUserId());
+                        appointmentMap.put("doctorSlotId", appointment.getDoctorSlotId());
+                        appointmentMap.put("daySlotId", appointment.getDaySlotId());
+                        appointmentMap.put("timeSlotId", appointment.getTimeSlotId());
+                        appointmentMap.put("appointmentDate", appointment.getAppointmentDate());
+                        appointmentMap.put("slotStartTime", appointment.getSlotStartTime());
+                        appointmentMap.put("slotEndTime", appointment.getSlotEndTime());
+                        appointmentMap.put("slotTime", appointment.getSlotTime());
+                        appointmentMap.put("isActive", appointment.getIsActive());
+                        appointmentMap.put("appointmentStatus", appointment.getAppointmentStatus());
+                        appointmentMap.put("patientNotes", appointment.getPatientNotes());
+                        appointmentMap.put("doctorSlotStartTime", appointment.getDoctorSlotStartTime());
+                        appointmentMap.put("doctorSlotEndTime", appointment.getDoctorSlotEndTime());
+                        appointmentMap.put("appointmentType", appointment.getAppointmentType());
+                        appointmentList.add(appointmentMap);
+                    }
+
+                    // Add Appointments List to Response
+                    responseMap.put("appointments", appointmentList);
+
+                    return ResponseEntity.ok(responseMap);
+                } else {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(Collections.singletonMap("message", "Patient details not found for the given mobile number and hospital ID."));
+                }
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(Collections.singletonMap("error", "Error fetching patient details: " + e.getMessage()));
+            }
+        }
+
+
+
+
+
 
 }
+

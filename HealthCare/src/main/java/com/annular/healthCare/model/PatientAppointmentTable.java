@@ -80,4 +80,7 @@ public class PatientAppointmentTable {
     
     @Column(name = "doctorSlotEndTime")
     private String doctorSlotEndTime;
+    
+    @Column(name = "appointmentType")
+    private String appointmentType;
 }
