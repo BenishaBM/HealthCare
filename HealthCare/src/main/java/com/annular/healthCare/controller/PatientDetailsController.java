@@ -44,6 +44,20 @@ public class PatientDetailsController {
 		}
 
 	}
+	
+	@RequestMapping(path = "/adminPatientRegister", method = RequestMethod.POST, consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+	public ResponseEntity<?> adminPatientRegister(@ModelAttribute PatientDetailsWebModel userWebModel) {
+		try {
+			logger.info("User register controller start");
+			return patientDetailService.adminPatientRegister(userWebModel);
+		} catch (Exception e) {
+			logger.error("userRegister Method Exception {}" + e);
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(new Response(-1, "Fail", e.getMessage()));
+		}
+
+	}
 	@PutMapping(path = "/updatePatientDetails", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
 	public ResponseEntity<?> updatePatientDetails(@ModelAttribute PatientDetailsWebModel userWebModel) {
 	    try {

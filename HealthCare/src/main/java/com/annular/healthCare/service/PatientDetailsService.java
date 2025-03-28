@@ -18,4 +18,6 @@ public interface PatientDetailsService {
 
 	boolean deleteMediaFilesById(Integer fileId);
 
+	ResponseEntity<?> adminPatientRegister(PatientDetailsWebModel userWebModel);
+
 }

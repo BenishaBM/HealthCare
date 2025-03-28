@@ -43,4 +43,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 	@Query("SELECT u FROM User u WHERE u.userIsActive = true AND u.hospitalId = :hospitalId AND u.userType = :string")
 	List<User> findByHospitalIdAndUserType(Integer hospitalId, String string);
 
+
+
 }

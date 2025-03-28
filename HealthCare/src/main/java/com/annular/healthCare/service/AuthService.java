@@ -42,4 +42,5 @@ public interface AuthService {
 
 	ResponseEntity<?> doctorSlotById(Integer doctorDaySlotId);
 
+	
 }

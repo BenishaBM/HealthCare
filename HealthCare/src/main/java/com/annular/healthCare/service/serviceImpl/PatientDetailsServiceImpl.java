@@ -71,9 +71,16 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 
 	        // Validate required fields
 	        if (userWebModel.getPatientName() == null || userWebModel.getMobileNumber() == null) {
-	            return ResponseEntity.badRequest().body(
-	                new Response(0, "Fail", "Patient name and mobile number are required")
-	            );
+	            return ResponseEntity.badRequest().body(new Response(0, "Fail", "Patient name and mobile number are required"));
+	        }
+
+	        // Check if the patient already exists
+	        Optional<PatientDetails> existingUser = patientDetailsRepository.findByMobileNumberAndHospitalId(
+	            userWebModel.getMobileNumber(), 
+	            userWebModel.getHospitalId()
+	        );
+	        if (existingUser.isPresent()) {
+	        	return ResponseEntity.badRequest().body(new Response(0, "Fail", "Mobile number is already registered for this hospital."));
 	        }
 
 	        // Check if slot is available before booking an appointment
@@ -144,6 +151,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	    }
 
 	    private PatientDetails createPatientDetails(PatientDetailsWebModel userWebModel) {
+
 	        PatientDetails newPatient = PatientDetails.builder()
 	                .patientName(userWebModel.getPatientName())
 	                .dob(userWebModel.getDob())
@@ -247,9 +255,9 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	        return time.format(TIME_FORMATTER);
 	    }
 	    private PatientAppointmentTable bookAppointment(PatientDetailsWebModel userWebModel, PatientDetails savedPatient) {
-	        if (userWebModel.getDoctorId() == null || userWebModel.getAppointmentDate() == null) {
-	            throw new IllegalArgumentException("Doctor ID and Appointment Date are required.");
-	        }
+//	        if (userWebModel.getDoctorId() == null || userWebModel.getAppointmentDate() == null) {
+//	            throw new IllegalArgumentException("Doctor ID and Appointment Date are required.");
+//	        }
 
 	        // Fetch required entities
 	        User doctor = userRepository.findById(userWebModel.getDoctorId())
@@ -660,6 +668,78 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	            MediaFileCategory.patientDocument, fileId
 	    ); 
 	}
+
+
+	@Override
+	public ResponseEntity<?> adminPatientRegister(PatientDetailsWebModel userWebModel) {
+
+		    try {
+		        logger.info("Registering patient: {}", userWebModel.getPatientName());
+
+		        if (userWebModel.getPatientName() == null || userWebModel.getMobileNumber() == null) {
+		            return ResponseEntity.badRequest().body(
+		                new Response(0, "Fail", "Patient name and mobile number are required")
+		            );
+		        }
+		        // Check if the patient already exists
+		        Optional<PatientDetails> existingUser = patientDetailsRepository.findByMobileNumberAndHospitalId(
+		            userWebModel.getMobileNumber(), 
+		            userWebModel.getHospitalId()
+		        );
+		        if (existingUser.isPresent()) {
+		        	return ResponseEntity.badRequest().body(new Response(0, "Fail", "Mobile number is already registered for this hospital."));
+		        }
+
+		        PatientDetails newPatient = PatientDetails.builder()
+		                .patientName(userWebModel.getPatientName())
+		                .dob(userWebModel.getDob())
+		                .age(userWebModel.getAge())
+		                .gender(userWebModel.getGender())
+		                .bloodGroup(userWebModel.getBloodGroup())
+		                .mobileNumber(userWebModel.getMobileNumber())
+		                .emailId(userWebModel.getEmailId())
+		                .address(userWebModel.getAddress())
+		                .currentAddress(userWebModel.getCurrentAddress())
+		                .emergencyContact(userWebModel.getEmergencyContact())
+		                .hospitalId(userWebModel.getHospitalId())
+		                .purposeOfVisit(userWebModel.getPurposeOfVisit())
+		                .doctorId(userWebModel.getDoctorId())
+		                .userIsActive(true)
+		                .createdBy(userWebModel.getCreatedBy())
+		                .userCreatedOn(new Date())
+		                .previousMedicalHistory(userWebModel.getPreviousMedicalHistory())
+		                .insuranceDetails(userWebModel.getInsuranceDetails())
+		                .insurerName(userWebModel.getInsurerName())
+		                .insuranceProvider(userWebModel.getInsuranceProvider())
+		                .policyNumber(userWebModel.getPolicyNumber())
+		                .disability(userWebModel.getDisability())
+		                .build();
+
+		        // Save patient first to generate ID
+		        PatientDetails savedPatient = patientDetailsRepository.save(newPatient);
+
+		        // Save media files if any
+		        if (!Utility.isNullOrEmptyList(userWebModel.getFiles())) {
+		            FileInputWebModel fileInput = FileInputWebModel.builder()
+		                    .category(MediaFileCategory.patientDocument) // Define a suitable enum value
+		                    .categoryRefId(savedPatient.getPatientDetailsId())
+		                    .files(userWebModel.getFiles())
+		                    .build();
+
+		            User userFromDB = userRepository.findById(userWebModel.getCreatedBy()).orElse(null); // Or handle accordingly
+
+		            mediaFilesService.saveMediaFiles(fileInput, userFromDB);
+		        }
+
+		        return ResponseEntity.ok(new Response(1, "Success", "Patient registered successfully"));
+
+		    } catch (Exception e) {
+		        logger.error("Registration failed", e);
+		        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+		                .body(new Response(0, "Fail", "Something went wrong during registration"));
+		    }
+		}
+
 	
 
 }
