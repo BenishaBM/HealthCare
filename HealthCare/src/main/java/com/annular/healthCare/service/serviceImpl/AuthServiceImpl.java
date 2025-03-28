@@ -650,14 +650,13 @@ public class AuthServiceImpl implements AuthService {
 
 	        data.put("profilePhotos", filesInputWebModel);
 
-	        // Fetch slot details if the user is a doctor
 	        if ("DOCTOR".equalsIgnoreCase(user.getUserType())) {
 	            List<Map<String, Object>> doctorSlotList = new ArrayList<>();
 
 	            List<DoctorSlot> doctorSlots = doctorSlotRepository.findByUser(user);
 	            for (DoctorSlot doctorSlot : doctorSlots) {
 	                Map<String, Object> slotData = new HashMap<>();
-	                slotData.put("slotId", doctorSlot.getDoctorSlotId());
+	                slotData.put("slotId", doctorSlot.getDoctorSlotId()); // ✅ Ensure slotId is included
 	                slotData.put("isActive", doctorSlot.getIsActive());
 
 	                // Fetch day slots
@@ -699,6 +698,8 @@ public class AuthServiceImpl implements AuthService {
 	                doctorSlotList.add(slotData);
 	            }
 	            data.put("doctorSlots", doctorSlotList);
+	        }
+
 	                   // Fetch doctor leave details
             List<Map<String, Object>> doctorLeaveList = new ArrayList<>();
             List<DoctorLeaveList> doctorLeaves = doctorLeaveListRepository.findByUser(user);
@@ -712,8 +713,7 @@ public class AuthServiceImpl implements AuthService {
             }
 
             data.put("doctorLeaveList", doctorLeaveList);
-        }
-
+        
 
 	        return ResponseEntity.ok(data);
 
