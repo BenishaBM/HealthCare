@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -40,6 +41,9 @@ public class WebSecurityConfig {
 
     @Autowired
     private AuthEntryPointJwt unauthorizedHandler;
+    
+    @Autowired
+    private OtpAuthenticationProvider otpAuthenticationProvider;
 
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
@@ -76,7 +80,7 @@ public class WebSecurityConfig {
                 .and()
                 .authorizeRequests(
                         (authorize) -> authorize
-                                .antMatchers("/auth/login","/auth/refreshToken","/user/login","/user/refreshToken","/patientDetails/register","/user/getByHopitalName","/user/getHospitalDataByUserTypeAndHospitalId","/auth/getDoctorSlotById")
+                                .antMatchers("/auth/login","/auth/refreshToken","/user/login","/user/refreshToken","/patientDetails/register","/user/getByHopitalName","/user/getHospitalDataByUserTypeAndHospitalId","/auth/getDoctorSlotById","/auth/adminPatientLogin")
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated()
@@ -93,5 +97,11 @@ public class WebSecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+    @Bean
+    public AuthenticationManager authManager(HttpSecurity http) throws Exception {
+        return http.getSharedObject(AuthenticationManagerBuilder.class)
+                .authenticationProvider(otpAuthenticationProvider)
+                .build();
     }
 }

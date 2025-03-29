@@ -61,6 +61,7 @@ public class PatientDetailsWebModel {
 	private String slotEndTime;
 	private String slotTime;
 	private String patientNotes;
+	private Integer otp;
 
    private List<PatientAppointmentWebModel> appointments;
 }

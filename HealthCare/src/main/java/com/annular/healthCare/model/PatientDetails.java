@@ -110,4 +110,7 @@ public class PatientDetails {
 	
 	@Column(name = "age")
 	private String age;
+	
+	@Column(name = "otp")
+	private Integer otp;
 }

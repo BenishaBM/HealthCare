@@ -74,11 +74,16 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	            return ResponseEntity.badRequest().body(new Response(0, "Fail", "Patient name and mobile number are required"));
 	        }
 
+	        // Check if email already exists in the database
+	        Optional<PatientDetails> existingUsers = patientDetailsRepository.findByEmailId(userWebModel.getEmailId());
+	        if (existingUsers.isPresent()) {
+	            return ResponseEntity.badRequest().body(new Response(0, "Fail", "Email already exists"));
+	        }
+
+	        
 	        // Check if the patient already exists
 	        Optional<PatientDetails> existingUser = patientDetailsRepository.findByMobileNumberAndHospitalId(
-	            userWebModel.getMobileNumber(), 
-	            userWebModel.getHospitalId()
-	        );
+	            userWebModel.getMobileNumber());
 	        if (existingUser.isPresent()) {
 	        	return ResponseEntity.badRequest().body(new Response(0, "Fail", "Mobile number is already registered for this hospital."));
 	        }
@@ -684,9 +689,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 		        }
 		        // Check if the patient already exists
 		        Optional<PatientDetails> existingUser = patientDetailsRepository.findByMobileNumberAndHospitalId(
-		            userWebModel.getMobileNumber(), 
-		            userWebModel.getHospitalId()
-		        );
+		            userWebModel.getMobileNumber());
 		        if (existingUser.isPresent()) {
 		        	return ResponseEntity.badRequest().body(new Response(0, "Fail", "Mobile number is already registered for this hospital."));
 		        }
@@ -782,7 +785,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 		public ResponseEntity<?> getPatientDetailsByMobileNumberAndHospitalId(String phoneNumber,
 				Integer hospitalId) {
             try {
-                Optional<PatientDetails> patientDetailsOptional = patientDetailsRepository.findByMobileNumberAndHospitalId(phoneNumber, hospitalId);
+                Optional<PatientDetails> patientDetailsOptional = patientDetailsRepository.findByMobileNumberAndHospitalIds(phoneNumber, hospitalId);
 
                 if (patientDetailsOptional.isPresent()) {
                     PatientDetails patient = patientDetailsOptional.get();
