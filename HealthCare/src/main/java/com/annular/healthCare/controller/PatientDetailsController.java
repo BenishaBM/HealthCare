@@ -146,5 +146,18 @@ public class PatientDetailsController {
 						.body(new Response(-1, "Fail", e.getMessage()));
 			}
 		}
+		
+		@GetMapping("getPatientDetailsByMobileNumber")
+		public ResponseEntity<?> getPatientDetailsByMobileNumber(@RequestParam("mobileNumber") String mobileNumber) {
+			try {
+				logger.info("getPatientDetailsByMobileNumber request for userType: {}", mobileNumber);
+				return patientDetailService.getPatientDetailsByMobileNumber(mobileNumber);
+			} catch (Exception e) {
+				logger.error("getPatientDetailsByMobileNumber Method Exception: {}", e.getMessage(), e);
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+						.body(new Response(-1, "Fail", e.getMessage()));
+			}
+		}
+		
 
 }

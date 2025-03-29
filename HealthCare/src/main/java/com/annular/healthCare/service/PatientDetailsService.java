@@ -24,4 +24,6 @@ public interface PatientDetailsService {
 
 	ResponseEntity<?> getPatientDetailsByMobileNumberAndHospitalId(String phoneNumber, Integer hospitalId);
 
+	ResponseEntity<?> getPatientDetailsByMobileNumber(String mobileNumber);
+
 }

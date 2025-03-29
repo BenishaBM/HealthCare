@@ -23,8 +23,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.annular.healthCare.Response;
+import com.annular.healthCare.Util.Base64FileUpload;
 import com.annular.healthCare.Util.Utility;
 import com.annular.healthCare.model.DoctorSlotTime;
+import com.annular.healthCare.model.MediaFile;
 import com.annular.healthCare.model.MediaFileCategory;
 import com.annular.healthCare.model.PatientAppointmentTable;
 import com.annular.healthCare.model.PatientDetails;
@@ -845,8 +847,65 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
             }
         }
 
+        @Override
+        public ResponseEntity<?> getPatientDetailsByMobileNumber(String mobileNumber) {
+            Map<String, Object> response = new HashMap<>();
 
+            Optional<PatientDetails> optionalPatient = patientDetailsRepository.findByMobileNumber(mobileNumber);
 
+            if (optionalPatient.isPresent()) {
+                PatientDetails patient = optionalPatient.get();
+
+                // Fetch appointments using patientDetailsId
+                List<PatientAppointmentTable> appointments = patientAppointmentRepository.findByPatientId(patient.getPatientDetailsId());
+
+                // Prepare patient details
+                Map<String, Object> patientData = new HashMap<>();
+                patientData.put("patientName", patient.getPatientName());
+                patientData.put("dob", patient.getDob());
+                patientData.put("gender", patient.getGender());
+                patientData.put("bloodGroup", patient.getBloodGroup());
+                patientData.put("mobileNumber", patient.getMobileNumber());
+                patientData.put("emailId", patient.getEmailId());
+                patientData.put("address", patient.getAddress());
+                patientData.put("emergencyContact", patient.getEmergencyContact());
+                patientData.put("hospitalId", patient.getHospitalId());
+                patientData.put("purposeOfVisit", patient.getPurposeOfVisit());
+                patientData.put("doctorId", patient.getDoctorId());
+                patientData.put("age", patient.getAge());
+
+                // Prepare appointment details
+                List<Map<String, Object>> appointmentDataList = new ArrayList<>();
+                for (PatientAppointmentTable appointment : appointments) {
+                    Map<String, Object> appointmentData = new HashMap<>();
+                    appointmentData.put("appointmentId", appointment.getAppointmentId());
+                    appointmentData.put("doctorId", appointment.getDoctor().getUserId());
+                    appointmentData.put("doctorSlotId", appointment.getDoctorSlotId());
+                    appointmentData.put("daySlotId", appointment.getDaySlotId());
+                    appointmentData.put("timeSlotId", appointment.getTimeSlotId());
+                    appointmentData.put("appointmentDate", appointment.getAppointmentDate());
+                    appointmentData.put("slotStartTime", appointment.getSlotStartTime());
+                    appointmentData.put("slotEndTime", appointment.getSlotEndTime());
+                    appointmentData.put("slotTime", appointment.getSlotTime());
+                    appointmentData.put("appointmentStatus", appointment.getAppointmentStatus());
+                    appointmentData.put("patientNotes", appointment.getPatientNotes());
+                    appointmentData.put("appointmentType", appointment.getAppointmentType());
+
+                    appointmentDataList.add(appointmentData);
+                }
+
+                response.put("status", 1);
+                response.put("message", "Success");
+                response.put("patientDetails", patientData);
+                response.put("appointments", appointmentDataList);
+
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("status", 0);
+                response.put("message", "Patient not found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+        }
 
 
 
