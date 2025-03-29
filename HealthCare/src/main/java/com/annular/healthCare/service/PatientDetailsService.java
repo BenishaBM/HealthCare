@@ -26,4 +26,6 @@ public interface PatientDetailsService {
 
 	ResponseEntity<?> getPatientDetailsByMobileNumber(String mobileNumber);
 
+	ResponseEntity<?> patientAppoitmentByOnline(PatientDetailsWebModel patientDetailsWebModel);
+
 }

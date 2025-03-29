@@ -2,6 +2,8 @@ package com.annular.healthCare.webModel;
 
 import java.util.Date;
 
+import javax.persistence.Column;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -33,5 +35,9 @@ public class PatientAppointmentWebModel {
 	    private Date updatedOn;
 	    private String appointmentStatus;
 	    private String patientNotes;
+	    private String age;
+	    private String dob;
+	    private String patientName;
+	    private String relationShipType;
 
 }

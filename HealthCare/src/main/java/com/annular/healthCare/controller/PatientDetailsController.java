@@ -159,5 +159,17 @@ public class PatientDetailsController {
 			}
 		}
 		
+		@PostMapping("patientAppoitmentByOnline")
+		public ResponseEntity<?> patientAppoitmentByOnline(@RequestBody PatientDetailsWebModel patientDetailsWebModel) {
+			try {
+				logger.info("patientAppoitmentByOnline request for userType: {}");
+				return patientDetailService.patientAppoitmentByOnline(patientDetailsWebModel);
+			} catch (Exception e) {
+				logger.error("patientAppoitmentByOnline Method Exception: {}", e.getMessage(), e);
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+						.body(new Response(-1, "Fail", e.getMessage()));
+			}
+		}
+		
 
 }

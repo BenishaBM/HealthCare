@@ -83,4 +83,16 @@ public class PatientAppointmentTable {
     
     @Column(name = "appointmentType")
     private String appointmentType;
+    
+    @Column(name = "age")
+    private String age;
+    
+    @Column(name = "dateOfBirth")
+    private String dateOfBirth;
+    
+    @Column(name = "name")
+    private String patientName;
+    
+    @Column(name = "relationshipType")
+    private String relationShipType;
 }

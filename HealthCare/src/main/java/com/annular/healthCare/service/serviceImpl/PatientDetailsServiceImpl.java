@@ -300,6 +300,10 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	        // If not booked, proceed with creating the appointment
 	        PatientAppointmentTable appointment = PatientAppointmentTable.builder()
 	                .doctor(doctor)
+	                .age(userWebModel.getAge())
+	                .dateOfBirth(userWebModel.getDateOfBirth())
+	                .patientName(userWebModel.getPatientName())
+	                .relationShipType(userWebModel.getRelationshipType())
 	                .patient(patient)
 	                .doctorSlotId(userWebModel.getDoctorSlotId())
 	                .daySlotId(userWebModel.getDaySlotId())
@@ -829,6 +833,10 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
                         appointmentMap.put("patientNotes", appointment.getPatientNotes());
                         appointmentMap.put("doctorSlotStartTime", appointment.getDoctorSlotStartTime());
                         appointmentMap.put("doctorSlotEndTime", appointment.getDoctorSlotEndTime());
+                        appointmentMap.put("age", appointment.getAge());
+                        appointmentMap.put("dateOfBirth", appointment.getDateOfBirth());
+                        appointmentMap.put("relationShipType", appointment.getRelationShipType());
+                        appointmentMap.put("patientName", appointment.getPatientName());
                         appointmentMap.put("appointmentType", appointment.getAppointmentType());
                         appointmentList.add(appointmentMap);
                     }
@@ -890,6 +898,10 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
                     appointmentData.put("appointmentStatus", appointment.getAppointmentStatus());
                     appointmentData.put("patientNotes", appointment.getPatientNotes());
                     appointmentData.put("appointmentType", appointment.getAppointmentType());
+                    appointmentData.put("age", appointment.getAge());
+                    appointmentData.put("dateOfBirth", appointment.getDateOfBirth());
+                    appointmentData.put("relationShipType", appointment.getRelationShipType());
+                    appointmentData.put("patientName", appointment.getPatientName());
 
                     appointmentDataList.add(appointmentData);
                 }
@@ -906,6 +918,63 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
         }
+
+
+		@Override
+		public ResponseEntity<?> patientAppoitmentByOnline(PatientDetailsWebModel userWebModel) {
+		    try {
+		        logger.info("Registering patient: {}", userWebModel.getPatientName());
+
+		       
+		        // Check if slot is available before booking an appointment
+		        if (userWebModel.getDoctorId() != null 
+		                && userWebModel.getAppointmentDate() != null 
+		                && userWebModel.getDoctorSlotId() != null 
+		                && userWebModel.getDaySlotId() != null 
+		                && userWebModel.getSlotStartTime() != null 
+		                && userWebModel.getSlotEndTime() != null) {  // Fixed duplicate check
+
+		            boolean isSlotBooked = checkIfSlotIsBooked(
+		                userWebModel.getDoctorSlotId(),
+		                userWebModel.getDaySlotId(),
+		                userWebModel.getSlotStartTime(),  // Pass correct start time
+		                userWebModel.getSlotEndTime()     // Pass correct end time
+		            );
+
+		            if (isSlotBooked) {
+		                logger.warn("Slot is already booked for doctorId: {}, date: {}, time: {} - {}",
+		                        userWebModel.getDoctorId(),
+		                        userWebModel.getAppointmentDate(),
+		                        userWebModel.getSlotStartTime(),
+		                        userWebModel.getSlotEndTime()
+		                );
+		                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+		                        .body(new Response(0, "Fail", "The selected slot on " 
+		                                + userWebModel.getAppointmentDate() + " is already booked."));
+		            }
+		        }
+
+		        PatientDetails db = patientDetailsRepository.findByIds(userWebModel.getPatientDetailsId());
+
+
+		        // Book appointment if appointment details are provided
+		        PatientAppointmentTable appointment = bookAppointment(userWebModel, db);  // Fixed return type
+		        if (appointment == null) {  // No need to check for isEmpty() since it's not a list
+		            return ResponseEntity.badRequest()
+		                    .body(new Response(0, "Fail", "slot Already booked"));
+		        }
+
+		        // Save media files if any
+		        
+
+		        return ResponseEntity.ok(new Response(1, "Success", "online registered successfully"));
+		    } catch (Exception e) {
+		        logger.error("Registration failed: {}", e.getMessage(), e);
+		        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+		                .body(new Response(0, "Fail", "Something went wrong during registration"));
+		    }
+		}
+
 
 
 

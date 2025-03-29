@@ -40,13 +40,14 @@ public class PatientDetailsWebModel {
 	private Integer userUpdatedBy;
 	private Date userUpdatedOn;
 	private String emergencyContact;
-	@Column(name = "previousMedicalHistory")
+    private String dateOfBirth;
 	private String previousMedicalHistory;
 	private String insuranceDetails;
 	private String insurerName;
 	private String insuranceProvider;
 	private String policyNumber;
 	private Boolean disability;
+	private String relationshipType;
 	private String age;
 	private List<MultipartFile> files;
 	private List<FileOutputWebModel> filess;
