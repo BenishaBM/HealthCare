@@ -296,6 +296,13 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	            
 	            return null; // Slot is already booked
 	        }
+            // Count existing appointments for the doctor on the same date with "OFFLINE" type
+            int newToken = patientAppointmentRepository.countByAppointmentDateAndDoctorIdAndAppointmentType(
+            		userWebModel.getAppointmentDate(), 
+            		doctor.getUserId(),
+                    "ONLINE"
+            ) + 1; 
+
 
 	        // If not booked, proceed with creating the appointment
 	        PatientAppointmentTable appointment = PatientAppointmentTable.builder()
@@ -306,6 +313,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	                .relationShipType(userWebModel.getRelationshipType())
 	                .patient(patient)
 	                .doctorSlotId(userWebModel.getDoctorSlotId())
+	                .token(String.valueOf(newToken)) // Assigning token sequentially
 	                .daySlotId(userWebModel.getDaySlotId())
 	                .timeSlotId(userWebModel.getTimeSlotId())
 	                .appointmentDate(userWebModel.getAppointmentDate())
@@ -760,6 +768,12 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	            if (doctor.isEmpty() || patient.isEmpty()) {
 	                return ResponseEntity.badRequest().body("Doctor or Patient not found.");
 	            }
+	            // Count existing appointments for the doctor on the same date with "OFFLINE" type
+	            int newToken = patientAppointmentRepository.countByAppointmentDateAndDoctorIdAndAppointmentType(
+	                    patientDetailsWebModel.getAppointmentDate(), 
+	                    patientDetailsWebModel.getDoctorId(),
+	                    "OFFLINE"
+	            ) + 1; 
 
 	            // Create new appointment entry
 	            PatientAppointmentTable appointment = PatientAppointmentTable.builder()
@@ -775,6 +789,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	                .appointmentStatus("SCHEDULED")
 	                .patientNotes(patientDetailsWebModel.getPatientNotes())
 	                .appointmentType("OFFLINE")
+	                .token(String.valueOf(newToken)) // Assigning token sequentially
 	                .build();
 
 	            // Save the appointment

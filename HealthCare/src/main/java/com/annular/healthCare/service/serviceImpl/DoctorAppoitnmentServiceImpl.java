@@ -64,6 +64,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                details.put("dob", appointment.getDateOfBirth());
 	                details.put("relationshipType", appointment.getRelationShipType());
 	                details.put("patientName", appointment.getPatientName());
+	                details.put("token", appointment.getToken());
 
 	            // Doctor details
 	            details.put("doctorId", appointment.getDoctor().getUserId());

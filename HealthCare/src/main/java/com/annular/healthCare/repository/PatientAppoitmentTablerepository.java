@@ -41,6 +41,9 @@ public interface PatientAppoitmentTablerepository extends JpaRepository<PatientA
 	List<PatientAppointmentTable> findAppointmentsByFilter(String appointmentDate, String appointmentType,
 			Integer doctorId);
 
+	 @Query("SELECT COUNT(p) FROM PatientAppointmentTable p WHERE p.appointmentDate = :appointmentDate AND p.doctor.userId = :doctorId AND p.appointmentType = :appointmentType")
+	 int countByAppointmentDateAndDoctorIdAndAppointmentType(String appointmentDate, Integer doctorId, String appointmentType);
+
 
 
 
