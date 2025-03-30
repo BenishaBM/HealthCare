@@ -95,4 +95,16 @@ public class PatientAppointmentTable {
     
     @Column(name = "relationshipType")
     private String relationShipType;
+    
+    @Column(name = "doctorPrescription")
+    private String doctorPrescription;
+    
+    @Column(name = "medicineData")
+    private String medicineData;
+    
+    @Column(name = "token")
+    private String token;
+    
+    
+    
 }

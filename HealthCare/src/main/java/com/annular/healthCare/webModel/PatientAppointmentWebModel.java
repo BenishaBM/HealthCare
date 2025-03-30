@@ -39,5 +39,8 @@ public class PatientAppointmentWebModel {
 	    private String dob;
 	    private String patientName;
 	    private String relationShipType;
+	    private String doctorPrescription;
+	    private String medicineData;
+	    private String token;
 
 }

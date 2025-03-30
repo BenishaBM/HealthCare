@@ -18,6 +18,7 @@ import com.annular.healthCare.model.PatientDetails;
 import com.annular.healthCare.repository.PatientAppoitmentTablerepository;
 import com.annular.healthCare.repository.PatientDetailsRepository;
 import com.annular.healthCare.service.DoctorAppoitmentService;
+import com.annular.healthCare.webModel.HospitalDataListWebModel;
 
 @Service
 public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
@@ -98,5 +99,46 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                    .body(new Response(-1, "Failed to retrieve appointments", e.getMessage()));
 	        }
 	    }
+	 @Override
+	 public ResponseEntity<?> saveDoctorAppoitment(HospitalDataListWebModel userWebModel) {
+	     try {
+	         // Validate request data
+	         if (userWebModel == null || userWebModel.getAppointmentId() == null) {
+	             return ResponseEntity.badRequest().body(new Response(0, "error", "Appointment ID is required."));
+	         }
+
+	         // Retrieve existing appointment
+	         Optional<PatientAppointmentTable> optionalAppointment = patientAppointmentRepository.findById(userWebModel.getAppointmentId());
+
+	         if (optionalAppointment.isEmpty()) {
+	             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Response(0, "error", "Appointment not found."));
+	         }
+
+	         PatientAppointmentTable appointment = optionalAppointment.get();
+
+	         // Update fields if values are provided
+	         if (userWebModel.getDoctorPrescription() != null) {
+	             appointment.setDoctorPrescription(userWebModel.getDoctorPrescription());
+	         }
+	         if (userWebModel.getMedicineData() != null) {
+	             appointment.setMedicineData(userWebModel.getMedicineData());
+	         }
+//	         if (userWebModel.getToken() != null) {
+//	             appointment.setToken(userWebModel.getToken());
+//	         }
+	         
+	         // Hardcode appointment status to "COMPLETED"
+	         appointment.setAppointmentStatus("COMPLETED");
+
+	         // Save updated appointment
+	         patientAppointmentRepository.save(appointment);
+
+	         return ResponseEntity.ok(new Response(1, "success", "Appointment updated successfully."));
+	     } catch (Exception e) {
+	         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                 .body(new Response(0, "error", "An error occurred while updating the appointment."));
+	     }
+	 }
+
 
 }

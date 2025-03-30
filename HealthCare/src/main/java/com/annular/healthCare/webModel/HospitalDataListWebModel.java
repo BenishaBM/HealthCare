@@ -60,6 +60,10 @@ public class HospitalDataListWebModel {
     private List<DoctorLeaveListWebModel> doctorLeaveList;
 	private List<DoctorDaySlotWebModel> doctorDaySlots;
 	private Integer doctorSlotId;
+    private String doctorPrescription;
+    private String medicineData;
+    private String token;
+    private Integer appointmentId;
 
 
 
