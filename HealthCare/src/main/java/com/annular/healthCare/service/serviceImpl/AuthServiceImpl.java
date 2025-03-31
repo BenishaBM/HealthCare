@@ -9,6 +9,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -53,6 +54,7 @@ import com.annular.healthCare.repository.DoctorSpecialityRepository;
 import com.annular.healthCare.repository.HospitalAdminRepository;
 import com.annular.healthCare.repository.HospitalDataListRepository;
 import com.annular.healthCare.repository.MediaFileRepository;
+import com.annular.healthCare.repository.PatientAppoitmentTablerepository;
 import com.annular.healthCare.repository.RefreshTokenRepository;
 import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.AuthService;
@@ -106,7 +108,8 @@ public class AuthServiceImpl implements AuthService {
 	@Autowired
 	DoctorSpecialityRepository doctorSpecialtyRepository;
 	
-
+	@Autowired
+	PatientAppoitmentTablerepository patientAppoitnmentRepository;
 	
 	@Value("${annular.app.imageLocation}")
 	private String imageLocation;
@@ -784,140 +787,183 @@ public class AuthServiceImpl implements AuthService {
 	    }
 	}
 
-	@Override
-	public ResponseEntity<?> getDoctorSlotById(Integer userId, LocalDate requestDate) {
-	    try {
-	        // Validate input parameters
-	        if (userId == null || requestDate == null) {
-	            return ResponseEntity.badRequest()
-	                    .body(Collections.singletonMap("message", "Invalid user ID or request date"));
-	        }
+    @Override
+    public ResponseEntity<?> getDoctorSlotById(Integer userId, LocalDate requestDate) {
+        try {
+            // Validate input parameters
+            if (userId == null || requestDate == null) {
+                return ResponseEntity.badRequest()
+                        .body(Collections.singletonMap("message", "Invalid user ID or request date"));
+            }
 
-	        // Find user with optional check
-	        Optional<User> userData = userRepository.findById(userId);
-	        if (userData.isEmpty()) {
-	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-	                    .body(Collections.singletonMap("message", "User not found"));
-	        }
+            // Find user
+            Optional<User> userData = userRepository.findById(userId);
+            if (userData.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Collections.singletonMap("message", "User not found"));
+            }
 
-	        User user = userData.get();
-	        Map<String, Object> response = new HashMap<>();
-	        response.put("userId", user.getUserId());
-	        response.put("userName", user.getUserName());
+            User user = userData.get();
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("userId", user.getUserId());
+            response.put("userName", user.getUserName());
 
-	        // If user is not a doctor, return basic user info
-	        if (!"DOCTOR".equalsIgnoreCase(user.getUserType())) {
-	            return ResponseEntity.ok(response);
-	        }
+            // Return basic info if not doctor
+            if (!"DOCTOR".equalsIgnoreCase(user.getUserType())) {
+                return ResponseEntity.ok(response);
+            }
 
-	        // Fetch and filter doctor slots based on the requested day
-	        List<Map<String, Object>> doctorSlotList = doctorDaySlotRepository.findByDoctorSlot_User(user)
-	        	    .stream()
-	        	    .filter(slot -> isValidSlot(slot, requestDate))
-	        	    .map(slot -> mapDoctorSlot(slot, requestDate))
-	        	    .distinct()  // Ensure unique entries
-	        	    .collect(Collectors.toList());
+            // Get doctor slots
+            List<Map<String, Object>> doctorSlotList = doctorDaySlotRepository.findByDoctorSlot_User(user)
+                    .stream()
+                    .filter(slot -> isValidSlot(slot, requestDate))
+                    .map(slot -> mapDoctorSlot(slot, requestDate))
+                    .distinct()
+                    .collect(Collectors.toList());
 
-	        response.put("doctorSlots", doctorSlotList);
-	        return ResponseEntity.ok(response);
-	    } catch (Exception e) {
-	        logger.error("Exception while retrieving doctor slots for user {}: ", userId, e);
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                .body(Collections.singletonMap("message", "Error retrieving doctor slots"));
-	    }
-	}
+            response.put("doctorSlots", doctorSlotList);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error retrieving doctor slots for user {}: ", userId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("message", "Error retrieving doctor slots"));
+        }
+    }
 
-	// Validate if the slot is active and within the valid date range
-	private boolean isValidSlot(DoctorDaySlot doctorSlot, LocalDate requestDate) {
-	    if (doctorSlot == null || requestDate == null) {
-	        return false;
-	    }
+    private boolean isValidSlot(DoctorDaySlot doctorSlot, LocalDate requestDate) {
+        if (doctorSlot == null || requestDate == null) return false;
+        
+        LocalDate startDate = convertToLocalDate(doctorSlot.getStartSlotDate());
+        LocalDate endDate = convertToLocalDate(doctorSlot.getEndSlotDate());
 
-	    LocalDate startDate = convertToLocalDate(doctorSlot.getStartSlotDate());
-	    LocalDate endDate = convertToLocalDate(doctorSlot.getEndSlotDate());
+        return doctorSlot.getIsActive() != null 
+               && doctorSlot.getIsActive() 
+               && !requestDate.isBefore(startDate) 
+               && !requestDate.isAfter(endDate);
+    }
 
-	    return doctorSlot.getIsActive() != null 
-	           && doctorSlot.getIsActive() 
-	           && !requestDate.isBefore(startDate) 
-	           && !requestDate.isAfter(endDate);
-	}
+    private Map<String, Object> mapDoctorSlot(DoctorDaySlot daySlot, LocalDate requestDate) {
+        List<Map<String, Object>> daySlotList = doctorDaySlotRepository.findByDoctorSlot(daySlot.getDoctorSlot())
+                .stream()
+                .filter(slot -> isValidDaySlot(slot, requestDate))
+                .map(slot -> mapDoctorDaySlot(slot, requestDate))
+                .collect(Collectors.toList());
 
-	// Map doctor slot while filtering day slots based on request date
-	private Map<String, Object> mapDoctorSlot(DoctorDaySlot daySlot, LocalDate requestDate) {
-	    List<Map<String, Object>> daySlotList = doctorDaySlotRepository.findByDoctorSlot(daySlot.getDoctorSlot())
-	            .stream()
-	            .filter(slot -> isValidDaySlot(slot, requestDate)) // Ensure day matches request date
-	            .map(this::mapDoctorDaySlot)
-	            .collect(Collectors.toList());
+        Map<String, Object> doctorSlotData = new LinkedHashMap<>();
+        doctorSlotData.put("doctorSlotId", daySlot.getDoctorSlot().getDoctorSlotId());
+        doctorSlotData.put("daySlots", daySlotList);
+        return doctorSlotData;
+    }
 
-	    Map<String, Object> doctorSlotData = new HashMap<>();
-	    doctorSlotData.put("doctorSlotId", daySlot.getDoctorSlot().getDoctorSlotId());
-	    doctorSlotData.put("daySlots", daySlotList);
-	    return doctorSlotData;
-	}
+    private boolean isValidDaySlot(DoctorDaySlot daySlot, LocalDate requestDate) {
+        if (daySlot == null || requestDate == null) return false;
+        
+        LocalDate startDate = convertToLocalDate(daySlot.getStartSlotDate());
+        LocalDate endDate = convertToLocalDate(daySlot.getEndSlotDate());
+        String requestDay = requestDate.getDayOfWeek().toString();
+        String slotDay = daySlot.getDay().toUpperCase();
 
-	// Validate day slot based on request date and ensure the day matches
-	private boolean isValidDaySlot(DoctorDaySlot daySlot, LocalDate requestDate) {
-	    if (daySlot == null || requestDate == null) {
-	        return false;
-	    }
+        return daySlot.getIsActive() != null 
+               && daySlot.getIsActive() 
+               && !requestDate.isBefore(startDate) 
+               && !requestDate.isAfter(endDate)
+               && requestDay.equals(slotDay);
+    }
 
-	    LocalDate startDate = convertToLocalDate(daySlot.getStartSlotDate());
-	    LocalDate endDate = convertToLocalDate(daySlot.getEndSlotDate());
+    private Map<String, Object> mapDoctorDaySlot(DoctorDaySlot daySlot, LocalDate requestDate) {
+        Map<String, Object> daySlotData = new LinkedHashMap<>();
+        daySlotData.put("daySlotId", daySlot.getDoctorDaySlotId());
+        daySlotData.put("day", daySlot.getDay());
+        daySlotData.put("startSlotDate", daySlot.getStartSlotDate());
+        daySlotData.put("endSlotDate", daySlot.getEndSlotDate());
+        daySlotData.put("isActive", daySlot.getIsActive());
 
-	    // Get the day of the week for requestDate
-	    String requestDay = requestDate.getDayOfWeek().toString(); // e.g., "FRIDAY"
-	    String slotDay = daySlot.getDay().toUpperCase(); // Assuming stored as "Tuesday"
+        List<Map<String, Object>> timeSlotList = doctorSlotTimeRepository.findByDoctorDaySlot(daySlot)
+                .stream()
+                .filter(slotTime -> slotTime.getIsActive() != null && slotTime.getIsActive())
+                .map(slotTime -> mapDoctorSlotTime(slotTime, requestDate))
+                .collect(Collectors.toList());
 
-	    return daySlot.getIsActive() != null 
-	           && daySlot.getIsActive() 
-	           && !requestDate.isBefore(startDate) 
-	           && !requestDate.isAfter(endDate)
-	           && requestDay.equals(slotDay); // Ensure the day matches
-	}
+        daySlotData.put("slotTimes", timeSlotList);
+        return daySlotData;
+    }
 
-	// Map day slot details
-	private Map<String, Object> mapDoctorDaySlot(DoctorDaySlot daySlot) {
-	    Map<String, Object> daySlotData = new HashMap<>();
-	    daySlotData.put("daySlotId", daySlot.getDoctorDaySlotId());
-	    daySlotData.put("day", daySlot.getDay());
-	    daySlotData.put("startSlotDate", daySlot.getStartSlotDate());
-	    daySlotData.put("endSlotDate", daySlot.getEndSlotDate());
-	    daySlotData.put("isActive", daySlot.getIsActive());
+    private Map<String, Object> mapDoctorSlotTime(DoctorSlotTime slotTime, LocalDate requestDate) {
+        Map<String, Object> timeSlotData = new LinkedHashMap<>();
+        timeSlotData.put("timeSlotId", slotTime.getDoctorSlotTimeId());
+        timeSlotData.put("slotStartTime", formatTime(slotTime.getSlotStartTime()));
+        timeSlotData.put("slotEndTime", formatTime(slotTime.getSlotEndTime()));
+        timeSlotData.put("slotTime", slotTime.getSlotTime());
+        timeSlotData.put("isActive", slotTime.getIsActive());
 
-	    // Fetch and filter active time slots
-	    List<Map<String, Object>> timeSlotList = doctorSlotTimeRepository.findByDoctorDaySlot(daySlot)
-	            .stream()
-	            .filter(slotTime -> slotTime.getIsActive() != null && slotTime.getIsActive())
-	            .map(this::mapDoctorSlotTime)
-	            .collect(Collectors.toList());
+        List<Map<String, String>> splitSlots = generateSplitSlots(
+            slotTime.getSlotStartTime(),
+            slotTime.getSlotEndTime(),
+            slotTime.getSlotTime(),
+            requestDate,
+            slotTime.getDoctorSlotTimeId()
+        );
 
-	    daySlotData.put("slotTimes", timeSlotList);
-	    return daySlotData;
-	}
+        timeSlotData.put("splitSlotDuration", splitSlots);
+        return timeSlotData;
+    }
 
-	// Map slot time details
-	private Map<String, Object> mapDoctorSlotTime(DoctorSlotTime slotTime) {
-	    Map<String, Object> timeSlotData = new HashMap<>();
-	    timeSlotData.put("timeSlotId", slotTime.getDoctorSlotTimeId());
-	    timeSlotData.put("slotStartTime", slotTime.getSlotStartTime());
-	    timeSlotData.put("slotEndTime", slotTime.getSlotEndTime());
-	    timeSlotData.put("slotTime", slotTime.getSlotTime());
-	    timeSlotData.put("isActive", slotTime.getIsActive());
-	    timeSlotData.put("splitSlotDuration", generateSplitSlots(
-	            slotTime.getSlotStartTime(),
-	            slotTime.getSlotEndTime(),
-	            slotTime.getSlotTime()));
-	    return timeSlotData;
-	}
+    private List<Map<String, String>> generateSplitSlots(String startTime, String endTime, 
+                                                       String slotDuration, LocalDate requestDate,
+                                                       Integer timeSlotId) {
+        List<Map<String, String>> splitSlots = new ArrayList<>();
+        
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("hh:mm a");
+            Date start = sdf.parse(startTime);
+            Date end = sdf.parse(endTime);
+            
+            int duration = Integer.parseInt(slotDuration.replaceAll("[^0-9]", ""));
+            long interval = duration * 60 * 1000;
+            
+            Date currentStart = start;
+            while (currentStart.before(end)) {
+                Date currentEnd = new Date(currentStart.getTime() + interval);
+                if (currentEnd.after(end)) currentEnd = end;
+                
+                Map<String, String> slot = new LinkedHashMap<>();
+                slot.put("startTime", formatTime(sdf.format(currentStart)));
+                slot.put("endTime", formatTime(sdf.format(currentEnd)));
+                
+                boolean isBooked = patientAppoitnmentRepository.isSlotBooked(
+                    timeSlotId,
+                    requestDate.toString(),
+                    sdf.format(currentStart),
+                    sdf.format(currentEnd)
+                );
+                
+                slot.put("status", isBooked ? "booked" : "available");
+                splitSlots.add(slot);
+                
+                currentStart = currentEnd;
+            }
+        } catch (Exception e) {
+            logger.error("Error parsing time slots", e);
+        }
+        
+        return splitSlots;
+    }
 
-	// Utility method to convert Date to LocalDate
-	private LocalDate convertToLocalDate(Date date) {
-	    return date != null 
-	           ? date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() 
-	           : null;
-	}
+    private String formatTime(String time) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("hh:mm a");
+            Date date = sdf.parse(time);
+            return new SimpleDateFormat("hh:mm a").format(date);
+        } catch (Exception e) {
+            return time;
+        }
+    }
 
+    private LocalDate convertToLocalDate(Date date) {
+        return date != null 
+               ? date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() 
+               : null;
+    }
 
 	@Override
 	public ResponseEntity<?> deleteDoctorLeaveByLeaveId(Integer doctorLeaveListId) {

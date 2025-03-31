@@ -44,7 +44,19 @@ public interface PatientAppoitmentTablerepository extends JpaRepository<PatientA
 	 @Query("SELECT COUNT(p) FROM PatientAppointmentTable p WHERE p.appointmentDate = :appointmentDate AND p.doctor.userId = :doctorId AND p.appointmentType = :appointmentType")
 	 int countByAppointmentDateAndDoctorIdAndAppointmentType(String appointmentDate, Integer doctorId, String appointmentType);
 
-
+	    
+	    	    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END " +
+	    	            "FROM PatientAppointmentTable a " +
+	    	            "WHERE a.timeSlotId = :timeSlotId " +
+	    	            "AND a.appointmentDate = :appointmentDate " +
+	    	            "AND a.slotStartTime = :slotStartTime " +
+	    	            "AND a.slotEndTime = :slotEndTime")
+	    	     boolean isSlotBooked(
+	    	         @Param("timeSlotId") Integer timeSlotId,
+	    	         @Param("appointmentDate") String appointmentDate,
+	    	         @Param("slotStartTime") String slotStartTime,
+	    	         @Param("slotEndTime") String slotEndTime
+	    	     );
 
 
 
