@@ -810,13 +810,13 @@ public class AuthServiceImpl implements AuthService {
 	            return ResponseEntity.ok(response);
 	        }
 
-	        // Fetch and filter doctor slots
+	        // Fetch and filter doctor slots based on the requested day
 	        List<Map<String, Object>> doctorSlotList = doctorDaySlotRepository.findByDoctorSlot_User(user)
-	                .stream()
-	                .filter(slot -> isValidSlot(slot, requestDate))
-	                .map(this::mapDoctorSlot)
-	                .filter(slot -> !((List<?>) slot.get("daySlots")).isEmpty())
-	                .collect(Collectors.toList());
+	        	    .stream()
+	        	    .filter(slot -> isValidSlot(slot, requestDate))
+	        	    .map(slot -> mapDoctorSlot(slot, requestDate))
+	        	    .distinct()  // Ensure unique entries
+	        	    .collect(Collectors.toList());
 
 	        response.put("doctorSlots", doctorSlotList);
 	        return ResponseEntity.ok(response);
@@ -827,6 +827,7 @@ public class AuthServiceImpl implements AuthService {
 	    }
 	}
 
+	// Validate if the slot is active and within the valid date range
 	private boolean isValidSlot(DoctorDaySlot doctorSlot, LocalDate requestDate) {
 	    if (doctorSlot == null || requestDate == null) {
 	        return false;
@@ -841,10 +842,11 @@ public class AuthServiceImpl implements AuthService {
 	           && !requestDate.isAfter(endDate);
 	}
 
-	private Map<String, Object> mapDoctorSlot(DoctorDaySlot daySlot) {
+	// Map doctor slot while filtering day slots based on request date
+	private Map<String, Object> mapDoctorSlot(DoctorDaySlot daySlot, LocalDate requestDate) {
 	    List<Map<String, Object>> daySlotList = doctorDaySlotRepository.findByDoctorSlot(daySlot.getDoctorSlot())
 	            .stream()
-	            .filter(this::isValidDaySlot)
+	            .filter(slot -> isValidDaySlot(slot, requestDate)) // Ensure day matches request date
 	            .map(this::mapDoctorDaySlot)
 	            .collect(Collectors.toList());
 
@@ -854,21 +856,27 @@ public class AuthServiceImpl implements AuthService {
 	    return doctorSlotData;
 	}
 
-	private boolean isValidDaySlot(DoctorDaySlot daySlot) {
-	    if (daySlot == null) {
+	// Validate day slot based on request date and ensure the day matches
+	private boolean isValidDaySlot(DoctorDaySlot daySlot, LocalDate requestDate) {
+	    if (daySlot == null || requestDate == null) {
 	        return false;
 	    }
 
 	    LocalDate startDate = convertToLocalDate(daySlot.getStartSlotDate());
 	    LocalDate endDate = convertToLocalDate(daySlot.getEndSlotDate());
-	    LocalDate now = LocalDate.now();
+
+	    // Get the day of the week for requestDate
+	    String requestDay = requestDate.getDayOfWeek().toString(); // e.g., "FRIDAY"
+	    String slotDay = daySlot.getDay().toUpperCase(); // Assuming stored as "Tuesday"
 
 	    return daySlot.getIsActive() != null 
 	           && daySlot.getIsActive() 
-	           && !now.isBefore(startDate) 
-	           && !now.isAfter(endDate);
+	           && !requestDate.isBefore(startDate) 
+	           && !requestDate.isAfter(endDate)
+	           && requestDay.equals(slotDay); // Ensure the day matches
 	}
 
+	// Map day slot details
 	private Map<String, Object> mapDoctorDaySlot(DoctorDaySlot daySlot) {
 	    Map<String, Object> daySlotData = new HashMap<>();
 	    daySlotData.put("daySlotId", daySlot.getDoctorDaySlotId());
@@ -877,6 +885,7 @@ public class AuthServiceImpl implements AuthService {
 	    daySlotData.put("endSlotDate", daySlot.getEndSlotDate());
 	    daySlotData.put("isActive", daySlot.getIsActive());
 
+	    // Fetch and filter active time slots
 	    List<Map<String, Object>> timeSlotList = doctorSlotTimeRepository.findByDoctorDaySlot(daySlot)
 	            .stream()
 	            .filter(slotTime -> slotTime.getIsActive() != null && slotTime.getIsActive())
@@ -887,6 +896,7 @@ public class AuthServiceImpl implements AuthService {
 	    return daySlotData;
 	}
 
+	// Map slot time details
 	private Map<String, Object> mapDoctorSlotTime(DoctorSlotTime slotTime) {
 	    Map<String, Object> timeSlotData = new HashMap<>();
 	    timeSlotData.put("timeSlotId", slotTime.getDoctorSlotTimeId());
@@ -907,7 +917,6 @@ public class AuthServiceImpl implements AuthService {
 	           ? date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() 
 	           : null;
 	}
-
 
 
 	@Override
