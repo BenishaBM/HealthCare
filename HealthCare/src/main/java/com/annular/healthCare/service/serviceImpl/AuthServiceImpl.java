@@ -930,7 +930,7 @@ public class AuthServiceImpl implements AuthService {
                 slot.put("startTime", formatTime(sdf.format(currentStart)));
                 slot.put("endTime", formatTime(sdf.format(currentEnd)));
                 
-                boolean isBooked = patientAppoitnmentRepository.isSlotBooked(
+                boolean isBooked = patientAppoitnmentRepository.isSlotBookeds(
                     timeSlotId,
                     requestDate.toString(),
                     sdf.format(currentStart),
