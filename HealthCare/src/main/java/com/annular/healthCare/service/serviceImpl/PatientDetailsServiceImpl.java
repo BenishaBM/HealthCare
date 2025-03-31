@@ -187,75 +187,6 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	        return patientDetailsRepository.save(newPatient);
 	    }
 
-//	    private PatientAppointmentTable bookAppointment(PatientDetailsWebModel userWebModel, PatientDetails savedPatient) {
-//	        if (userWebModel.getDoctorId() == null || userWebModel.getAppointmentDate() == null) {
-//	            throw new IllegalArgumentException("Doctor ID and Appointment Date are required.");
-//	        }
-//
-//	        // Fetch required entities
-//	        User doctor = userRepository.findById(userWebModel.getDoctorId())
-//	                .orElseThrow(() -> new RuntimeException("Doctor not found"));
-//	        User patient = userRepository.findById(savedPatient.getPatientDetailsId())
-//	                .orElseThrow(() -> new RuntimeException("Patient user not found"));
-//
-//	        DoctorSlotTime doctorSlotTime = doctorSlotTimeRepository.findById(userWebModel.getTimeSlotId())
-//	                .orElseThrow(() -> new RuntimeException("Doctor slot time not found"));
-//
-//	        // Parse time slot details
-//	        LocalTime startTime = parseTime(doctorSlotTime.getSlotStartTime());
-//	        LocalTime endTime = parseTime(doctorSlotTime.getSlotEndTime());
-//
-//	        int slotDuration;
-//	        try {
-//	            slotDuration = Integer.parseInt(userWebModel.getSlotTime().replaceAll("[^0-9]", ""));
-//	        } catch (NumberFormatException e) {
-//	            logger.error("Invalid slot time format: {}", userWebModel.getSlotTime(), e);
-//	            throw new IllegalArgumentException("Invalid slot time format. Please provide a numeric value (e.g., '15').");
-//	        }
-//
-//	        while (startTime.isBefore(endTime)) {
-//	            LocalTime nextSlotEndTime = startTime.plusMinutes(slotDuration);
-//	            if (nextSlotEndTime.isAfter(endTime)) {
-//	                break;
-//	            }
-//
-//	            boolean isBooked = patientAppointmentRepository.isSlotBooked(
-//	                    userWebModel.getDoctorSlotId(),
-//	                    userWebModel.getDaySlotId(),
-//	                    startTime.toString(),
-//	                    nextSlotEndTime.toString()
-//	            );
-//
-//	            if (!isBooked) {
-//	                // Create and return the appointment immediately
-//	                PatientAppointmentTable appointment = PatientAppointmentTable.builder()
-//	                        .doctor(doctor)
-//	                        .patient(patient)
-//	                        .doctorSlotId(userWebModel.getDoctorSlotId())
-//	                        .daySlotId(userWebModel.getDaySlotId())
-//	                        .timeSlotId(userWebModel.getTimeSlotId())
-//	                        .appointmentDate(userWebModel.getAppointmentDate())
-//	                        .slotStartTime(startTime.toString())
-//	                        .slotEndTime(nextSlotEndTime.toString())
-//	                        .slotTime(userWebModel.getSlotTime())
-//	                        .isActive(true)
-//	                        .doctorSlotStartTime(doctorSlotTime.getSlotStartTime())
-//	                        .doctorSlotEndTime(doctorSlotTime.getSlotEndTime())
-//	                        .createdBy(userWebModel.getCreatedBy())
-//	                        .appointmentStatus("SCHEDULED")
-//	                        .patientNotes(userWebModel.getPatientNotes())
-//	                        .build();
-//
-//	                return patientAppointmentRepository.save(appointment);
-//	            } else {
-//	                logger.warn("Slot already booked: {} - {}", startTime, nextSlotEndTime);
-//	            }
-//
-//	            startTime = nextSlotEndTime; // Move to next slot
-//	        }
-//
-//	        return null; // No available slot found
-//	    }
 	    
 	 // Helper method to format LocalTime to "hh:mm a" format (e.g., "07:45 PM")
 	    private String formatTime(LocalTime time) {
@@ -269,7 +200,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	        // Fetch required entities
 	        User doctor = userRepository.findById(userWebModel.getDoctorId())
 	                .orElseThrow(() -> new RuntimeException("Doctor not found"));
-	        User patient = userRepository.findById(savedPatient.getPatientDetailsId())
+	        PatientDetails patient = patientDetailsRepository.findById(savedPatient.getPatientDetailsId())
 	                .orElseThrow(() -> new RuntimeException("Patient user not found"));
 
 	        DoctorSlotTime doctorSlotTime = doctorSlotTimeRepository.findById(userWebModel.getTimeSlotId())
@@ -618,7 +549,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	        webModel.setFiless(mediaFiles);
 
 	        // Fetch patient appointments
-	        List<PatientAppointmentTable> appointments = patientAppointmentRepository.findByPatient_UserId(patientDetailsID);
+	        List<PatientAppointmentTable> appointments = patientAppointmentRepository.findByPatient_PatientDetailsId(patientDetailsID);
 
 	        // Convert appointment details to a list of WebModels
 	        List<PatientAppointmentWebModel> appointmentWebModels = appointments.stream().map(appointment -> {
@@ -763,7 +694,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	        try {
 	            // Validate patient and doctor
 	            Optional<User> doctor = userRepository.findById(patientDetailsWebModel.getDoctorId());
-	            Optional<User> patient = userRepository.findById(patientDetailsWebModel.getPatientDetailsId());
+	            Optional<PatientDetails> patient = patientDetailsRepository.findById(patientDetailsWebModel.getPatientDetailsId());
 
 	            if (doctor.isEmpty() || patient.isEmpty()) {
 	                return ResponseEntity.badRequest().body("Doctor or Patient not found.");
@@ -835,7 +766,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
                         Map<String, Object> appointmentMap = new HashMap<>();
                         appointmentMap.put("appointmentId", appointment.getAppointmentId());
                         appointmentMap.put("doctorId", appointment.getDoctor().getUserId());
-                        appointmentMap.put("patientId", appointment.getPatient().getUserId());
+                        appointmentMap.put("patientId", appointment.getPatient().getPatientDetailsId());
                         appointmentMap.put("doctorSlotId", appointment.getDoctorSlotId());
                         appointmentMap.put("daySlotId", appointment.getDaySlotId());
                         appointmentMap.put("timeSlotId", appointment.getTimeSlotId());

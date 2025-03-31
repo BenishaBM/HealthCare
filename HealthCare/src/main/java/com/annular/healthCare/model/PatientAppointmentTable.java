@@ -27,8 +27,8 @@ public class PatientAppointmentTable {
 
     // Relationship with User (Patient)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "patient_id", referencedColumnName = "userId")
-    private User patient;
+    @JoinColumn(name = "patient_id", referencedColumnName = "patientDetailsId")
+    private PatientDetails patient;
 
     @Column(name = "doctor_slot_id")
     private Integer doctorSlotId;//foregignKey for DoctorSlot table

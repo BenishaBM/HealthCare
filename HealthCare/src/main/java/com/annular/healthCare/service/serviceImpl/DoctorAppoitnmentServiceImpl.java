@@ -71,7 +71,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	            details.put("doctorName", appointment.getDoctor().getUserName());
 
 	            // Fetching Patient Details
-	            Optional<PatientDetails> patientDetailsOpt = patientDetailsRepository.findById(appointment.getPatient().getUserId());
+	            Optional<PatientDetails> patientDetailsOpt = patientDetailsRepository.findById(appointment.getPatient().getPatientDetailsId());
 	            if (patientDetailsOpt.isPresent()) {
 	                PatientDetails patient = patientDetailsOpt.get();
 	                details.put("patientId", patient.getPatientDetailsId());

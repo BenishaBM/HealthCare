@@ -23,12 +23,12 @@ public interface PatientAppoitmentTablerepository extends JpaRepository<PatientA
 		                     @Param("newSlotStartTime") String newSlotStartTime,
 		                     @Param("newSlotEndTime") String newSlotEndTime);
 
-	List<PatientAppointmentTable> findByPatient_UserId(Integer patientDetailsID);
+	List<PatientAppointmentTable> findByPatient_PatientDetailsId(Integer patientDetailsID);
 
-	@Query("SELECT p FROM PatientAppointmentTable p WHERE p.patient.userId = :patientDetailsId")
+	@Query("SELECT p FROM PatientAppointmentTable p WHERE p.patient.patientDetailsId = :patientDetailsId")
 	List<PatientAppointmentTable> findByPatientDetailsId(@Param("patientDetailsId") Integer patientDetailsId);
 
-	 @Query("SELECT a FROM PatientAppointmentTable a WHERE a.patient.userId = :patientId AND a.isActive = true")
+	 @Query("SELECT a FROM PatientAppointmentTable a WHERE a.patient.patientDetailsId = :patientId AND a.isActive = true")
 	    List<PatientAppointmentTable> findByPatientId(@Param("patientId") Integer patientId);
 
 
