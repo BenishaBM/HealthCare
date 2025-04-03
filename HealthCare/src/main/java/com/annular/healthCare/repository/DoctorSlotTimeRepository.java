@@ -17,4 +17,7 @@ public interface DoctorSlotTimeRepository extends JpaRepository<DoctorSlotTime, 
 
 	void deleteByDoctorDaySlot(Integer doctorSlot);
 
+	boolean existsByDoctorDaySlotAndSlotStartTimeLessThanAndSlotEndTimeGreaterThan(DoctorDaySlot doctorDaySlot,
+			String newEndTime, String newStartTime);
+
 }

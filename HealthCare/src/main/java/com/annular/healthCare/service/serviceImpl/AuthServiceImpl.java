@@ -3,6 +3,7 @@ package com.annular.healthCare.service.serviceImpl;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -1074,26 +1075,25 @@ public class AuthServiceImpl implements AuthService {
 	@Override
 	public ResponseEntity<?> addTimeSlotByDoctor(HospitalDataListWebModel userWebModel) {
 	    try {
-
 	        // Fetch the DoctorSlot manually
 	        DoctorSlot doctorSlot = doctorSlotRepository.findById(userWebModel.getDoctorSlotId())
 	                .orElseThrow(() -> new RuntimeException("DoctorSlot not found with ID: " + userWebModel.getDoctorSlotId()));
 
+	        // Fetch existing doctor day slots for validation
+	        List<DoctorDaySlot> existingDoctorDaySlots = doctorDaySlotRepository.findByDoctorSlot(doctorSlot);
 
-	        // Check for slot time overlaps BEFORE saving
-	        if (!validateDoctorSlots(userWebModel.getDoctorDaySlots())) {
+	        // Validate for overlaps with existing data and new entries
+	        if (!validateDoctorSlots(existingDoctorDaySlots, userWebModel.getDoctorDaySlots())) {
 	            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 	                    .body(new Response(0, "Error", "Doctor slot times overlap. Please ensure slot times don't conflict."));
 	        }
 
-	        
-	        
 	        // Loop through provided day slots and save them
 	        if (userWebModel.getDoctorDaySlots() != null) {
 	            for (DoctorDaySlotWebModel daySlotModel : userWebModel.getDoctorDaySlots()) {
 	                try {
 	                    DoctorDaySlot doctorDaySlot = DoctorDaySlot.builder()
-	                            .doctorSlot(doctorSlot) // Set doctorSlot object
+	                            .doctorSlot(doctorSlot) 
 	                            .day(daySlotModel.getDay())
 	                            .startSlotDate(daySlotModel.getStartSlotDate())
 	                            .endSlotDate(daySlotModel.getEndSlotDate())
@@ -1108,7 +1108,7 @@ public class AuthServiceImpl implements AuthService {
 	                        for (DoctorSlotTimeWebModel slotTimeModel : daySlotModel.getDoctorSlotTimes()) {
 	                            try {
 	                                DoctorSlotTime doctorSlotTime = DoctorSlotTime.builder()
-	                                        .doctorDaySlot(doctorDaySlot) // Use saved day slot ID
+	                                        .doctorDaySlot(doctorDaySlot)
 	                                        .slotStartTime(slotTimeModel.getSlotStartTime())
 	                                        .slotEndTime(slotTimeModel.getSlotEndTime())
 	                                        .slotTime(slotTimeModel.getSlotTime())
@@ -1131,8 +1131,6 @@ public class AuthServiceImpl implements AuthService {
 	            }
 	        }
 
-	      
-
 	        return ResponseEntity.ok(new Response(1, "Success", "Time slots and leaves added successfully"));
 	    } catch (Exception e) {
 	        e.printStackTrace();
@@ -1141,6 +1139,51 @@ public class AuthServiceImpl implements AuthService {
 	    }
 	}
 
+	/**
+	 * Validates if any new slots overlap with existing slots or among themselves.
+	 */
+	private boolean validateDoctorSlots(List<DoctorDaySlot> existingSlots, List<DoctorDaySlotWebModel> newSlots) {
+	    for (DoctorDaySlotWebModel newSlot : newSlots) {
+	        for (DoctorDaySlot existingSlot : existingSlots) {
+	            if (newSlot.getDay().equals(existingSlot.getDay()) &&
+	                slotsOverlap(newSlot.getStartSlotDate(), newSlot.getEndSlotDate(), existingSlot.getStartSlotDate(), existingSlot.getEndSlotDate())) {
+	                return false;
+	            }
+	        }
+
+	        // Check for overlap among new slots themselves
+	        for (DoctorDaySlotWebModel otherNewSlot : newSlots) {
+	            if (newSlot != otherNewSlot &&
+	                newSlot.getDay().equals(otherNewSlot.getDay()) &&
+	                slotsOverlap(newSlot.getStartSlotDate(), newSlot.getEndSlotDate(), otherNewSlot.getStartSlotDate(), otherNewSlot.getEndSlotDate())) {
+	                return false;
+	            }
+	        }
+	    }
+	    return true;
+	}
+
+	/**
+	 * Checks if two time slots overlap.
+	 */
+	private boolean slotsOverlap(LocalDateTime start1, LocalDateTime end1, LocalDateTime start2, LocalDateTime end2) {
+	    return start1.isBefore(end2) && start2.isBefore(end1);
+	}
+	private boolean slotsOverlap(Date start1, Date end1, Date start2, Date end2) {
+	    LocalDateTime startDateTime1 = convertToLocalDateTime(start1);
+	    LocalDateTime endDateTime1 = convertToLocalDateTime(end1);
+	    LocalDateTime startDateTime2 = convertToLocalDateTime(start2);
+	    LocalDateTime endDateTime2 = convertToLocalDateTime(end2);
+
+	    return startDateTime1.isBefore(endDateTime2) && startDateTime2.isBefore(endDateTime1);
+	}
+
+	/**
+	 * Converts a Date to LocalDateTime.
+	 */
+	private LocalDateTime convertToLocalDateTime(Date date) {
+	    return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+	}
 
 	@Transactional
 	@Override
