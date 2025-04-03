@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,12 +27,16 @@ import com.annular.healthCare.model.DoctorSpecialty;
 import com.annular.healthCare.model.HospitalAdmin;
 import com.annular.healthCare.model.HospitalDataList;
 import com.annular.healthCare.model.MediaFile;
+import com.annular.healthCare.model.PatientAppointmentTable;
+import com.annular.healthCare.model.PatientDetails;
 import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.DoctorRoleRepository;
 import com.annular.healthCare.repository.DoctorSpecialityRepository;
 import com.annular.healthCare.repository.HospitalAdminRepository;
 import com.annular.healthCare.repository.HospitalDataListRepository;
 import com.annular.healthCare.repository.MediaFileRepository;
+import com.annular.healthCare.repository.PatientAppoitmentTablerepository;
+import com.annular.healthCare.repository.PatientDetailsRepository;
 import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.HospitalDataListService;
 import com.annular.healthCare.webModel.FileInputWebModel;
@@ -69,6 +74,12 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 
 	@Autowired
 	HospitalAdminRepository hospitalAdminRepository;
+	
+	@Autowired
+	PatientAppoitmentTablerepository patientAppoinmentRepository;
+	
+	@Autowired
+	PatientDetailsRepository patientDetailsRepository;
 
 	@Value("${annular.app.imageLocation}")
 	private String imageLocation;
@@ -621,5 +632,8 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
+
+	
+
 
 }

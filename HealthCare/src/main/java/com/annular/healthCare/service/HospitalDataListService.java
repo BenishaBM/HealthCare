@@ -20,4 +20,5 @@ public interface HospitalDataListService {
 
 	ResponseEntity<?> getByDoctorSpeciallity();
 
+
 }

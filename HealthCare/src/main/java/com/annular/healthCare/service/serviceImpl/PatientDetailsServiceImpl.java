@@ -14,6 +14,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import javax.persistence.Column;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -570,6 +572,8 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	            appointmentModel.setUpdatedOn(appointment.getUpdatedOn());
 	            appointmentModel.setAppointmentStatus(appointment.getAppointmentStatus());
 	            appointmentModel.setPatientNotes(appointment.getPatientNotes());
+	            appointmentModel.setDoctorPrescription(appointment.getDoctorPrescription());
+	            appointmentModel.setMedicineData(appointment.getMedicineData());
 	            return appointmentModel;
 	        }).collect(Collectors.toList());
 
@@ -784,6 +788,9 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
                         appointmentMap.put("relationShipType", appointment.getRelationShipType());
                         appointmentMap.put("patientName", appointment.getPatientName());
                         appointmentMap.put("appointmentType", appointment.getAppointmentType());
+                        appointmentMap.put("doctorPrescription", appointment.getDoctorPrescription());
+                        appointmentMap.put("medicineData", appointment.getMedicineData());
+
                         appointmentList.add(appointmentMap);
                     }
 

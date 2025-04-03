@@ -3,14 +3,18 @@ package com.annular.healthCare.service.serviceImpl;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -129,6 +133,18 @@ public class AuthServiceImpl implements AuthService {
 				response.put("message", "User with this email, user type, and hospital ID already exists");
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 			}
+			
+	        // Validate doctor slots if user is a doctor
+	        if (userWebModel.getUserType().equalsIgnoreCase("DOCTOR") && 
+	            userWebModel.getDoctorDaySlots() != null) {
+	            
+	            // Check for slot time overlaps
+	            if (!validateDoctorSlots(userWebModel.getDoctorDaySlots())) {
+	                response.put("message", "Doctor slot times overlap. Please ensure slot times don't conflict.");
+	                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+	            }
+	        }
+
 
 
 			// Create new user entity
@@ -227,6 +243,66 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	
+
+	
+	/**
+	 * Validates that doctor time slots do not overlap within the same day
+	 * @param doctorDaySlots List of day slots to validate
+	 * @return true if valid (no overlaps), false otherwise
+	 */
+	private boolean validateDoctorSlots(List<DoctorDaySlotWebModel> doctorDaySlots) {
+	    if (doctorDaySlots == null || doctorDaySlots.isEmpty()) {
+	        return true; // No slots to validate
+	    }
+	    
+	    // Group slots by day
+	    Map<String, List<DoctorDaySlotWebModel>> slotsByDay = doctorDaySlots.stream()
+	            .collect(Collectors.groupingBy(DoctorDaySlotWebModel::getDay));
+	    
+	    // Check each day's slots for overlaps
+	    for (Map.Entry<String, List<DoctorDaySlotWebModel>> entry : slotsByDay.entrySet()) {
+	        List<DoctorDaySlotWebModel> daySlots = entry.getValue();
+	        
+	        for (DoctorDaySlotWebModel daySlot : daySlots) {
+	            List<DoctorSlotTimeWebModel> timeSlots = daySlot.getDoctorSlotTimes();
+	            if (timeSlots == null || timeSlots.isEmpty()) {
+	                continue;
+	            }
+	            
+	            // Sort slots by start time for easier comparison
+	            List<DoctorSlotTimeWebModel> sortedTimeSlots = new ArrayList<>(timeSlots);
+	            sortedTimeSlots.sort(Comparator.comparing(slot -> parseTime(slot.getSlotStartTime())));
+	            
+	            // Check for overlaps
+	            for (int i = 0; i < sortedTimeSlots.size() - 1; i++) {
+	                LocalTime currentEnd = parseTime(sortedTimeSlots.get(i).getSlotEndTime());
+	                LocalTime nextStart = parseTime(sortedTimeSlots.get(i + 1).getSlotStartTime());
+	                
+	                if (currentEnd.isAfter(nextStart)) {
+	                    logger.warn("Slot overlap detected for day: " + entry.getKey() + 
+	                               " between " + sortedTimeSlots.get(i).getSlotStartTime() + 
+	                               "-" + sortedTimeSlots.get(i).getSlotEndTime() + 
+	                               " and " + sortedTimeSlots.get(i + 1).getSlotStartTime() + 
+	                               "-" + sortedTimeSlots.get(i + 1).getSlotEndTime());
+	                    return false;
+	                }
+	            }
+	        }
+	    }
+	    return true;
+	}
+	private LocalTime parseTime(String timeString) {
+	    try {
+	        // Trim and ensure correct format
+	        timeString = timeString.trim();
+	        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH);
+	        return LocalTime.parse(timeString, formatter);
+	    } catch (Exception e) {
+	        logger.error("Time parsing failed for input: '" + timeString + "'", e);
+	        throw e; // Rethrow to see the exact issue
+	    }
+	}
+
 
 	// Helper method to handle file uploads (hospital logo)
 		public void handleFileUploads(User hospitalData, List<FileInputWebModel> filesInputWebModel)
@@ -1003,6 +1079,15 @@ public class AuthServiceImpl implements AuthService {
 	        DoctorSlot doctorSlot = doctorSlotRepository.findById(userWebModel.getDoctorSlotId())
 	                .orElseThrow(() -> new RuntimeException("DoctorSlot not found with ID: " + userWebModel.getDoctorSlotId()));
 
+
+	        // Check for slot time overlaps BEFORE saving
+	        if (!validateDoctorSlots(userWebModel.getDoctorDaySlots())) {
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+	                    .body(new Response(0, "Error", "Doctor slot times overlap. Please ensure slot times don't conflict."));
+	        }
+
+	        
+	        
 	        // Loop through provided day slots and save them
 	        if (userWebModel.getDoctorDaySlots() != null) {
 	            for (DoctorDaySlotWebModel daySlotModel : userWebModel.getDoctorDaySlots()) {

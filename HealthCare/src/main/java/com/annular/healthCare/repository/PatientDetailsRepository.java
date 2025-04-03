@@ -30,6 +30,8 @@ public interface PatientDetailsRepository extends JpaRepository<PatientDetails, 
 
 	@Query("SELECT p FROM PatientDetails p WHERE p.patientDetailsId = :patientDetailsId")
 	PatientDetails findByIds(Integer patientDetailsId);
+	
+
 
 
 
