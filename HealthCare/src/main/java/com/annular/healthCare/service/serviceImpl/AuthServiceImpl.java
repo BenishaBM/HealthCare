@@ -889,6 +889,14 @@ public class AuthServiceImpl implements AuthService {
             if (!"DOCTOR".equalsIgnoreCase(user.getUserType())) {
                 return ResponseEntity.ok(response);
             }
+            
+            // Check if doctor is on leave for the requested date
+            boolean isDoctorOnLeave = checkDoctorLeave(user, requestDate);
+            if (isDoctorOnLeave) {
+                response.put("doctorSlots", Collections.emptyList());
+                response.put("message", "Doctor is on leave for the requested date");
+                return ResponseEntity.ok(response);
+            }
 
             // Get doctor slots
             List<Map<String, Object>> doctorSlotList = doctorDaySlotRepository.findByDoctorSlot_User(user)
@@ -905,6 +913,24 @@ public class AuthServiceImpl implements AuthService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Collections.singletonMap("message", "Error retrieving doctor slots"));
         }
+    }
+    
+    /**
+     * Check if the doctor is on leave for the specified date
+     * @param doctor The doctor user
+     * @param requestDate The date to check
+     * @return true if doctor is on leave, false otherwise
+     */
+    private boolean checkDoctorLeave(User doctor, LocalDate requestDate) {
+        // Convert LocalDate to java.util.Date for comparison with entity
+        Date reqDate = Date.from(requestDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        
+        // Query the doctor_leave_list table to check if the doctor has leave on the requested date
+        return doctorLeaveListRepository.existsByUserAndDoctorLeaveDateAndUserIsActive(
+                doctor,
+                reqDate,
+                true
+        );
     }
 
     private boolean isValidSlot(DoctorDaySlot doctorSlot, LocalDate requestDate) {
