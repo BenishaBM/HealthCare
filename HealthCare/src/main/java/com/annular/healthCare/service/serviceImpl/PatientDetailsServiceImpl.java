@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,13 +28,16 @@ import org.springframework.web.client.RestTemplate;
 import com.annular.healthCare.Response;
 import com.annular.healthCare.Util.Base64FileUpload;
 import com.annular.healthCare.Util.Utility;
+import com.annular.healthCare.model.DoctorRole;
 import com.annular.healthCare.model.DoctorSlotTime;
+import com.annular.healthCare.model.DoctorSpecialty;
 import com.annular.healthCare.model.MediaFile;
 import com.annular.healthCare.model.MediaFileCategory;
 import com.annular.healthCare.model.PatientAppointmentTable;
 import com.annular.healthCare.model.PatientDetails;
 import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.DoctorSlotTimeRepository;
+import com.annular.healthCare.repository.DoctorSpecialityRepository;
 import com.annular.healthCare.repository.PatientAppoitmentTablerepository;
 import com.annular.healthCare.repository.PatientDetailsRepository;
 import com.annular.healthCare.repository.UserRepository;
@@ -64,6 +68,9 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	
 	@Autowired
 	DoctorSlotTimeRepository doctorSlotTimeRepository;
+	
+	@Autowired
+	DoctorSpecialityRepository doctorSpecialtyRepository;
 	
 	private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("hh:mm a");
 
@@ -606,6 +613,23 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	            map.put("id", doctor.getUserId());
 	            map.put("firstname", doctor.getFirstName());
 	            map.put("lastName", doctor.getLastName());
+	            // Extract role IDs
+	            List<Integer> roleIds = doctor.getDoctorRoles().stream()
+	                    .map((DoctorRole role) -> role.getRoleId()) // Explicitly defining type
+	                    .collect(Collectors.toList());
+
+
+	            List<String> specialties = roleIds.stream()
+	                    .map((Integer roleId) -> {
+	                        DoctorSpecialty specialty = doctorSpecialtyRepository.findById(roleId).orElse(null);
+	                        return (specialty != null) ? specialty.getSpecialtyName() : null;
+	                    })
+	                    .filter(Objects::nonNull)
+	                    .collect(Collectors.toList());
+
+
+	           
+	            map.put("specialties", specialties);
 	            return map;
 	        }).collect(Collectors.toList());
 
