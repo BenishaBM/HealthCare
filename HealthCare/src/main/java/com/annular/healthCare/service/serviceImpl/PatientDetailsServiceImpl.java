@@ -236,13 +236,15 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	            
 	            return null; // Slot is already booked
 	        }
-            // Count existing appointments for the doctor on the same date with "OFFLINE" type
-            int newToken = patientAppointmentRepository.countByAppointmentDateAndDoctorIdAndAppointmentType(
-            		userWebModel.getAppointmentDate(), 
-            		doctor.getUserId(),
-                    "ONLINE"
-            ) + 1; 
+	     // Get the appointment type from the input
+	        String appointmentType = userWebModel.getAppointmentType();
 
+	        // Count existing appointments for the doctor on the same date with the given appointment type
+	        int newToken = patientAppointmentRepository.countByAppointmentDateAndDoctorIdAndAppointmentType(
+	                userWebModel.getAppointmentDate(),
+	                doctor.getUserId(),
+	                appointmentType
+	        ) + 1;
 
 	        // If not booked, proceed with creating the appointment
 	        PatientAppointmentTable appointment = PatientAppointmentTable.builder()
@@ -265,7 +267,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	                .doctorSlotEndTime(doctorSlotTime.getSlotEndTime())
 	                .createdBy(userWebModel.getCreatedBy())
 	                .appointmentStatus("SCHEDULED")
-	                .appointmentType("ONLINE")
+	                .appointmentType(userWebModel.getAppointmentType())
 	                .patientNotes(userWebModel.getPatientNotes())
 	                .build();
 
@@ -579,8 +581,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	            appointmentModel.setUpdatedOn(appointment.getUpdatedOn());
 	            appointmentModel.setAppointmentStatus(appointment.getAppointmentStatus());
 	            appointmentModel.setPatientNotes(appointment.getPatientNotes());
-	            appointmentModel.setDoctorPrescription(appointment.getDoctorPrescription());
-	            appointmentModel.setMedicineData(appointment.getMedicineData());
+
 	            return appointmentModel;
 	        }).collect(Collectors.toList());
 
@@ -812,8 +813,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
                         appointmentMap.put("relationShipType", appointment.getRelationShipType());
                         appointmentMap.put("patientName", appointment.getPatientName());
                         appointmentMap.put("appointmentType", appointment.getAppointmentType());
-                        appointmentMap.put("doctorPrescription", appointment.getDoctorPrescription());
-                        appointmentMap.put("medicineData", appointment.getMedicineData());
+;
 
                         appointmentList.add(appointmentMap);
                     }

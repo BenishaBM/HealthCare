@@ -58,4 +58,34 @@ public class DoctorAppointmentController {
 	}
 
 
+	@GetMapping("getAllMedicineDetailsByHospitalId") // Corrected spelling in endpoint
+	public ResponseEntity<?> getAllMedicineDetailsByHospitalId(
+	        @RequestParam("hospitalId") Integer  hospitalId) {
+	    try {
+	        logger.info("getAllMedicineDetailsByHospitalId request for createdOn: {}, appointmentType: {}", hospitalId);
+	        
+	       
+	        return doctorAppoitmentService.getAllMedicineDetailsByHospitalId(hospitalId);
+	    } catch (Exception e) {
+	        logger.error("getAllMedicineDetailsByHospitalId Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+	
+	@GetMapping("getAllMedicalTestByHospitalId") // Corrected spelling in endpoint
+	public ResponseEntity<?> getAllMedicalTestByHospitalId(
+	        @RequestParam("hospitalId") Integer  hospitalId) {
+	    try {
+	        logger.info("getAllMedicalTestByHospitalId request for createdOn: {}, appointmentType: {}", hospitalId);
+	        
+	       
+	        return doctorAppoitmentService.getAllMedicalTestByHospitalId(hospitalId);
+	    } catch (Exception e) {
+	        logger.error("getAllMedicalTestByHospitalId Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 }
+

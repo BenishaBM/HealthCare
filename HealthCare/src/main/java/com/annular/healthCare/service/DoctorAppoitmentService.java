@@ -12,4 +12,8 @@ public interface DoctorAppoitmentService {
 
 	ResponseEntity<?> saveDoctorAppoitment(HospitalDataListWebModel userWebModel);
 
+	ResponseEntity<?> getAllMedicineDetailsByHospitalId(Integer hospitalId);
+
+	ResponseEntity<?> getAllMedicalTestByHospitalId(Integer hospitalId);
+
 }
