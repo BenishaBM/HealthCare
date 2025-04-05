@@ -391,28 +391,26 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	     List<HospitalDataListWebModel.MedicineDetail> medicineDetails = userWebModel.getMedicineDetails();
 
 	     for (HospitalDataListWebModel.MedicineDetail detail : medicineDetails) {
-	         Optional<Medicines> medicineOpt = medicineRepository.findById(detail.getMedicineId());
-	         if (!medicineOpt.isPresent()) {
-	             continue; // or handle medicine not found case
+	         // ✅ Find existing medicine record for this appointment
+	         Optional<AppointmentMedicine> existingOpt =
+	             appointmentMedicineRepository.findByAppointmentAppointmentIdAndMedicineId(appointmentId, detail.getMedicineId());
+
+	         if (existingOpt.isPresent()) {
+	             // ✅ Update only
+	             AppointmentMedicine existing = existingOpt.get();
+	             existing.setPatientStatus(detail.getPatientStatus());
+	             existing.setUpdatedBy(appointment.getCreatedBy());
+	             existing.setUpdatedOn(new Date()); // update timestamp if needed
+	             appointmentMedicineRepository.save(existing);
 	         }
-
-	         AppointmentMedicine medicine = AppointmentMedicine.builder()
-	             .appointment(appointment)
-	             .medicine(medicineOpt.get())
-	             .isActive(true)
-	             .patientStatus(detail.getPatientStatus())
-	             .createdBy(appointment.getCreatedBy()) // or use session user ID
-	             .updatedBy(appointment.getCreatedBy())
-	             .build();
-
-	         appointmentMedicineRepository.save(medicine);
+	        
 	     }
-       
+
 	     appointment.setPharmacyStatus("COMPLETED");
 	     patientAppointmentRepository.save(appointment);
-	     return ResponseEntity.ok(new Response(1,"success","Medicines saved successfully"));
-	 }
 
+	     return ResponseEntity.ok(new Response(1, "success", "Existing medicines updated successfully"));
+	 }
 
 
 
