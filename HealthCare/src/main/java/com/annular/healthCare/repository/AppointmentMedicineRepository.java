@@ -1,5 +1,6 @@
 package com.annular.healthCare.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,7 +11,7 @@ import com.annular.healthCare.model.AppointmentMedicine;
 @Repository
 public interface AppointmentMedicineRepository extends JpaRepository<AppointmentMedicine, Integer> {
 
-	Optional<AppointmentMedicine> findByAppointmentAppointmentIdAndMedicineId(Integer appointmentId,
+	List<AppointmentMedicine> findByAppointmentAppointmentIdAndMedicineId(Integer appointmentId,
 			Integer medicineId);
 
 }

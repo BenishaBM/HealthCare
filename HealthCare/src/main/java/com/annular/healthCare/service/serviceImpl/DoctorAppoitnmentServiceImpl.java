@@ -379,37 +379,44 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	 }
 	 @Override
 	 public ResponseEntity<?> saveMedicineDetailByPharamacy(HospitalDataListWebModel userWebModel) {
-	     Integer appointmentId = userWebModel.getAppointmentId();
+	     try {
+	         Integer appointmentId = userWebModel.getAppointmentId();
 
-	     // Get Appointment
-	     Optional<PatientAppointmentTable> appointmentOpt = patientAppointmentRepository.findById(appointmentId);
-	     if (!appointmentOpt.isPresent()) {
-	         return ResponseEntity.badRequest().body("Invalid appointment ID");
-	     }
-	     PatientAppointmentTable appointment = appointmentOpt.get();
-
-	     List<HospitalDataListWebModel.MedicineDetail> medicineDetails = userWebModel.getMedicineDetails();
-
-	     for (HospitalDataListWebModel.MedicineDetail detail : medicineDetails) {
-	         // ✅ Find existing medicine record for this appointment
-	         Optional<AppointmentMedicine> existingOpt =
-	             appointmentMedicineRepository.findByAppointmentAppointmentIdAndMedicineId(appointmentId, detail.getMedicineId());
-
-	         if (existingOpt.isPresent()) {
-	             // ✅ Update only
-	             AppointmentMedicine existing = existingOpt.get();
-	             existing.setPatientStatus(detail.getPatientStatus());
-	             existing.setUpdatedBy(appointment.getCreatedBy());
-	             existing.setUpdatedOn(new Date()); // update timestamp if needed
-	             appointmentMedicineRepository.save(existing);
+	         // Get Appointment
+	         Optional<PatientAppointmentTable> appointmentOpt = patientAppointmentRepository.findById(appointmentId);
+	         if (!appointmentOpt.isPresent()) {
+	             return ResponseEntity.badRequest().body("Invalid appointment ID");
 	         }
-	        
+	         PatientAppointmentTable appointment = appointmentOpt.get();
+
+	         List<HospitalDataListWebModel.MedicineDetail> medicineDetails = userWebModel.getMedicineDetails();
+	         if (medicineDetails == null || medicineDetails.isEmpty()) {
+	             return ResponseEntity.badRequest().body("No medicine details provided.");
+	         }
+
+	         for (HospitalDataListWebModel.MedicineDetail detail : medicineDetails) {
+	             Integer medicineId = detail.getMedicineId();
+
+	             List<AppointmentMedicine> existingMedicines =
+	                 appointmentMedicineRepository.findByAppointmentAppointmentIdAndMedicineId(appointmentId, medicineId);
+
+	             for (AppointmentMedicine existing : existingMedicines) {
+	                 existing.setPatientStatus(detail.getPatientStatus());
+	                 existing.setUpdatedBy(appointment.getCreatedBy()); // or session user
+	                 existing.setUpdatedOn(new Date());
+	                 appointmentMedicineRepository.save(existing);
+	             }
+	         }
+
+	         // Update pharmacy status to COMPLETED
+	         appointment.setPharmacyStatus("COMPLETED");
+	         patientAppointmentRepository.save(appointment);
+
+	         return ResponseEntity.ok(new Response(1, "success", "Medicines updated successfully"));
+	     } catch (Exception e) {
+	         e.printStackTrace();
+	         return ResponseEntity.internalServerError().body(new Response(0, "error", "An error occurred: " + e.getMessage()));
 	     }
-
-	     appointment.setPharmacyStatus("COMPLETED");
-	     patientAppointmentRepository.save(appointment);
-
-	     return ResponseEntity.ok(new Response(1, "success", "Existing medicines updated successfully"));
 	 }
 
 
