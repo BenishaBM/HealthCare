@@ -99,12 +99,14 @@ public class PatientAppointmentTable {
     @Column(name = "token")
     private String token;
     
+    @Column(name = "doctorPrescription")
+    private String doctorPrescription;
+   
+    @Column(name = "pharmacyStatus")
+    private String pharmacyStatus;
     
-    @Column(name = "medicalTestId")
-    private Integer medicalTestId;
-    
-    @Column(name = "medicineId")
-    private Integer medicineId;
+    @Column(name = "labStatus")
+    private String labStatus;
     
     
 }

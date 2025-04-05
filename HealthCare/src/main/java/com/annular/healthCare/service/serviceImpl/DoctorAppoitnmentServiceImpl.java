@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -141,6 +142,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 
 	         // Set appointment status
 	         appointment.setAppointmentStatus("COMPLETED");
+	         appointment.setDoctorPrescription(userWebModel.getDoctorPrescription());
 	         patientAppointmentRepository.save(appointment);
 
 	         Integer userId = userWebModel.getUserId(); // Who is saving this
@@ -234,6 +236,100 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	         e.printStackTrace(); // Log properly in production
 	         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 	             .body("An error occurred while fetching medical tests.");
+	     }
+	 }
+	 @Override
+	 public ResponseEntity<?> getAllPatientPharamcyByHospitalIdAndDate(Integer hospitalId, String currentDate) {
+	     try {
+	         List<PatientAppointmentTable> appointments = patientAppointmentRepository.findByAppointmentDate(currentDate);
+
+	         List<Map<String, Object>> filteredData = appointments.stream()
+	             .map(PatientAppointmentTable::getPatient)
+	             .filter(Objects::nonNull)
+	             .filter(patient -> patient.getHospitalId().equals(hospitalId))
+	             .distinct() // optional: to remove duplicates if the same patient has multiple appointments
+	             .map(patient -> {
+	                 Map<String, Object> map = new HashMap<>();
+	                 map.put("patientDetailsId", patient.getPatientDetailsId());
+	                 map.put("patientName", patient.getPatientName());
+	                 map.put("dob", patient.getDob());
+	                 map.put("gender", patient.getGender());
+	                 map.put("bloodGroup", patient.getBloodGroup());
+	                 map.put("mobileNumber", patient.getMobileNumber());
+	                 map.put("emailId", patient.getEmailId());
+	                 map.put("address", patient.getAddress());
+	                 return map;
+	             })
+	             .collect(Collectors.toList());
+
+	         return ResponseEntity.ok(new Response(1, "success", filteredData));
+
+	     } catch (Exception e) {
+	         e.printStackTrace();
+	         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	             .body(new Response(0, "error", "An error occurred while fetching patient details."));
+	     }
+	 }
+	 @Override
+	 public ResponseEntity<?> getAllPatientPharamcyBypatientIdAndDate(Integer patientId, String appointmentDate) {
+	     try {
+	         // Fetch appointments by patientId and date
+	         List<PatientAppointmentTable> appointments = patientAppointmentRepository.findByPatient_PatientDetailsIdAndAppointmentDate(patientId, appointmentDate);
+
+	         // Map to response
+	         List<Map<String, Object>> filteredData = appointments.stream()
+	             .map(appointment -> {
+	                 Map<String, Object> map = new HashMap<>();
+
+	                 // Appointment data
+	                 map.put("doctorSlotId", appointment.getDoctorSlotId());
+	                 map.put("daySlotId", appointment.getDaySlotId());
+	                 map.put("timeSlotId", appointment.getTimeSlotId());
+	                 map.put("appointmentDate", appointment.getAppointmentDate());
+	                 map.put("slotStartTime", appointment.getSlotStartTime());
+	                 map.put("slotEndTime", appointment.getSlotEndTime());
+	                 map.put("slotTime", appointment.getSlotTime());
+	                 map.put("isActive", appointment.getIsActive());
+	                 map.put("createdBy", appointment.getCreatedBy());
+	                 map.put("createdOn", appointment.getCreatedOn());
+	                 map.put("updatedBy", appointment.getUpdatedBy());
+	                 map.put("updatedOn", appointment.getUpdatedOn());
+	                 map.put("appointmentStatus", appointment.getAppointmentStatus());
+	                 map.put("patientNotes", appointment.getPatientNotes());
+	                 map.put("doctorSlotStartTime", appointment.getDoctorSlotStartTime());
+	                 map.put("doctorSlotEndTime", appointment.getDoctorSlotEndTime());
+	                 map.put("appointmentType", appointment.getAppointmentType());
+	                 map.put("age", appointment.getAge());
+	                 map.put("dateOfBirth", appointment.getDateOfBirth());
+	                 map.put("patientName", appointment.getPatientName());
+	                 map.put("relationshipType", appointment.getRelationShipType());
+	                 map.put("token", appointment.getToken());
+	                 map.put("pharmacyStatus", appointment.getPharmacyStatus());
+	                 map.put("labStatus", appointment.getLabStatus());
+
+	                 // PatientDetails data
+	                 PatientDetails patient = appointment.getPatient();
+	                 if (patient != null) {
+	                     map.put("patientDetailsId", patient.getPatientDetailsId());
+	                     map.put("patientName", patient.getPatientName());
+	                     map.put("dob", patient.getDob());
+	                     map.put("gender", patient.getGender());
+	                     map.put("bloodGroup", patient.getBloodGroup());
+	                     map.put("mobileNumber", patient.getMobileNumber());
+	                     map.put("emailId", patient.getEmailId());
+	                     map.put("address", patient.getAddress());
+	                 }
+
+	                 return map;
+	             })
+	             .collect(Collectors.toList());
+
+	         return ResponseEntity.ok(new Response(1, "success", filteredData));
+
+	     } catch (Exception e) {
+	         e.printStackTrace();
+	         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	             .body(new Response(0, "error", "An error occurred while fetching pharmacy appointments."));
 	     }
 	 }
 

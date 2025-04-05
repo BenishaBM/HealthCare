@@ -16,4 +16,8 @@ public interface DoctorAppoitmentService {
 
 	ResponseEntity<?> getAllMedicalTestByHospitalId(Integer hospitalId);
 
+	ResponseEntity<?> getAllPatientPharamcyByHospitalIdAndDate(Integer hospitalId, String currentDatae);
+
+	ResponseEntity<?> getAllPatientPharamcyBypatientIdAndDate(Integer patientId, String currentDatae);
+
 }

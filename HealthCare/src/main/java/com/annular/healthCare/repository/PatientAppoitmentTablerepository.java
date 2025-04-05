@@ -57,6 +57,10 @@ public interface PatientAppoitmentTablerepository extends JpaRepository<PatientA
 		    @Param("slotEndTime") String slotEndTime
 		);
 
+	List<PatientAppointmentTable> findByAppointmentDate(String currentDate);
+
+	List<PatientAppointmentTable> findByPatient_PatientDetailsIdAndAppointmentDate(Integer patientId, String appointmentDate);
+
 
 
 
