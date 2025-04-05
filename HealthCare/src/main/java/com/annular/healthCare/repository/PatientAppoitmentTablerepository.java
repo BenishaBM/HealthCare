@@ -62,6 +62,18 @@ public interface PatientAppoitmentTablerepository extends JpaRepository<PatientA
 	List<PatientAppointmentTable> findByPatient_PatientDetailsIdAndAppointmentDate(Integer patientId, String appointmentDate);
 
 
+//	@Query("SELECT p FROM PatientAppointmentTable p WHERE p.appointmentDate = :appointmentDate AND p.timeSlotId = :slotTimeId")
+//	List<PatientAppointmentTable> findByAppointmentDateAndDoctorSlotTimeId(
+//	    @Param("appointmentDate") Date appointmentDate,
+//	    @Param("slotTimeId") Integer slotTimeId);
+
+	@Query("SELECT p FROM PatientAppointmentTable p WHERE p.appointmentDate = :appointmentDate AND p.timeSlotId = :slotTimeId")
+	List<PatientAppointmentTable> findByAppointmentDateAndDoctorSlotTimeId(String appointmentDate, Integer slotTimeId);
+
+
+
+
+
 
 
 
