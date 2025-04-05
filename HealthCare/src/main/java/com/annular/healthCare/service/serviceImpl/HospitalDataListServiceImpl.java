@@ -1,12 +1,17 @@
 package com.annular.healthCare.service.serviceImpl;
 
 import java.io.IOException;
-
+import java.text.SimpleDateFormat;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,6 +25,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.annular.healthCare.Util.Base64FileUpload;
 import com.annular.healthCare.Util.HealthCareConstant;
@@ -31,6 +38,8 @@ import com.annular.healthCare.model.PatientAppointmentTable;
 import com.annular.healthCare.model.PatientDetails;
 import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.DoctorRoleRepository;
+import com.annular.healthCare.repository.DoctorSlotTimeOverrideRepository;
+import com.annular.healthCare.repository.DoctorSlotTimeRepository;
 import com.annular.healthCare.repository.DoctorSpecialityRepository;
 import com.annular.healthCare.repository.HospitalAdminRepository;
 import com.annular.healthCare.repository.HospitalDataListRepository;
@@ -39,9 +48,12 @@ import com.annular.healthCare.repository.PatientAppoitmentTablerepository;
 import com.annular.healthCare.repository.PatientDetailsRepository;
 import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.HospitalDataListService;
+import com.annular.healthCare.webModel.DoctorSlotTimeOverrideWebModel;
 import com.annular.healthCare.webModel.FileInputWebModel;
 import com.annular.healthCare.webModel.HospitalAdminWebModel;
 import com.annular.healthCare.model.DoctorRole;
+import com.annular.healthCare.model.DoctorSlotTime;
+import com.annular.healthCare.model.DoctorSlotTimeOverride;
 import com.annular.healthCare.webModel.HospitalDataListWebModel;
 
 import com.annular.healthCare.Response;
@@ -74,6 +86,12 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 
 	@Autowired
 	HospitalAdminRepository hospitalAdminRepository;
+	
+	@Autowired
+	DoctorSlotTimeRepository doctorSlotTimeRepository;
+	
+	@Autowired
+	DoctorSlotTimeOverrideRepository doctorSlotTimeOverrideRepository;
 	
 	@Autowired
 	PatientAppoitmentTablerepository patientAppoinmentRepository;
@@ -632,8 +650,89 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
+	@Transactional
+	public ResponseEntity<?> saveDoctorSlotTimeOverride(DoctorSlotTimeOverrideWebModel webModel) {
+	    try {
+	        if (webModel == null || webModel.getDoctorSlotTimeId() == null ||
+	                webModel.getOverrideDate() == null || StringUtils.isEmpty(webModel.getNewSlotTime())) {
+	            return ResponseEntity.badRequest().body(new Response(0, "error", "Missing required fields"));
+	        }
 
-	
+	        Optional<DoctorSlotTime> doctorSlotTimeOpt = doctorSlotTimeRepository.findById(webModel.getDoctorSlotTimeId());
+	        if (!doctorSlotTimeOpt.isPresent()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body(new Response(0, "error", "DoctorSlotTime not found with ID: " + webModel.getDoctorSlotTimeId()));
+	        }
 
+	        DoctorSlotTime slot = doctorSlotTimeOpt.get();
+
+	        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH);
+	        LocalTime originalStart = LocalTime.parse(slot.getSlotStartTime(), formatter);
+
+	        int durationMinutes = extractDurationInMinutes(webModel.getNewSlotTime());
+	        if (durationMinutes <= 0) {
+	            return ResponseEntity.badRequest().body(new Response(0, "error", "Invalid new slot time format."));
+	        }
+
+	        List<DoctorSlotTimeOverride> existingOverrides = doctorSlotTimeOverrideRepository
+	                .findByOriginalSlotDoctorSlotTimeIdAndOverrideDate(webModel.getDoctorSlotTimeId(), webModel.getOverrideDate());
+
+	        if (!existingOverrides.isEmpty()) {
+	            for (DoctorSlotTimeOverride overrideItem : existingOverrides) {
+	                overrideItem.setIsActive(false);
+	            }
+	            doctorSlotTimeOverrideRepository.saveAll(existingOverrides);
+	        }
+
+
+	        // ✅ Step 2: Save new override entry with isActive = true
+	        DoctorSlotTimeOverride override = DoctorSlotTimeOverride.builder()
+	                .originalSlot(slot)
+	                .overrideDate(webModel.getOverrideDate())
+	                .newSlotTime(webModel.getNewSlotTime()) // saves "30 mins"
+	                .reason(webModel.getReason())
+	                .isActive(true) // ✅ mark new one as active
+	                .build();
+
+	        doctorSlotTimeOverrideRepository.save(override);
+
+	        // Update appointments
+	        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+	        String dateString = sdf.format(webModel.getOverrideDate());
+
+	        List<PatientAppointmentTable> appointments = patientAppoinmentRepository
+	                .findByAppointmentDateAndDoctorSlotTimeId(dateString, slot.getDoctorSlotTimeId());
+
+	        for (PatientAppointmentTable appointment : appointments) {
+	            LocalTime apptStart = LocalTime.parse(appointment.getSlotStartTime(), formatter);
+	            LocalTime apptEnd = LocalTime.parse(appointment.getSlotEndTime(), formatter);
+
+	            appointment.setSlotStartTime(apptStart.plusMinutes(durationMinutes).format(formatter));
+	            appointment.setSlotEndTime(apptEnd.plusMinutes(durationMinutes).format(formatter));
+	            System.out.println("Updating appointment ID: " + appointment.getAppointmentId());
+	        }
+
+	        patientAppoinmentRepository.saveAll(appointments);
+
+	        return ResponseEntity.ok(new Response(1, "success",
+	                "Override saved and " + appointments.size() + " appointments updated."));
+
+	    } catch (DateTimeParseException e) {
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+	                .body(new Response(0, "error", "Invalid time format: " + e.getMessage()));
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "error", "Error while saving override: " + e.getMessage()));
+	    }
+	}
+
+	// Extracts minutes from "60 mins" or "30 mins"
+	private int extractDurationInMinutes(String newSlotTime) {
+	    try {
+	        return Integer.parseInt(newSlotTime.trim().split(" ")[0]);
+	    } catch (Exception e) {
+	        return 0;
+	    }
+	}
 
 }

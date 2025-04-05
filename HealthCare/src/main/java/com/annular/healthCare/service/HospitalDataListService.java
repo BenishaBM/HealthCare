@@ -2,6 +2,7 @@ package com.annular.healthCare.service;
 
 import org.springframework.http.ResponseEntity;
 
+import com.annular.healthCare.webModel.DoctorSlotTimeOverrideWebModel;
 import com.annular.healthCare.webModel.HospitalDataListWebModel;
 
 public interface HospitalDataListService {
@@ -19,6 +20,8 @@ public interface HospitalDataListService {
 	ResponseEntity<?> getByHopitalName();
 
 	ResponseEntity<?> getByDoctorSpeciallity();
+
+	ResponseEntity<?> saveDoctorSlotTimeOverride(DoctorSlotTimeOverrideWebModel userWebModel);
 
 
 }

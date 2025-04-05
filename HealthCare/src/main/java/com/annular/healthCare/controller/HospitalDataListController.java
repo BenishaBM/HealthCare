@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.annular.healthCare.Response;
 import com.annular.healthCare.service.AuthService;
 import com.annular.healthCare.service.HospitalDataListService;
+import com.annular.healthCare.webModel.DoctorSlotTimeOverrideWebModel;
 import com.annular.healthCare.webModel.HospitalDataListWebModel;
 import com.annular.healthCare.webModel.UserWebModel;
 
@@ -118,9 +119,19 @@ public class HospitalDataListController {
 	    }
 	}
 	
+	@PostMapping("saveDoctorSlotTimeOverride")
+	public ResponseEntity<?> saveDoctorSlotTimeOverride(@RequestBody DoctorSlotTimeOverrideWebModel userWebModel) {
+		try {
+			logger.info("saveDoctorSlotTimeOverride controller start");
+			return authService.saveDoctorSlotTimeOverride(userWebModel);
+		} catch (Exception e) {
+			logger.error("saveDoctorSlotTimeOverride Method Exception {}" + e);
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(new Response(-1, "Fail", e.getMessage()));
+		}
 
-	
-	
+	}
 	
 
 }
