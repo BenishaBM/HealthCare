@@ -1,6 +1,8 @@
 package com.annular.healthCare.model;
 
 import java.util.Date;
+import java.util.List;
+
 import javax.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import lombok.*;
@@ -107,6 +109,13 @@ public class PatientAppointmentTable {
     
     @Column(name = "labStatus")
     private String labStatus;
+    
+    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<AppointmentMedicalTest> appointmentMedicalTests;
+    
+    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<AppointmentMedicine> appointmentMedicines;
+
     
     
 }
