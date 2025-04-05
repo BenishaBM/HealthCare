@@ -250,11 +250,11 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	         List<PatientAppointmentTable> appointments = patientAppointmentRepository.findByAppointmentDate(currentDate);
 
 	         List<Map<String, Object>> filteredData = appointments.stream()
-	             .map(PatientAppointmentTable::getPatient)
-	             .filter(Objects::nonNull)
-	             .filter(patient -> patient.getHospitalId().equals(hospitalId))
-	             .distinct() // optional: to remove duplicates if the same patient has multiple appointments
-	             .map(patient -> {
+	             .filter(app -> app.getPatient() != null
+	                         && app.getPatient().getHospitalId().equals(hospitalId)
+	                         && appointmentMedicineRepository.existsByAppointment(app)) // Check if medicine exists
+	             .map(app -> {
+	                 PatientDetails patient = app.getPatient();
 	                 Map<String, Object> map = new HashMap<>();
 	                 map.put("patientDetailsId", patient.getPatientDetailsId());
 	                 map.put("patientName", patient.getPatientName());
@@ -266,6 +266,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                 map.put("address", patient.getAddress());
 	                 return map;
 	             })
+	             .distinct()
 	             .collect(Collectors.toList());
 
 	         return ResponseEntity.ok(new Response(1, "success", filteredData));
@@ -276,6 +277,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	             .body(new Response(0, "error", "An error occurred while fetching patient details."));
 	     }
 	 }
+
 	 @Override
 	 public ResponseEntity<?> getAllPatientPharamcyBypatientIdAndDate(Integer patientId, String appointmentDate) {
 	     try {
@@ -418,6 +420,141 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	         return ResponseEntity.internalServerError().body(new Response(0, "error", "An error occurred: " + e.getMessage()));
 	     }
 	 }
+	 @Override
+	 public ResponseEntity<?> getAllPatientMedicalTestByHospitalIdAndDate(Integer hospitalId, String currentDate) {
+	     try {
+	         // Step 1: Get appointments by date
+	         List<PatientAppointmentTable> appointments = patientAppointmentRepository.findByAppointmentDate(currentDate);
+
+	         // Step 2: Filter appointments by hospitalId and check for existing medical test data
+	         List<Map<String, Object>> filteredData = appointments.stream()
+	             .filter(app -> app.getPatient() != null
+	                         && app.getPatient().getHospitalId().equals(hospitalId)
+	                         && appointmentMedicalTestRepository.existsByAppointment(app)) // check if test exists
+	             .map(app -> {
+	                 PatientDetails patient = app.getPatient();
+	                 Map<String, Object> map = new HashMap<>();
+	                 map.put("patientDetailsId", patient.getPatientDetailsId());
+	                 map.put("patientName", patient.getPatientName());
+	                 map.put("dob", patient.getDob());
+	                 map.put("gender", patient.getGender());
+	                 map.put("bloodGroup", patient.getBloodGroup());
+	                 map.put("mobileNumber", patient.getMobileNumber());
+	                 map.put("emailId", patient.getEmailId());
+	                 map.put("address", patient.getAddress());
+	                 return map;
+	             })
+	             .distinct() // Optional to avoid duplicate patient maps
+	             .collect(Collectors.toList());
+
+	         return ResponseEntity.ok(new Response(1, "success", filteredData));
+
+	     } catch (Exception e) {
+	         e.printStackTrace();
+	         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	             .body(new Response(0, "error", "An error occurred while fetching patient details."));
+	     }
+	 }
+
+	@Override
+	public ResponseEntity<?> getAllPatientMedicalTestBypatientIdAndDate(Integer patientId, String appointmentDate) {
+		 try {
+	         // Fetch appointments by patientId and date
+	         List<PatientAppointmentTable> appointments =
+	                 patientAppointmentRepository.findByPatient_PatientDetailsIdAndAppointmentDate(patientId, appointmentDate);
+
+	         // Set to keep unique combinations of patientDetailsId + appointmentDate
+	         Set<String> uniqueKeys = new HashSet<>();
+
+	         List<Map<String, Object>> filteredData = appointments.stream()
+	                 .filter(appointment -> {
+	                     String key = appointment.getPatient().getPatientDetailsId() + "_" + appointment.getAppointmentDate();
+	                     return uniqueKeys.add(key); // Returns false if already exists (duplicate)
+	                 })
+	                 .map(appointment -> {
+	                     Map<String, Object> map = new HashMap<>();
+
+	                     // Appointment data
+	                     map.put("doctorSlotId", appointment.getDoctorSlotId());
+	                     map.put("daySlotId", appointment.getDaySlotId());
+	                     map.put("timeSlotId", appointment.getTimeSlotId());
+	                     map.put("appointmentDate", appointment.getAppointmentDate());
+	                     map.put("slotStartTime", appointment.getSlotStartTime());
+	                     map.put("slotEndTime", appointment.getSlotEndTime());
+	                     map.put("slotTime", appointment.getSlotTime());
+	                     map.put("isActive", appointment.getIsActive());
+	                     map.put("createdBy", appointment.getCreatedBy());
+	                     map.put("createdOn", appointment.getCreatedOn());
+	                     map.put("updatedBy", appointment.getUpdatedBy());
+	                     map.put("updatedOn", appointment.getUpdatedOn());
+	                     map.put("appointmentStatus", appointment.getAppointmentStatus());
+	                     map.put("patientNotes", appointment.getPatientNotes());
+	                     map.put("doctorSlotStartTime", appointment.getDoctorSlotStartTime());
+	                     map.put("doctorSlotEndTime", appointment.getDoctorSlotEndTime());
+	                     map.put("appointmentType", appointment.getAppointmentType());
+	                     map.put("age", appointment.getAge());
+	                     map.put("dateOfBirth", appointment.getDateOfBirth());
+	                     map.put("patientName", appointment.getPatientName());
+	                     map.put("relationshipType", appointment.getRelationShipType());
+	                     map.put("token", appointment.getToken());
+	                     map.put("pharmacyStatus", appointment.getPharmacyStatus());
+	                     map.put("labStatus", appointment.getLabStatus());
+	                     map.put("appointmentId", appointment.getAppointmentId());
+
+	                     // PatientDetails data
+	                     PatientDetails patient = appointment.getPatient();
+	                     if (patient != null) {
+	                         map.put("patientDetailsId", patient.getPatientDetailsId());
+	                         map.put("patientName", patient.getPatientName());
+	                         map.put("dob", patient.getDob());
+	                         map.put("gender", patient.getGender());
+	                         map.put("bloodGroup", patient.getBloodGroup());
+	                         map.put("mobileNumber", patient.getMobileNumber());
+	                         map.put("emailId", patient.getEmailId());
+	                         map.put("address", patient.getAddress());
+	                     }
+
+	                     // AppointmentMedicine data
+	                     List<AppointmentMedicalTest> medicines = appointment.getAppointmentMedicalTests();
+	                     if (medicines != null && !medicines.isEmpty()) {
+	                         List<Map<String, Object>> medicineList = medicines.stream().map(med -> {
+	                             Map<String, Object> medMap = new HashMap<>();
+	                             medMap.put("appointmentMedicineId", med.getId());
+	                             medMap.put("isActive", med.getIsActive());
+	                             medMap.put("createdBy", med.getCreatedBy());
+	                             medMap.put("createdOn", med.getCreatedOn());
+	                             medMap.put("updatedBy", med.getUpdatedBy());
+	                             medMap.put("updatedOn", med.getUpdatedOn());
+	                             medMap.put("medicineStatus", med.getPatientStatus());
+
+	                             MedicalTest medicine = med.getMedicalTest();
+	                             if (medicine != null) {
+	                                 medMap.put("medicineId", medicine.getId());
+	                                 medMap.put("testname", medicine.getTestName());
+	                                 medMap.put("mrp", medicine.getMrp());
+	                                 medMap.put("department", medicine.getDepartment());
+	                                 medMap.put("isActive", medicine.getIsActive());
+	                                
+	                             }
+
+	                             return medMap;
+	                         }).collect(Collectors.toList());
+
+	                         map.put("appointmentMedicialTest", medicineList);
+	                     }
+
+	                     return map;
+	                 })
+	                 .collect(Collectors.toList());
+
+	         return ResponseEntity.ok(new Response(1, "success", filteredData));
+
+	     } catch (Exception e) {
+	         e.printStackTrace();
+	         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                 .body(new Response(0, "error", "An error occurred while fetching pharmacy appointments."));
+	     }
+	}
 
 
 

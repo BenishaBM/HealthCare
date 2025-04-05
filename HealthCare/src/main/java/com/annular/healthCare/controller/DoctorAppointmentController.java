@@ -129,6 +129,36 @@ public class DoctorAppointmentController {
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+	
+	@GetMapping("getAllPatientMedicalTestByHospitalIdAndDate") // Corrected spelling in endpoint
+	public ResponseEntity<?> getAllPatientMedicalTestByHospitalIdAndDate(
+	        @RequestParam("hospitalId") Integer  hospitalId,@RequestParam("currentDate")String currentDatae) {
+	    try {
+	        logger.info("getAllPatientMedicalTestByHospitalIdAndDate request for createdOn: {}, appointmentType: {}", hospitalId);
+	        
+	       
+	        return doctorAppoitmentService.getAllPatientMedicalTestByHospitalIdAndDate(hospitalId,currentDatae);
+	    } catch (Exception e) {
+	        logger.error("getAllPatientMedicalTestByHospitalIdAndDate Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+	
+	@GetMapping("getAllPatientMedicalTestBypatientIdAndDate") // Corrected spelling in endpoint
+	public ResponseEntity<?> getAllPatientMedicalTestBypatientIdAndDate(
+	        @RequestParam("patientId") Integer  patientId,@RequestParam("currentDate")String currentDatae) {
+	    try {
+	        logger.info("getAllPatientMedicalTestBypatientIdAndDate request for createdOn: {}, appointmentType: {}", patientId);
+	        
+	       
+	        return doctorAppoitmentService.getAllPatientMedicalTestBypatientIdAndDate(patientId,currentDatae);
+	    } catch (Exception e) {
+	        logger.error("getAllPatientMedicalTestBypatientIdAndDate Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 
 }
 
