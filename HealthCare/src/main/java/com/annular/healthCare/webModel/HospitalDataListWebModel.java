@@ -66,6 +66,14 @@ public class HospitalDataListWebModel {
     private Integer appointmentId;
     private List<Integer> medicineIds;
     private List<Integer> medicalTestIds;
+    private List<MedicineDetail> medicineDetails;
+    
+    @Getter
+    @Setter
+    public static class MedicineDetail {
+        private Integer medicineId;
+        private Boolean patientStatus;
+    }
 
 
 

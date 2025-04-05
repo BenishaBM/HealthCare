@@ -46,6 +46,9 @@ public class AppointmentMedicalTest {
     @Column(name = "is_active")
     private Boolean isActive;
     
+    @Column(name = "patientStatus")
+    private Boolean patientStatus;
+    
 	@Column(name = "created_by")
 	private Integer createdBy;
 

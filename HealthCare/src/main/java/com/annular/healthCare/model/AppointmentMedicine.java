@@ -58,4 +58,7 @@ public class AppointmentMedicine {
 	@Column(name = "updated_on")
 	@CreationTimestamp
 	private Date updatedOn;
+	
+    @Column(name = "patientStatus")
+    private Boolean patientStatus;
 }

@@ -20,4 +20,6 @@ public interface DoctorAppoitmentService {
 
 	ResponseEntity<?> getAllPatientPharamcyBypatientIdAndDate(Integer patientId, String currentDatae);
 
+	ResponseEntity<?> saveMedicineDetailByPharamacy(HospitalDataListWebModel userWebModel);
+
 }

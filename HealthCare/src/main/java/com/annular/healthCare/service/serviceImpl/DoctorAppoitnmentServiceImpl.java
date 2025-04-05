@@ -159,6 +159,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                     AppointmentMedicine am = AppointmentMedicine.builder()
 	                             .appointment(appointment)
 	                             .medicine(medicineOpt.get())
+	                             .patientStatus(false)
 	                             .isActive(true)
 	                             .createdBy(userId)
 	                             .updatedBy(userId)
@@ -176,6 +177,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                     AppointmentMedicalTest amt = AppointmentMedicalTest.builder()
 	                             .appointment(appointment)
 	                             .medicalTest(testOpt.get())
+	                             .patientStatus(false)
 	                             .isActive(true)
 	                             .createdBy(userId)
 	                             .updatedBy(userId)
@@ -342,6 +344,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                             medMap.put("createdOn", med.getCreatedOn());
 	                             medMap.put("updatedBy", med.getUpdatedBy());
 	                             medMap.put("updatedOn", med.getUpdatedOn());
+	                             medMap.put("medicineStatus", med.getPatientStatus());
 
 	                             Medicines medicine = med.getMedicine();
 	                             if (medicine != null) {
@@ -372,6 +375,41 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 	                 .body(new Response(0, "error", "An error occurred while fetching pharmacy appointments."));
 	     }
+	 }
+	 @Override
+	 public ResponseEntity<?> saveMedicineDetailByPharamacy(HospitalDataListWebModel userWebModel) {
+	     Integer appointmentId = userWebModel.getAppointmentId();
+
+	     // Get Appointment
+	     Optional<PatientAppointmentTable> appointmentOpt = patientAppointmentRepository.findById(appointmentId);
+	     if (!appointmentOpt.isPresent()) {
+	         return ResponseEntity.badRequest().body("Invalid appointment ID");
+	     }
+	     PatientAppointmentTable appointment = appointmentOpt.get();
+
+	     List<HospitalDataListWebModel.MedicineDetail> medicineDetails = userWebModel.getMedicineDetails();
+
+	     for (HospitalDataListWebModel.MedicineDetail detail : medicineDetails) {
+	         Optional<Medicines> medicineOpt = medicineRepository.findById(detail.getMedicineId());
+	         if (!medicineOpt.isPresent()) {
+	             continue; // or handle medicine not found case
+	         }
+
+	         AppointmentMedicine medicine = AppointmentMedicine.builder()
+	             .appointment(appointment)
+	             .medicine(medicineOpt.get())
+	             .isActive(true)
+	             .patientStatus(detail.getPatientStatus())
+	             .createdBy(appointment.getCreatedBy()) // or use session user ID
+	             .updatedBy(appointment.getCreatedBy())
+	             .build();
+
+	         appointmentMedicineRepository.save(medicine);
+	     }
+       
+	     appointment.setPharmacyStatus("COMPLETED");
+	     patientAppointmentRepository.save(appointment);
+	     return ResponseEntity.ok(new Response(1,"success","Medicines saved successfully"));
 	 }
 
 
