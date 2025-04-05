@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -43,6 +44,7 @@ import com.annular.healthCare.model.DoctorLeaveList;
 import com.annular.healthCare.model.DoctorRole;
 import com.annular.healthCare.model.DoctorSlot;
 import com.annular.healthCare.model.DoctorSlotTime;
+import com.annular.healthCare.model.DoctorSlotTimeOverride;
 import com.annular.healthCare.model.DoctorSpecialty;
 import com.annular.healthCare.model.HospitalAdmin;
 import com.annular.healthCare.model.HospitalDataList;
@@ -54,6 +56,7 @@ import com.annular.healthCare.repository.DoctorDaySlotRepository;
 import com.annular.healthCare.repository.DoctorLeaveListRepository;
 import com.annular.healthCare.repository.DoctorRoleRepository;
 import com.annular.healthCare.repository.DoctorSlotRepository;
+import com.annular.healthCare.repository.DoctorSlotTimeOverrideRepository;
 import com.annular.healthCare.repository.DoctorSlotTimeRepository;
 import com.annular.healthCare.repository.DoctorSpecialityRepository;
 import com.annular.healthCare.repository.HospitalAdminRepository;
@@ -109,6 +112,9 @@ public class AuthServiceImpl implements AuthService {
 	
 	@Autowired
 	DoctorLeaveListRepository doctorLeaveListRepository;
+	
+	@Autowired
+	DoctorSlotTimeOverrideRepository doctorSlotTimeOverrideRepository;
 	
 	@Autowired
 	DoctorSpecialityRepository doctorSpecialtyRepository;
@@ -980,6 +986,7 @@ public class AuthServiceImpl implements AuthService {
         daySlotData.put("startSlotDate", daySlot.getStartSlotDate());
         daySlotData.put("endSlotDate", daySlot.getEndSlotDate());
         daySlotData.put("isActive", daySlot.getIsActive());
+        
 
         List<Map<String, Object>> timeSlotList = doctorSlotTimeRepository.findByDoctorDaySlot(daySlot)
                 .stream()
@@ -990,28 +997,87 @@ public class AuthServiceImpl implements AuthService {
         daySlotData.put("slotTimes", timeSlotList);
         return daySlotData;
     }
-
     private Map<String, Object> mapDoctorSlotTime(DoctorSlotTime slotTime, LocalDate requestDate) {
         Map<String, Object> timeSlotData = new LinkedHashMap<>();
-        timeSlotData.put("timeSlotId", slotTime.getDoctorSlotTimeId());
-        timeSlotData.put("slotStartTime", formatTime(slotTime.getSlotStartTime()));
-        timeSlotData.put("slotEndTime", formatTime(slotTime.getSlotEndTime()));
-        timeSlotData.put("slotTime", slotTime.getSlotTime());
-        timeSlotData.put("isActive", slotTime.getIsActive());
-
-        List<Map<String, String>> splitSlots = generateSplitSlots(
-            slotTime.getSlotStartTime(),
-            slotTime.getSlotEndTime(),
-            slotTime.getSlotTime(),
-            requestDate,
-            slotTime.getDoctorSlotTimeId()
-        );
-
-        timeSlotData.put("splitSlotDuration", splitSlots);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH); // Accepts "9:00 AM"
+        
+        try {
+            // Step 1: Parse slot times
+            LocalTime slotStartTime = LocalTime.parse(slotTime.getSlotStartTime(), formatter);
+            LocalTime slotEndTime = LocalTime.parse(slotTime.getSlotEndTime(), formatter);
+            
+            // Step 2: Check for overrides
+            Date overrideCheckDate = Date.from(requestDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            Optional<DoctorSlotTimeOverride> overrideOpt = doctorSlotTimeOverrideRepository
+                    .findByOriginalSlot_DoctorSlotTimeIdAndOverrideDateAndIsActive(
+                            slotTime.getDoctorSlotTimeId(),
+                            overrideCheckDate,
+                            true
+                    );
+            
+            // Step 3: Apply override if present
+            if (overrideOpt.isPresent()) {
+                DoctorSlotTimeOverride override = overrideOpt.get();
+                String overrideValue = override.getNewSlotTime();
+                
+                logger.info("Override found for slot {}: shifting by {}", 
+                        slotTime.getDoctorSlotTimeId(), overrideValue);
+                
+                try {
+                    // Extract the numeric part from strings like "10 mins"
+                    String numericPart = overrideValue.replaceAll("[^0-9-]", "").trim();
+                    int newSlotMinutes = Integer.parseInt(numericPart);
+                    
+                    logger.info("Before shift - Start: {}, End: {}", 
+                            slotStartTime.format(formatter), slotEndTime.format(formatter));
+                    
+                    // Apply the shift
+                    slotStartTime = slotStartTime.plusMinutes(newSlotMinutes);
+                    slotEndTime = slotEndTime.plusMinutes(newSlotMinutes);
+                    
+                    logger.info("After shift - Start: {}, End: {}", 
+                            slotStartTime.format(formatter), slotEndTime.format(formatter));
+                    
+                } catch (NumberFormatException e) {
+                    logger.error("Invalid override value for slot {}: {}. Error: {}", 
+                            slotTime.getDoctorSlotTimeId(), overrideValue, e.getMessage());
+                    // Continue with original slot times if override is invalid
+                }
+            }
+            
+            // Step 4: Build response with potentially shifted times
+            timeSlotData.put("timeSlotId", slotTime.getDoctorSlotTimeId());
+            timeSlotData.put("slotStartTime", slotStartTime.format(formatter));
+            timeSlotData.put("slotEndTime", slotEndTime.format(formatter));
+            timeSlotData.put("slotTime", slotTime.getSlotTime());
+            timeSlotData.put("isActive", slotTime.getIsActive());
+            
+            // Step 5: Generate split slots with the potentially updated times
+            List<Map<String, String>> splitSlots = generateSplitSlots(
+                    slotStartTime.format(formatter),
+                    slotEndTime.format(formatter),
+                    slotTime.getSlotTime(),
+                    requestDate,
+                    slotTime.getDoctorSlotTimeId()
+            );
+            timeSlotData.put("splitSlotDuration", splitSlots);
+            
+        } catch (DateTimeParseException e) {
+            logger.error("Error parsing slot time for slot {}: {}", 
+                    slotTime.getDoctorSlotTimeId(), e.getMessage());
+            
+            // Fallback with original string values
+            timeSlotData.put("timeSlotId", slotTime.getDoctorSlotTimeId());
+            timeSlotData.put("slotStartTime", slotTime.getSlotStartTime());
+            timeSlotData.put("slotEndTime", slotTime.getSlotEndTime());
+            timeSlotData.put("slotTime", slotTime.getSlotTime());
+            timeSlotData.put("isActive", slotTime.getIsActive());
+            timeSlotData.put("parseError", true);
+        }
+        
         return timeSlotData;
     }
-
-    private List<Map<String, String>> generateSplitSlots(String startTime, String endTime, 
+	private List<Map<String, String>> generateSplitSlots(String startTime, String endTime, 
                                                        String slotDuration, LocalDate requestDate,
                                                        Integer timeSlotId) {
         List<Map<String, String>> splitSlots = new ArrayList<>();
