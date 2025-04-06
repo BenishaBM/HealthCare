@@ -15,8 +15,11 @@ public interface DoctorSlotTimeOverrideRepository extends JpaRepository<DoctorSl
 	List<DoctorSlotTimeOverride> findByOriginalSlotDoctorSlotTimeIdAndOverrideDate(Integer doctorSlotTimeId,
 			Date overrideDate);
 
-	Optional<DoctorSlotTimeOverride> findByOriginalSlot_DoctorSlotTimeIdAndOverrideDateAndIsActive(
-			Integer doctorSlotTimeId, Date overrideCheckDate, boolean b);
+//	Optional<DoctorSlotTimeOverride> findByOriginalSlot_DoctorSlotTimeIdAndOverrideDateAndIsActive(
+//			Integer doctorSlotTimeId, Date overrideCheckDate, boolean b);
+
+	List<DoctorSlotTimeOverride> findByOriginalSlot_DoctorSlotTimeIdAndOverrideDate(Integer doctorSlotTimeId,
+			Date overrideCheckDate);
 
 
 
