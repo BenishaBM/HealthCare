@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import com.annular.healthCare.model.DoctorSlotTime;
 import com.annular.healthCare.model.DoctorSlotTimeOverride;
 
 @Repository
@@ -20,6 +21,8 @@ public interface DoctorSlotTimeOverrideRepository extends JpaRepository<DoctorSl
 
 	List<DoctorSlotTimeOverride> findByOriginalSlot_DoctorSlotTimeIdAndOverrideDate(Integer doctorSlotTimeId,
 			Date overrideCheckDate);
+
+	List<DoctorSlotTimeOverride> findByOriginalSlot(DoctorSlotTime slotTime);
 
 
 

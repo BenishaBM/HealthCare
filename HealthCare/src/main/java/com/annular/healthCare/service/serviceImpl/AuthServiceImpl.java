@@ -615,168 +615,248 @@ public class AuthServiceImpl implements AuthService {
 					.body(new Response(0, "Fail", "Error soft deleting admin"));
 		}
 	}
-
 	@Override
 	public ResponseEntity<?> getUserDetailsByUserId(Integer userId) {
-		try {
-			Optional<User> userData = userRepository.findById(userId);
+	    try {
+	        Optional<User> userData = userRepository.findById(userId);
 
-			if (!userData.isPresent()) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(Collections.singletonMap("message", "User not found"));
-			}
+	        if (!userData.isPresent()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body(Collections.singletonMap("message", "User not found"));
+	        }
 
-			User user = userData.get();
-			Map<String, Object> data = new HashMap<>();
-			data.put("userId", user.getUserId());
-			data.put("userName", user.getUserName());
-			data.put("emailId", user.getEmailId());
-			data.put("userType", user.getUserType());
-			data.put("firstName", user.getFirstName());
-			data.put("lastName", user.getLastName());
-			data.put("phoneNumber", user.getPhoneNumber());
-			data.put("gender", user.getGender());
-			data.put("dob", user.getDob());
-			data.put("yearOfExperience", user.getYearOfExperiences());
-			Integer hospitalId = user.getHospitalId();
-			data.put("hospitalId", hospitalId);
+	        User user = userData.get();
+	        Map<String, Object> data = new HashMap<>();
+	        data.put("userId", user.getUserId());
+	        data.put("userName", user.getUserName());
+	        data.put("emailId", user.getEmailId());
+	        data.put("userType", user.getUserType());
+	        data.put("firstName", user.getFirstName());
+	        data.put("lastName", user.getLastName());
+	        data.put("phoneNumber", user.getPhoneNumber());
+	        data.put("gender", user.getGender());
+	        data.put("dob", user.getDob());
+	        data.put("yearOfExperience", user.getYearOfExperiences());
+	        Integer hospitalId = user.getHospitalId();
+	        data.put("hospitalId", hospitalId);
 
-			if (hospitalId != null) {
-				try {
-					Optional<HospitalDataList> hospitalData = hospitalDataListRepository.findByHospitalId(hospitalId);
-					data.put("hospitalName", hospitalData.isPresent() ? hospitalData.get().getHospitalName() : "N/A");
-				} catch (Exception e) {
-					logger.error("Error retrieving hospital name for hospitalId {}: {}", hospitalId, e.getMessage());
-					data.put("hospitalName", "Error retrieving");
-				}
-			} else {
-				data.put("hospitalName", "N/A");
-			}
+	        if (hospitalId != null) {
+	            try {
+	                Optional<HospitalDataList> hospitalData = hospitalDataListRepository.findByHospitalId(hospitalId);
+	                data.put("hospitalName", hospitalData.isPresent() ? hospitalData.get().getHospitalName() : "N/A");
+	            } catch (Exception e) {
+	                logger.error("Error retrieving hospital name for hospitalId {}: {}", hospitalId, e.getMessage());
+	                data.put("hospitalName", "Error retrieving");
+	            }
+	        } else {
+	            data.put("hospitalName", "N/A");
+	        }
 
-			data.put("userIsActive", user.getUserIsActive());
+	        data.put("userIsActive", user.getUserIsActive());
 
-			// Fetch role details if user is a doctor
-			List<Map<String, Object>> roleDetails = new ArrayList<>();
-			if (user.getDoctorRoles() != null) {
-				for (DoctorRole doctorRole : user.getDoctorRoles()) {
-					if (doctorRole.getUserIsActive()) {
-						Map<String, Object> roleMap = new HashMap<>();
-						roleMap.put("roleId", doctorRole.getRoleId());
+	        // Fetch role details if user is a doctor - include ALL roles regardless of active status
+	        List<Map<String, Object>> roleDetails = new ArrayList<>();
+	        if (user.getDoctorRoles() != null) {
+	            for (DoctorRole doctorRole : user.getDoctorRoles()) {
+	                // Removed the active status check to include all roles
+	                Map<String, Object> roleMap = new HashMap<>();
+	                roleMap.put("roleId", doctorRole.getRoleId());
+	                roleMap.put("isActive", doctorRole.getUserIsActive());  // Include the active status in the response
 
-						try {
-							String specialtyName = doctorSpecialtyRepository
-									.findSpecialtyNameByRoleId(doctorRole.getRoleId());
-							roleMap.put("specialtyName", specialtyName != null ? specialtyName : "N/A");
-						} catch (Exception e) {
-							logger.error("Error fetching specialty name for roleId {}: {}", doctorRole.getRoleId(),
-									e.getMessage());
-							roleMap.put("specialtyName", "Error retrieving");
-						}
+	                try {
+	                    String specialtyName = doctorSpecialtyRepository
+	                            .findSpecialtyNameByRoleId(doctorRole.getRoleId());
+	                    roleMap.put("specialtyName", specialtyName != null ? specialtyName : "N/A");
+	                } catch (Exception e) {
+	                    logger.error("Error fetching specialty name for roleId {}: {}", doctorRole.getRoleId(),
+	                            e.getMessage());
+	                    roleMap.put("specialtyName", "Error retrieving");
+	                }
 
-						roleDetails.add(roleMap);
-					}
-				}
-			}
-			data.put("roles", roleDetails);
+	                roleDetails.add(roleMap);
+	            }
+	        }
+	        data.put("roles", roleDetails);
 
-			// Fetch media files for profile photos
-			List<MediaFile> files = mediaFileRepository
-					.findByFileDomainIdAndFileDomainReferenceId(HealthCareConstant.ProfilePhoto, user.getUserId());
-			if (files == null) {
-				files = new ArrayList<>();
-			}
+	        // Fetch media files for profile photos
+	        List<MediaFile> files = mediaFileRepository
+	                .findByFileDomainIdAndFileDomainReferenceId(HealthCareConstant.ProfilePhoto, user.getUserId());
+	        if (files == null) {
+	            files = new ArrayList<>();
+	        }
 
-			List<FileInputWebModel> filesInputWebModel = new ArrayList<>();
-			for (MediaFile mediaFile : files) {
-				FileInputWebModel filesInput = new FileInputWebModel();
-				filesInput.setFileName(mediaFile.getFileOriginalName());
-				filesInput.setFileId(mediaFile.getFileId());
-				filesInput.setFileSize(mediaFile.getFileSize());
-				filesInput.setFileType(mediaFile.getFileType());
+	        List<FileInputWebModel> filesInputWebModel = new ArrayList<>();
+	        for (MediaFile mediaFile : files) {
+	            FileInputWebModel filesInput = new FileInputWebModel();
+	            filesInput.setFileName(mediaFile.getFileOriginalName());
+	            filesInput.setFileId(mediaFile.getFileId());
+	            filesInput.setFileSize(mediaFile.getFileSize());
+	            filesInput.setFileType(mediaFile.getFileType());
 
-				try {
-					String fileData = Base64FileUpload.encodeToBase64String(imageLocation + "/ProfilePhoto",
-							mediaFile.getFileName());
-					filesInput.setFileData(fileData);
-				} catch (Exception e) {
-					logger.error("Error encoding file {}: {}", mediaFile.getFileName(), e.getMessage());
-					filesInput.setFileData("Error encoding file");
-				}
+	            try {
+	                String fileData = Base64FileUpload.encodeToBase64String(imageLocation + "/ProfilePhoto",
+	                        mediaFile.getFileName());
+	                filesInput.setFileData(fileData);
+	            } catch (Exception e) {
+	                logger.error("Error encoding file {}: {}", mediaFile.getFileName(), e.getMessage());
+	                filesInput.setFileData("Error encoding file");
+	            }
 
-				filesInputWebModel.add(filesInput);
-			}
+	            filesInputWebModel.add(filesInput);
+	        }
 
-			data.put("profilePhotos", filesInputWebModel);
+	        data.put("profilePhotos", filesInputWebModel);
 
-			if ("DOCTOR".equalsIgnoreCase(user.getUserType())) {
-				List<Map<String, Object>> doctorSlotList = new ArrayList<>();
+	        if ("DOCTOR".equalsIgnoreCase(user.getUserType())) {
+	            List<Map<String, Object>> doctorSlotList = new ArrayList<>();
 
-				List<DoctorSlot> doctorSlots = doctorSlotRepository.findByUser(user);
-				for (DoctorSlot doctorSlot : doctorSlots) {
-					Map<String, Object> slotData = new HashMap<>();
-					slotData.put("slotId", doctorSlot.getDoctorSlotId()); // ✅ Ensure slotId is included
-					slotData.put("isActive", doctorSlot.getIsActive());
+	            // Get all slots regardless of active status
+	            List<DoctorSlot> doctorSlots = doctorSlotRepository.findByUser(user);
+	            for (DoctorSlot doctorSlot : doctorSlots) {
+	                Map<String, Object> slotData = new HashMap<>();
+	                slotData.put("slotId", doctorSlot.getDoctorSlotId());
+	                slotData.put("isActive", doctorSlot.getIsActive());
 
-					// Fetch day slots
-					List<Map<String, Object>> daySlotList = new ArrayList<>();
-					List<DoctorDaySlot> doctorDaySlots = doctorDaySlotRepository.findByDoctorSlot(doctorSlot);
-					for (DoctorDaySlot daySlot : doctorDaySlots) {
-						Map<String, Object> daySlotData = new HashMap<>();
-						daySlotData.put("daySlotId", daySlot.getDoctorDaySlotId());
-						daySlotData.put("day", daySlot.getDay());
-						daySlotData.put("startSlotDate", daySlot.getStartSlotDate());
-						daySlotData.put("endSlotDate", daySlot.getEndSlotDate());
-						daySlotData.put("isActive", daySlot.getIsActive());
+	                // Fetch day slots - include all regardless of active status
+	                List<Map<String, Object>> daySlotList = new ArrayList<>();
+	                List<DoctorDaySlot> doctorDaySlots = doctorDaySlotRepository.findByDoctorSlot(doctorSlot);
+	                for (DoctorDaySlot daySlot : doctorDaySlots) {
+	                    Map<String, Object> daySlotData = new HashMap<>();
+	                    daySlotData.put("daySlotId", daySlot.getDoctorDaySlotId());
+	                    daySlotData.put("day", daySlot.getDay());
+	                    daySlotData.put("startSlotDate", daySlot.getStartSlotDate());
+	                    daySlotData.put("endSlotDate", daySlot.getEndSlotDate());
+	                    daySlotData.put("isActive", daySlot.getIsActive());
 
-						// Fetch time slots
-						List<Map<String, Object>> timeSlotList = new ArrayList<>();
-						List<DoctorSlotTime> doctorSlotTimes = doctorSlotTimeRepository.findByDoctorDaySlot(daySlot);
-						for (DoctorSlotTime slotTime : doctorSlotTimes) {
-							Map<String, Object> timeSlotData = new HashMap<>();
-							timeSlotData.put("timeSlotId", slotTime.getDoctorSlotTimeId());
-							timeSlotData.put("slotStartTime", slotTime.getSlotStartTime());
-							timeSlotData.put("slotEndTime", slotTime.getSlotEndTime());
-							timeSlotData.put("slotTime", slotTime.getSlotTime());
-							timeSlotData.put("isActive", slotTime.getIsActive());
+	                    // Fetch time slots - include all regardless of active status
+	                    List<Map<String, Object>> timeSlotList = new ArrayList<>();
+	                    List<DoctorSlotTime> doctorSlotTimes = doctorSlotTimeRepository.findByDoctorDaySlot(daySlot);
+	                    for (DoctorSlotTime slotTime : doctorSlotTimes) {
+	                        Map<String, Object> timeSlotData = new HashMap<>();
+	                        timeSlotData.put("timeSlotId", slotTime.getDoctorSlotTimeId());
+	                        timeSlotData.put("slotStartTime", slotTime.getSlotStartTime());
+	                        timeSlotData.put("slotEndTime", slotTime.getSlotEndTime());
+	                        timeSlotData.put("slotTime", slotTime.getSlotTime());
+	                        timeSlotData.put("isActive", slotTime.getIsActive());
 
-							// Split slots
-							List<Map<String, String>> splitSlots = generateSplitSlots(slotTime.getSlotStartTime(),
-									slotTime.getSlotEndTime(), slotTime.getSlotTime());
+	                        // Split slots
+	                        List<Map<String, String>> splitSlots = generateSplitSlots(slotTime.getSlotStartTime(),
+	                                slotTime.getSlotEndTime(), slotTime.getSlotTime());
 
-							timeSlotData.put("splitSlotDuration", splitSlots);
-							timeSlotList.add(timeSlotData);
-						}
-						daySlotData.put("slotTimes", timeSlotList);
-						daySlotList.add(daySlotData);
-					}
-					slotData.put("daySlots", daySlotList);
-					doctorSlotList.add(slotData);
-				}
-				data.put("doctorSlots", doctorSlotList);
-			}
+	                        timeSlotData.put("splitSlotDuration", splitSlots);
+	                        
+	                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH);
 
-			// Fetch doctor leave details
-			List<Map<String, Object>> doctorLeaveList = new ArrayList<>();
-			List<DoctorLeaveList> doctorLeaves = doctorLeaveListRepository.findByUser(user);
+	                        // Fetch DoctorSlotTimeOverride entries - include all regardless of active status
+	                        List<DoctorSlotTimeOverride> overrides = doctorSlotTimeOverrideRepository.findByOriginalSlot(slotTime);
+	                        timeSlotData.put("isOverride", !overrides.isEmpty());
 
-			for (DoctorLeaveList doctorLeave : doctorLeaves) {
-				Map<String, Object> leaveData = new HashMap<>();
-				leaveData.put("leaveId", doctorLeave.getDoctorLeaveListId());
-				leaveData.put("doctorLeaveDate", doctorLeave.getDoctorLeaveDate());
-				leaveData.put("userIsActive", doctorLeave.getUserIsActive());
-				doctorLeaveList.add(leaveData);
-			}
+	                        // Basic override info - include all regardless of active status
+	                        List<Map<String, Object>> overrideList = new ArrayList<>();
+	                        for (DoctorSlotTimeOverride override : overrides) {
+	                            Map<String, Object> overrideMap = new HashMap<>();
+	                            overrideMap.put("overrideId", override.getOverrideId());
+	                            overrideMap.put("overrideDate", override.getOverrideDate());
+	                            overrideMap.put("pushedSlotTime", override.getNewSlotTime());
+	                            overrideMap.put("reason", override.getReason());
+	                            overrideMap.put("isActive", override.getIsActive());
+	                            overrideList.add(overrideMap);
+	                        }
+	                        timeSlotData.put("overrides", overrideList);
 
-			data.put("doctorLeaveList", doctorLeaveList);
+	                        // Handle total override minutes - include all regardless of active status
+	                        int totalExtraMinutes = 0;
+	                        for (DoctorSlotTimeOverride override : overrides) {
+	                            // Removed active check to include all overrides
+	                            if (override.getNewSlotTime() != null) {
+	                                try {
+	                                    int mins = Integer.parseInt(override.getNewSlotTime().replace("mins", "").trim());
+	                                    totalExtraMinutes += mins;
+	                                } catch (NumberFormatException e) {
+	                                    logger.warn("Invalid newSlotTime format: {}", override.getNewSlotTime());
+	                                }
+	                            }
+	                        }
 
-			return ResponseEntity.ok(data);
+	                        if (totalExtraMinutes > 0) {
+	                            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH);
+	                            LocalTime overrideStartTime = LocalTime.parse(slotTime.getSlotEndTime(), timeFormatter);
+	                            LocalTime overrideEndTime = overrideStartTime.plusMinutes(totalExtraMinutes);
 
-		} catch (Exception e) {
-			logger.error("Exception while retrieving user details: ", e);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(Collections.singletonMap("message", "Error retrieving user details"));
-		}
+	                            String newStartTime = overrideStartTime.format(timeFormatter);
+	                            String newEndTime = overrideEndTime.format(timeFormatter);
+
+	                            List<Map<String, String>> extendedSplitSlots = generateSplitSlots(
+	                                    newStartTime, 
+	                                    newEndTime, 
+	                                    slotTime.getSlotTime());
+
+	                            Map<String, Object> newOverrideData = new HashMap<>();
+	                            newOverrideData.put("newStartTime", newStartTime);
+	                            newOverrideData.put("newEndTime", newEndTime);
+	                            newOverrideData.put("extendedSplitSlotDuration", extendedSplitSlots);
+
+	                            timeSlotData.put("newOverrideData", newOverrideData);
+	                        }
+
+	                        // Add the final slot info to the list
+	                        timeSlotList.add(timeSlotData);
+	                    }
+	                    
+	                    daySlotData.put("timeSlots", timeSlotList);
+	                    daySlotList.add(daySlotData);
+	                }
+	                
+	                slotData.put("daySlots", daySlotList);
+	                doctorSlotList.add(slotData);
+	            }
+	            
+	            data.put("doctorSlots", doctorSlotList);
+	        }
+
+	        // Fetch doctor leave details - include all regardless of active status
+	        List<Map<String, Object>> doctorLeaveList = new ArrayList<>();
+	        List<DoctorLeaveList> doctorLeaves = doctorLeaveListRepository.findByUser(user);
+
+	        for (DoctorLeaveList doctorLeave : doctorLeaves) {
+	            Map<String, Object> leaveData = new HashMap<>();
+	            leaveData.put("leaveId", doctorLeave.getDoctorLeaveListId());
+	            leaveData.put("doctorLeaveDate", doctorLeave.getDoctorLeaveDate());
+	            leaveData.put("userIsActive", doctorLeave.getUserIsActive());
+	            doctorLeaveList.add(leaveData);
+	        }
+
+	        data.put("doctorLeaveList", doctorLeaveList);
+
+	        return ResponseEntity.ok(data);
+	    } catch (Exception e) {
+	        logger.error("Exception while retrieving user details: ", e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(Collections.singletonMap("message", "Error retrieving user details"));
+	    }
 	}
+
+	    // Helper method to split time range into slot chunks
+	    private List<Map<String, String>> generateSplitSlots(LocalTime startTime, LocalTime endTime, int slotMinutes) {
+	        List<Map<String, String>> splitSlots = new ArrayList<>();
+	        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm a");
+
+	        while (startTime.isBefore(endTime)) {
+	            LocalTime nextTime = startTime.plusMinutes(slotMinutes);
+	            if (nextTime.isAfter(endTime)) {
+	                nextTime = endTime;
+	            }
+
+	            Map<String, String> slot = new HashMap<>();
+	            slot.put("startTime", startTime.format(formatter));
+	            slot.put("endTime", nextTime.format(formatter));
+	            splitSlots.add(slot);
+
+	            startTime = nextTime;
+	        }
+
+	        return splitSlots;
+	    }
 
 	// Helper method to generate split slots
 	private List<Map<String, String>> generateSplitSlots(String startTime, String endTime, String slotDuration) {
