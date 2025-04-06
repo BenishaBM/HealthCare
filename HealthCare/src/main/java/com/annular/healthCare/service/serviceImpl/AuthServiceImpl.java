@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -777,27 +778,39 @@ public class AuthServiceImpl implements AuthService {
 	                                }
 	                            }
 	                        }
-
 	                        if (totalExtraMinutes > 0) {
-	                            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH);
-	                            LocalTime overrideStartTime = LocalTime.parse(slotTime.getSlotEndTime(), timeFormatter);
-	                            LocalTime overrideEndTime = overrideStartTime.plusMinutes(totalExtraMinutes);
+	                            // Create a DateTimeFormatter that correctly parses "9:00 AM" style times
+	                            DateTimeFormatter timeFormatter = new DateTimeFormatterBuilder()
+	                                    .parseCaseInsensitive()
+	                                    .appendPattern("h:mm a")
+	                                    .toFormatter(Locale.ENGLISH);
 
-	                            String newStartTime = overrideStartTime.format(timeFormatter);
-	                            String newEndTime = overrideEndTime.format(timeFormatter);
+	                            // Parse original slot start time
+	                            LocalTime originalStartTime = LocalTime.parse(slotTime.getSlotStartTime().trim(), timeFormatter);
+                                LocalTime originalEndTime = LocalTime.parse(slotTime.getSlotEndTime().trim(), timeFormatter);
+	                            // Calculate new start time as originalStartTime + totalExtraMinutes + 1 minute
+	                            LocalTime newStartTime = originalStartTime.plusMinutes(totalExtraMinutes);
+                                LocalTime newEndTime = originalEndTime.plusMinutes(totalExtraMinutes);
+	                           
+	                            // Format new times back to "hh:mm a"
+	                            String formattedNewStartTime = newStartTime.format(timeFormatter);
+	                            String formattedNewEndTime = newEndTime.format(timeFormatter);
 
+	                            // Generate split slots
 	                            List<Map<String, String>> extendedSplitSlots = generateSplitSlots(
-	                                    newStartTime, 
-	                                    newEndTime, 
+	                                    formattedNewStartTime,
+	                                    formattedNewEndTime,
 	                                    slotTime.getSlotTime());
 
 	                            Map<String, Object> newOverrideData = new HashMap<>();
-	                            newOverrideData.put("newStartTime", newStartTime);
-	                            newOverrideData.put("newEndTime", newEndTime);
+	                            newOverrideData.put("newStartTime", formattedNewStartTime);
+	                            newOverrideData.put("newEndTime", formattedNewEndTime);
 	                            newOverrideData.put("extendedSplitSlotDuration", extendedSplitSlots);
 
 	                            timeSlotData.put("newOverrideData", newOverrideData);
 	                        }
+
+
 
 	                        // Add the final slot info to the list
 	                        timeSlotList.add(timeSlotData);
