@@ -46,7 +46,9 @@ public class UserWebModel {
 	private ArrayList<FileInputWebModel> filesInputWebModel;
 	private List<DoctorDaySlotWebModel> doctorDaySlots;
 	private List<DoctorLeaveListWebModel> doctorLeaveList;
-
+    private Integer patientId;
+	private Boolean medicalHistoryStatus;
+	private Boolean personalDataStatus;
 
 	
 

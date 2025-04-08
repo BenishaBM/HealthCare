@@ -388,4 +388,17 @@ public class AuthenticationController {
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+	
+	@PostMapping("savePatientIdAndHospitalIdByExistingUser")
+	public ResponseEntity<?> savePatientIdAndHospitalIdByExistingUser(@RequestBody UserWebModel userWebModel) {
+	    try {
+	        // Call the service to perform the update
+	        return authService.savePatientIdAndHospitalIdByExistingUser(userWebModel);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("savePatientIdAndHospitalIdByExistingUser Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 }

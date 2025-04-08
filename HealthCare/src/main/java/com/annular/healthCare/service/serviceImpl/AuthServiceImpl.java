@@ -52,6 +52,7 @@ import com.annular.healthCare.model.HospitalDataList;
 import com.annular.healthCare.model.MediaFile;
 import com.annular.healthCare.model.MediaFileCategory;
 import com.annular.healthCare.model.PatientDetails;
+import com.annular.healthCare.model.PatientMappedHospitalId;
 import com.annular.healthCare.model.RefreshToken;
 import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.DoctorDaySlotRepository;
@@ -1435,6 +1436,48 @@ public class AuthServiceImpl implements AuthService {
 	        e.printStackTrace();
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 	            .body(new Response(0, "error", "An error occurred while checking user existence."));
+	    }
+	}
+
+	@Override
+	public ResponseEntity<?> savePatientIdAndHospitalIdByExistingUser(UserWebModel userWebModel) {
+	    try {
+	        Integer patientId = userWebModel.getPatientId();
+	        Integer hospitalId = userWebModel.getHospitalId();
+
+	        // Validation
+	        if (patientId == null || hospitalId == null) {
+	            return ResponseEntity.badRequest()
+	                .body(new Response(0, "Fail", "Patient ID and Hospital ID must not be null"));
+	        }
+
+	        // Check if mapping already exists
+	        Optional<PatientMappedHospitalId> existingMapping =
+	            patientMappedHospitalIdRepository.findByPatientIdAndHospitalId(patientId, hospitalId);
+
+	        if (existingMapping.isPresent()) {
+	            return ResponseEntity.status(HttpStatus.CONFLICT)
+	                .body(new Response(0, "Fail", "Mapping already exists"));
+	        }
+
+	        // Create new mapping
+	        PatientMappedHospitalId mapping = PatientMappedHospitalId.builder()
+	            .patientId(patientId)
+	            .hospitalId(hospitalId)
+	            .createdBy(userWebModel.getCreatedBy())
+	            .userUpdatedBy(userWebModel.getCreatedBy())
+	            .userIsActive(true)
+	            .medicalHistoryStatus(userWebModel.getMedicalHistoryStatus()) // set as needed
+	            .personalDataStatus(userWebModel.getPersonalDataStatus())   // set as needed
+	            .build();
+
+	        patientMappedHospitalIdRepository.save(mapping);
+
+	        return ResponseEntity.ok(new Response(1, "Success", "Patient-hospital mapping saved successfully"));
+	    } catch (Exception e) {
+	        logger.error("Error saving mapping: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	            .body(new Response(0, "Fail", "An error occurred while saving the mapping"));
 	    }
 	}
 

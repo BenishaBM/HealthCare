@@ -46,5 +46,7 @@ public interface AuthService {
 
 	ResponseEntity<?> checkExistingUserOrNewUserByPatentientId(Integer patientId, Integer hospitalId);
 
+	ResponseEntity<?> savePatientIdAndHospitalIdByExistingUser(UserWebModel userWebModel);
+
 	
 }
