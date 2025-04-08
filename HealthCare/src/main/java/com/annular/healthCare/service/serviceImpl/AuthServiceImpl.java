@@ -1411,7 +1411,7 @@ public class AuthServiceImpl implements AuthService {
 	    if (patientOpt.isPresent()) {
 	        response.put("statusCode", 1);
 	        response.put("status", "success");
-	        response.put("message", "Mobile number verified");
+	        response.put("message", "Mobile number verified"+patientOpt.get().getPatientDetailsId());
 	    } else {
 	        response.put("statusCode", 0);
 	        response.put("status", "failure");
