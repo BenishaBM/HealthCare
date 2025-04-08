@@ -35,11 +35,13 @@ import com.annular.healthCare.model.MediaFile;
 import com.annular.healthCare.model.MediaFileCategory;
 import com.annular.healthCare.model.PatientAppointmentTable;
 import com.annular.healthCare.model.PatientDetails;
+import com.annular.healthCare.model.PatientMappedHospitalId;
 import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.DoctorSlotTimeRepository;
 import com.annular.healthCare.repository.DoctorSpecialityRepository;
 import com.annular.healthCare.repository.PatientAppoitmentTablerepository;
 import com.annular.healthCare.repository.PatientDetailsRepository;
+import com.annular.healthCare.repository.PatientMappedHospitalIdRepository;
 import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.MediaFileService;
 import com.annular.healthCare.service.PatientDetailsService;
@@ -68,6 +70,9 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	
 	@Autowired
 	DoctorSlotTimeRepository doctorSlotTimeRepository;
+	
+	@Autowired
+	PatientMappedHospitalIdRepository patientMappedHospitalIdRepository;
 	
 	@Autowired
 	DoctorSpecialityRepository doctorSpecialtyRepository;
@@ -143,6 +148,8 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 
 	        // Save media files if any
 	        savePatientMediaFiles(userWebModel, savedPatient);
+	     // Save patient-hospital mapping
+	        savePatientMappedHospital(savedPatient, userWebModel);
 
 	        return ResponseEntity.ok(new Response(1, "Success", "Patient registered successfully"));
 	    } catch (Exception e) {
@@ -151,6 +158,20 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	                .body(new Response(0, "Fail", "Something went wrong during registration"));
 	    }
 	}
+	private void savePatientMappedHospital(PatientDetails savedPatient, PatientDetailsWebModel userWebModel) {
+	    PatientMappedHospitalId mapped = PatientMappedHospitalId.builder()
+	            .createdBy(userWebModel.getCreatedBy())
+	            .userIsActive(true)
+	            .userUpdatedBy(userWebModel.getCreatedBy())
+	            .patientId(savedPatient.getPatientDetailsId())
+	            .hospitalId(userWebModel.getHospitalId())
+	            .medicalHistoryStatus(true)
+	            .personalDataStatus(true)
+	            .build();
+
+	    patientMappedHospitalIdRepository.save(mapped);
+	}
+
 
 
 	    public boolean checkIfSlotIsBooked(Integer doctorSlotId, Integer daySlotId, String slotStartTime, String slotEndTime) {
@@ -179,7 +200,6 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	                .address(userWebModel.getAddress())
 	                .currentAddress(userWebModel.getCurrentAddress())
 	                .emergencyContact(userWebModel.getEmergencyContact())
-	                .hospitalId(userWebModel.getHospitalId())
 	                .purposeOfVisit(userWebModel.getPurposeOfVisit())
 	                .doctorId(userWebModel.getDoctorId())
 	                .userIsActive(true)
@@ -395,54 +415,63 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	        }
 	    }
 	
-	@Override
-	public ResponseEntity<?> getAllPatientDetails(Integer hospitalId) {
-	    Map<String, Object> response = new HashMap<>();
-	    try {
-	        List<PatientDetails> patients = patientDetailsRepository.findByHospitalId(hospitalId);
-	        
-	        if (patients.isEmpty()) {
+	    @Override
+	    public ResponseEntity<?> getAllPatientDetails(Integer hospitalId) {
+	        Map<String, Object> response = new HashMap<>();
+	        try {
+	            // Step 1: Get all mapped patients for hospital
+	            List<PatientMappedHospitalId> mappings = patientMappedHospitalIdRepository.findByHospitalId(hospitalId);
+
+	            if (mappings.isEmpty()) {
+	                response.put("status", 0);
+	                response.put("message", "No patients found for the given hospital.");
+	                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+	            }
+
+	            // Step 2: Extract patient IDs
+	            List<Integer> patientIds = mappings.stream()
+	                    .map(PatientMappedHospitalId::getPatientId)
+	                    .collect(Collectors.toList());
+
+	            // Step 3: Fetch patient details
+	            List<PatientDetails> patients = patientDetailsRepository.findAllById(patientIds);
+
+	            List<Map<String, Object>> patientList = new ArrayList<>();
+	            for (PatientDetails patient : patients) {
+	                Map<String, Object> patientData = new HashMap<>();
+	                patientData.put("patientDetailsId", patient.getPatientDetailsId());
+	                patientData.put("patientName", patient.getPatientName());
+	                patientData.put("dob", patient.getDob());
+	                patientData.put("gender", patient.getGender());
+	                patientData.put("bloodGroup", patient.getBloodGroup());
+	                patientData.put("mobileNumber", patient.getMobileNumber());
+	                patientData.put("emailId", patient.getEmailId());
+	                patientData.put("address", patient.getAddress());
+	                patientData.put("currentAddress", patient.getCurrentAddress());
+	                patientData.put("emergencyContact", patient.getEmergencyContact());
+	                patientData.put("hospitalId", hospitalId); // from method param
+	                patientData.put("purposeOfVisit", patient.getPurposeOfVisit());
+	                patientData.put("doctorId", patient.getDoctorId());
+	                patientData.put("userIsActive", patient.getUserIsActive());
+	                patientData.put("createdBy", patient.getCreatedBy());
+	                patientData.put("userCreatedOn", patient.getUserCreatedOn());
+
+	                patientList.add(patientData);
+	            }
+
+	            response.put("status", 1);
+	            response.put("message", "Success");
+	            response.put("data", patientList);
+	            return ResponseEntity.ok(response);
+
+	        } catch (Exception e) {
 	            response.put("status", 0);
-	            response.put("message", "No patients found for the given hospital.");
-	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+	            response.put("message", "Error retrieving patient details");
+	            response.put("error", e.getMessage());
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 	        }
-
-	        List<Map<String, Object>> patientList = new ArrayList<>();
-
-	        for (PatientDetails patient : patients) {
-	            Map<String, Object> patientData = new HashMap<>();
-	            patientData.put("patientDetailsId", patient.getPatientDetailsId());
-	            patientData.put("patientName", patient.getPatientName());
-	            patientData.put("dob", patient.getDob());
-	            patientData.put("gender", patient.getGender());
-	            patientData.put("bloodGroup", patient.getBloodGroup());
-	            patientData.put("mobileNumber", patient.getMobileNumber());
-	            patientData.put("emailId", patient.getEmailId());
-	            patientData.put("address", patient.getAddress());
-	            patientData.put("currentAddress", patient.getCurrentAddress());
-	            patientData.put("emergencyContact", patient.getEmergencyContact());
-	            patientData.put("hospitalId", patient.getHospitalId());
-	            patientData.put("purposeOfVisit", patient.getPurposeOfVisit());
-	            patientData.put("doctorId", patient.getDoctorId());
-	            patientData.put("userIsActive", patient.getUserIsActive());
-	            patientData.put("createdBy", patient.getCreatedBy());
-	            patientData.put("userCreatedOn", patient.getUserCreatedOn());
-
-	            patientList.add(patientData);
-	        }
-
-	        response.put("status", 1);
-	        response.put("message", "Success");
-	        response.put("data", patientList);
-	        return ResponseEntity.ok(response);
-
-	    } catch (Exception e) {
-	        response.put("status", 0);
-	        response.put("message", "Error retrieving patient details");
-	        response.put("error", e.getMessage());
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 	    }
-	}
+
 	@Override
 	public ResponseEntity<?> updatePatientDetails(PatientDetailsWebModel userWebModel) {
 	    try {
@@ -474,7 +503,6 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	        if (userWebModel.getAddress() != null) patient.setAddress(userWebModel.getAddress());
 	        if (userWebModel.getCurrentAddress() != null) patient.setCurrentAddress(userWebModel.getCurrentAddress());
 	        if (userWebModel.getEmergencyContact() != null) patient.setEmergencyContact(userWebModel.getEmergencyContact());
-	        if (userWebModel.getHospitalId() != null) patient.setHospitalId(userWebModel.getHospitalId());
 	        if (userWebModel.getPurposeOfVisit() != null) patient.setPurposeOfVisit(userWebModel.getPurposeOfVisit());
 	        if (userWebModel.getDoctorId() != null) patient.setDoctorId(userWebModel.getDoctorId());
 	        if (userWebModel.getPreviousMedicalHistory() != null) patient.setPreviousMedicalHistory(userWebModel.getPreviousMedicalHistory());
@@ -543,7 +571,6 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	        webModel.setAddress(patient.getAddress());
 	        webModel.setCurrentAddress(patient.getCurrentAddress());
 	        webModel.setEmergencyContact(patient.getEmergencyContact());
-	        webModel.setHospitalId(patient.getHospitalId());
 	        webModel.setPurposeOfVisit(patient.getPurposeOfVisit());
 	        webModel.setDoctorId(patient.getDoctorId());
 	        webModel.setPreviousMedicalHistory(patient.getPreviousMedicalHistory());
@@ -553,6 +580,14 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	        webModel.setPolicyNumber(patient.getPolicyNumber());
 	        webModel.setDisability(patient.getDisability());
 	        webModel.setUserUpdatedBy(patient.getUserUpdatedBy());
+
+	        // Override hospitalId if mapping exists in patient_mapped_hospital_id table
+	        Optional<PatientMappedHospitalId> optionalMapping =
+	                patientMappedHospitalIdRepository.findByPatientId(patient.getPatientDetailsId());
+
+	        optionalMapping.ifPresent(mapping ->
+	                webModel.setHospitalId(mapping.getHospitalId())
+	        );
 
 	        // Fetch media files
 	        List<FileOutputWebModel> mediaFiles = mediaFilesService.getMediaFilesByCategoryAndRefId(
@@ -679,7 +714,6 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 		                .address(userWebModel.getAddress())
 		                .currentAddress(userWebModel.getCurrentAddress())
 		                .emergencyContact(userWebModel.getEmergencyContact())
-		                .hospitalId(userWebModel.getHospitalId())
 		                .purposeOfVisit(userWebModel.getPurposeOfVisit())
 		                .doctorId(userWebModel.getDoctorId())
 		                .userIsActive(true)
@@ -707,6 +741,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 		            User userFromDB = userRepository.findById(userWebModel.getCreatedBy()).orElse(null); // Or handle accordingly
 
 		            mediaFilesService.saveMediaFiles(fileInput, userFromDB);
+		            savePatientMappedHospital(savedPatient, userWebModel);
 		        }
 
 		        return ResponseEntity.ok(new Response(1, "Success", "Patient registered successfully"));
@@ -763,74 +798,82 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 
 
         @Override
-		public ResponseEntity<?> getPatientDetailsByMobileNumberAndHospitalId(String phoneNumber,
-				Integer hospitalId) {
+        public ResponseEntity<?> getPatientDetailsByMobileNumberAndHospitalId(String phoneNumber, Integer hospitalId) {
             try {
-                Optional<PatientDetails> patientDetailsOptional = patientDetailsRepository.findByMobileNumberAndHospitalIds(phoneNumber, hospitalId);
+                // Step 1: Get patient by mobile number
+                Optional<PatientDetails> patientDetailsOptional = patientDetailsRepository.findByMobileNumber(phoneNumber);
 
                 if (patientDetailsOptional.isPresent()) {
                     PatientDetails patient = patientDetailsOptional.get();
 
-                    // Fetch Patient's Appointments
-                    List<PatientAppointmentTable> appointments = patientAppointmentRepository.findByPatientDetailsId(patient.getPatientDetailsId());
+                    // Step 2: Check if mapping exists for patientId and hospitalId
+                    Optional<PatientMappedHospitalId> mappingOptional = 
+                        patientMappedHospitalIdRepository.findByPatientIdAndHospitalId(patient.getPatientDetailsId(), hospitalId);
 
-                    // Create Response HashMap
-                    Map<String, Object> responseMap = new HashMap<>();
-                    responseMap.put("patientDetailsId", patient.getPatientDetailsId());
-                    responseMap.put("patientName", patient.getPatientName());
-                    responseMap.put("dob", patient.getDob());
-                    responseMap.put("gender", patient.getGender());
-                    responseMap.put("bloodGroup", patient.getBloodGroup());
-                    responseMap.put("mobileNumber", patient.getMobileNumber());
-                    responseMap.put("emailId", patient.getEmailId());
-                    responseMap.put("address", patient.getAddress());
-                    responseMap.put("emergencyContact", patient.getEmergencyContact());
-                    responseMap.put("hospitalId", patient.getHospitalId());
-                    responseMap.put("doctorId", patient.getDoctorId());
-                    responseMap.put("userIsActive", patient.getUserIsActive());
+                    if (mappingOptional.isPresent()) {
+                        // Step 3: Fetch Appointments
+                        List<PatientAppointmentTable> appointments = 
+                            patientAppointmentRepository.findByPatientDetailsId(patient.getPatientDetailsId());
 
-                    // Transform appointments into a list of HashMaps
-                    List<Map<String, Object>> appointmentList = new ArrayList<>();
-                    for (PatientAppointmentTable appointment : appointments) {
-                        Map<String, Object> appointmentMap = new HashMap<>();
-                        appointmentMap.put("appointmentId", appointment.getAppointmentId());
-                        appointmentMap.put("doctorId", appointment.getDoctor().getUserId());
-                        appointmentMap.put("patientId", appointment.getPatient().getPatientDetailsId());
-                        appointmentMap.put("doctorSlotId", appointment.getDoctorSlotId());
-                        appointmentMap.put("daySlotId", appointment.getDaySlotId());
-                        appointmentMap.put("timeSlotId", appointment.getTimeSlotId());
-                        appointmentMap.put("appointmentDate", appointment.getAppointmentDate());
-                        appointmentMap.put("slotStartTime", appointment.getSlotStartTime());
-                        appointmentMap.put("slotEndTime", appointment.getSlotEndTime());
-                        appointmentMap.put("slotTime", appointment.getSlotTime());
-                        appointmentMap.put("isActive", appointment.getIsActive());
-                        appointmentMap.put("appointmentStatus", appointment.getAppointmentStatus());
-                        appointmentMap.put("patientNotes", appointment.getPatientNotes());
-                        appointmentMap.put("doctorSlotStartTime", appointment.getDoctorSlotStartTime());
-                        appointmentMap.put("doctorSlotEndTime", appointment.getDoctorSlotEndTime());
-                        appointmentMap.put("age", appointment.getAge());
-                        appointmentMap.put("dateOfBirth", appointment.getDateOfBirth());
-                        appointmentMap.put("relationShipType", appointment.getRelationShipType());
-                        appointmentMap.put("patientName", appointment.getPatientName());
-                        appointmentMap.put("appointmentType", appointment.getAppointmentType());
-;
+                        // Step 4: Prepare response
+                        Map<String, Object> responseMap = new HashMap<>();
+                        responseMap.put("patientDetailsId", patient.getPatientDetailsId());
+                        responseMap.put("patientName", patient.getPatientName());
+                        responseMap.put("dob", patient.getDob());
+                        responseMap.put("gender", patient.getGender());
+                        responseMap.put("bloodGroup", patient.getBloodGroup());
+                        responseMap.put("mobileNumber", patient.getMobileNumber());
+                        responseMap.put("emailId", patient.getEmailId());
+                        responseMap.put("address", patient.getAddress());
+                        responseMap.put("emergencyContact", patient.getEmergencyContact());
+                        responseMap.put("doctorId", patient.getDoctorId());
+                        responseMap.put("userIsActive", patient.getUserIsActive());
 
-                        appointmentList.add(appointmentMap);
+                        // Step 5: Transform appointments
+                        List<Map<String, Object>> appointmentList = new ArrayList<>();
+                        for (PatientAppointmentTable appointment : appointments) {
+                            Map<String, Object> appointmentMap = new HashMap<>();
+                            appointmentMap.put("appointmentId", appointment.getAppointmentId());
+                            appointmentMap.put("doctorId", appointment.getDoctor().getUserId());
+                            appointmentMap.put("patientId", appointment.getPatient().getPatientDetailsId());
+                            appointmentMap.put("doctorSlotId", appointment.getDoctorSlotId());
+                            appointmentMap.put("daySlotId", appointment.getDaySlotId());
+                            appointmentMap.put("timeSlotId", appointment.getTimeSlotId());
+                            appointmentMap.put("appointmentDate", appointment.getAppointmentDate());
+                            appointmentMap.put("slotStartTime", appointment.getSlotStartTime());
+                            appointmentMap.put("slotEndTime", appointment.getSlotEndTime());
+                            appointmentMap.put("slotTime", appointment.getSlotTime());
+                            appointmentMap.put("isActive", appointment.getIsActive());
+                            appointmentMap.put("appointmentStatus", appointment.getAppointmentStatus());
+                            appointmentMap.put("patientNotes", appointment.getPatientNotes());
+                            appointmentMap.put("doctorSlotStartTime", appointment.getDoctorSlotStartTime());
+                            appointmentMap.put("doctorSlotEndTime", appointment.getDoctorSlotEndTime());
+                            appointmentMap.put("age", appointment.getAge());
+                            appointmentMap.put("dateOfBirth", appointment.getDateOfBirth());
+                            appointmentMap.put("relationShipType", appointment.getRelationShipType());
+                            appointmentMap.put("patientName", appointment.getPatientName());
+                            appointmentMap.put("appointmentType", appointment.getAppointmentType());
+
+                            appointmentList.add(appointmentMap);
+                        }
+
+                        responseMap.put("appointments", appointmentList);
+                        return ResponseEntity.ok(responseMap);
+
+                    } else {
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                .body(Collections.singletonMap("message", "No hospital mapping found for the given patient."));
                     }
-
-                    // Add Appointments List to Response
-                    responseMap.put("appointments", appointmentList);
-
-                    return ResponseEntity.ok(responseMap);
                 } else {
                     return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                            .body(Collections.singletonMap("message", "Patient details not found for the given mobile number and hospital ID."));
+                            .body(Collections.singletonMap("message", "Patient not found with the given mobile number."));
                 }
             } catch (Exception e) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(Collections.singletonMap("error", "Error fetching patient details: " + e.getMessage()));
             }
         }
+
 
         @Override
         public ResponseEntity<?> getPatientDetailsByMobileNumber(String mobileNumber) {
@@ -854,7 +897,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
                 patientData.put("emailId", patient.getEmailId());
                 patientData.put("address", patient.getAddress());
                 patientData.put("emergencyContact", patient.getEmergencyContact());
-                patientData.put("hospitalId", patient.getHospitalId());
+              //  patientData.put("hospitalId", patient.getHospitalId());
                 patientData.put("purposeOfVisit", patient.getPurposeOfVisit());
                 patientData.put("doctorId", patient.getDoctorId());
                 patientData.put("age", patient.getAge());

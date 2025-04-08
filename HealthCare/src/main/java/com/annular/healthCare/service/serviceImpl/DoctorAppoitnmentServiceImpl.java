@@ -26,12 +26,14 @@ import com.annular.healthCare.model.MedicalTest;
 import com.annular.healthCare.model.Medicines;
 import com.annular.healthCare.model.PatientAppointmentTable;
 import com.annular.healthCare.model.PatientDetails;
+import com.annular.healthCare.model.PatientMappedHospitalId;
 import com.annular.healthCare.repository.AppointmentMedicalTestRepository;
 import com.annular.healthCare.repository.AppointmentMedicineRepository;
 import com.annular.healthCare.repository.MedicalTestRepository;
 import com.annular.healthCare.repository.MedicinesRepository;
 import com.annular.healthCare.repository.PatientAppoitmentTablerepository;
 import com.annular.healthCare.repository.PatientDetailsRepository;
+import com.annular.healthCare.repository.PatientMappedHospitalIdRepository;
 import com.annular.healthCare.service.DoctorAppoitmentService;
 import com.annular.healthCare.webModel.HospitalDataListWebModel;
 
@@ -52,6 +54,9 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	
 	@Autowired
 	private AppointmentMedicineRepository appointmentMedicineRepository;
+	
+	@Autowired
+	PatientMappedHospitalIdRepository patientMappedHospitalIdRepository;
 
 	@Autowired
 	private AppointmentMedicalTestRepository appointmentMedicalTestRepository;
@@ -112,7 +117,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                details.put("emailId", patient.getEmailId());
 	                details.put("address", patient.getAddress());
 	                details.put("emergencyContact", patient.getEmergencyContact());
-	                details.put("hospitalId", patient.getHospitalId());
+	               
 	                details.put("purposeOfVisit", patient.getPurposeOfVisit());
 	                details.put("policyNumber", patient.getPolicyNumber());
 	                details.put("disability", patient.getDisability());
@@ -247,12 +252,25 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	 @Override
 	 public ResponseEntity<?> getAllPatientPharamcyByHospitalIdAndDate(Integer hospitalId, String currentDate) {
 	     try {
+	         // Fetch all appointments for the given date
 	         List<PatientAppointmentTable> appointments = patientAppointmentRepository.findByAppointmentDate(currentDate);
 
+	         // Fetch all patient-hospital mappings for the given hospitalId
+	         List<PatientMappedHospitalId> mappings = patientMappedHospitalIdRepository.findByHospitalId(hospitalId);
+
+	         // Extract patient IDs that belong to the hospital
+	         Set<Integer> patientIds = mappings.stream()
+	             .map(PatientMappedHospitalId::getPatientId)
+	             .collect(Collectors.toSet());
+
+	         // Filter appointments where:
+	         // - Patient is not null
+	         // - Patient is mapped to the given hospital
+	         // - Medicines exist for the appointment
 	         List<Map<String, Object>> filteredData = appointments.stream()
 	             .filter(app -> app.getPatient() != null
-	                         && app.getPatient().getHospitalId().equals(hospitalId)
-	                         && appointmentMedicineRepository.existsByAppointment(app)) // Check if medicine exists
+	                         && patientIds.contains(app.getPatient().getPatientDetailsId())
+	                         && appointmentMedicineRepository.existsByAppointment(app))
 	             .map(app -> {
 	                 PatientDetails patient = app.getPatient();
 	                 Map<String, Object> map = new HashMap<>();
@@ -277,6 +295,41 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	             .body(new Response(0, "error", "An error occurred while fetching patient details."));
 	     }
 	 }
+
+//	 @Override
+//	 public ResponseEntity<?> getAllPatientPharamcyByHospitalIdAndDate(Integer hospitalId, String currentDate) {
+//	     try {
+//	         List<PatientAppointmentTable> appointments = patientAppointmentRepository.findByAppointmentDate(currentDate);
+//
+//	         List<PatientMappedHospitalId> mappings = patientMappedHospitalIdRepository.findByHospitalId(hospitalId);
+//	         List<Map<String, Object>> filteredData = appointments.stream()
+//	             .filter(app -> app.getPatient() != null
+//	                         && app.getPatient()..equals(hospitalId)
+//	                         && appointmentMedicineRepository.existsByAppointment(app)) // Check if medicine exists
+//	             .map(app -> {
+//	                 PatientDetails patient = app.getPatient();
+//	                 Map<String, Object> map = new HashMap<>();
+//	                 map.put("patientDetailsId", patient.getPatientDetailsId());
+//	                 map.put("patientName", patient.getPatientName());
+//	                 map.put("dob", patient.getDob());
+//	                 map.put("gender", patient.getGender());
+//	                 map.put("bloodGroup", patient.getBloodGroup());
+//	                 map.put("mobileNumber", patient.getMobileNumber());
+//	                 map.put("emailId", patient.getEmailId());
+//	                 map.put("address", patient.getAddress());
+//	                 return map;
+//	             })
+//	             .distinct()
+//	             .collect(Collectors.toList());
+//
+//	         return ResponseEntity.ok(new Response(1, "success", filteredData));
+//
+//	     } catch (Exception e) {
+//	         e.printStackTrace();
+//	         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//	             .body(new Response(0, "error", "An error occurred while fetching patient details."));
+//	     }
+//	 }
 
 	 @Override
 	 public ResponseEntity<?> getAllPatientPharamcyBypatientIdAndDate(Integer patientId, String appointmentDate) {
@@ -424,13 +477,24 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	 public ResponseEntity<?> getAllPatientMedicalTestByHospitalIdAndDate(Integer hospitalId, String currentDate) {
 	     try {
 	         // Step 1: Get appointments by date
-	         List<PatientAppointmentTable> appointments = patientAppointmentRepository.findByAppointmentDate(currentDate);
+	    	    List<PatientAppointmentTable> appointments = patientAppointmentRepository.findByAppointmentDate(currentDate);
 
-	         // Step 2: Filter appointments by hospitalId and check for existing medical test data
-	         List<Map<String, Object>> filteredData = appointments.stream()
-	             .filter(app -> app.getPatient() != null
-	                         && app.getPatient().getHospitalId().equals(hospitalId)
-	                         && appointmentMedicalTestRepository.existsByAppointment(app)) // check if test exists
+		         // Fetch all patient-hospital mappings for the given hospitalId
+		         List<PatientMappedHospitalId> mappings = patientMappedHospitalIdRepository.findByHospitalId(hospitalId);
+
+		         // Extract patient IDs that belong to the hospital
+		         Set<Integer> patientIds = mappings.stream()
+		             .map(PatientMappedHospitalId::getPatientId)
+		             .collect(Collectors.toSet());
+
+		         // Filter appointments where:
+		         // - Patient is not null
+		         // - Patient is mapped to the given hospital
+		         // - Medicines exist for the appointment
+		         List<Map<String, Object>> filteredData = appointments.stream()
+		             .filter(app -> app.getPatient() != null
+		                         && patientIds.contains(app.getPatient().getPatientDetailsId())
+		                         && appointmentMedicineRepository.existsByAppointment(app))
 	             .map(app -> {
 	                 PatientDetails patient = app.getPatient();
 	                 Map<String, Object> map = new HashMap<>();

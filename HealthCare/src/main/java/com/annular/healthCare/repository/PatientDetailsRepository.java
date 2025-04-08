@@ -13,7 +13,10 @@ import com.annular.healthCare.model.PatientDetails;
 @Repository
 public interface PatientDetailsRepository extends JpaRepository<PatientDetails, Integer> {
 
-	@Query("SELECT p FROM PatientDetails p WHERE p.hospitalId = :hospitalId")
+//	@Query("SELECT p FROM PatientDetails p WHERE p.hospitalId = :hospitalId")
+	@Query("SELECT p FROM PatientDetails p " +
+		       "JOIN PatientMappedHospitalId m ON p.patientDetailsId = m.patientId " +
+		       "WHERE m.hospitalId = :hospitalId AND p.userIsActive = true AND m.userIsActive = true")
 	List<PatientDetails> findByHospitalId(Integer hospitalId);
 
 	@Query("SELECT p FROM PatientDetails p WHERE p.mobileNumber = :mobileNumber AND p.userIsActive = true")
@@ -25,7 +28,13 @@ public interface PatientDetailsRepository extends JpaRepository<PatientDetails, 
 	Optional<PatientDetails> findByEmailId(@Param("email") String email);
 
 	
-	@Query("SELECT p FROM PatientDetails p WHERE p.mobileNumber = :mobileNumber AND p.userIsActive = true AND p.hospitalId = :hospitalId")
+	//@Query("SELECT p FROM PatientDetails p WHERE p.mobileNumber = :mobileNumber AND p.userIsActive = true AND p.hospitalId = :hospitalId")
+	@Query("SELECT p FROM PatientDetails p " +
+		       "JOIN PatientMappedHospitalId m ON p.patientDetailsId = m.patientId " +
+		       "WHERE p.mobileNumber = :mobileNumber " +
+		       "AND p.userIsActive = true " +
+		       "AND m.hospitalId = :hospitalId " +
+		       "AND m.userIsActive = true")
 	Optional<PatientDetails> findByMobileNumberAndHospitalIds(@Param("mobileNumber") String mobileNumber, @Param("hospitalId") Integer hospitalId);
 
 	@Query("SELECT p FROM PatientDetails p WHERE p.patientDetailsId = :patientDetailsId")

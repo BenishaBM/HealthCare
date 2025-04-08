@@ -36,6 +36,7 @@ import com.annular.healthCare.model.RefreshToken;
 import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.HospitalDataListRepository;
 import com.annular.healthCare.repository.PatientDetailsRepository;
+import com.annular.healthCare.repository.PatientMappedHospitalIdRepository;
 import com.annular.healthCare.repository.RefreshTokenRepository;
 import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.security.Jwt.JwtResponse;
@@ -71,6 +72,9 @@ public class AuthenticationController {
 
 	@Autowired
 	UserRepository userRepository;
+	
+	@Autowired
+	PatientMappedHospitalIdRepository patientMappedHospitalIdRepository;
 
 	@PostMapping("register")
 	public ResponseEntity<?> userRegister(@RequestBody UserWebModel userWebModel) {
@@ -305,63 +309,7 @@ public class AuthenticationController {
 	    }
 	}
 	
-	@PostMapping("adminPatientLogin")
-	public ResponseEntity<?> adminPatientLogin(@RequestBody PatientDetailsWebModel userWebModel) {
-	    try {
-	        Optional<PatientDetails> checkUser = patientDetailsRepository.findByMobileNumber(userWebModel.getMobileNumber());
-	        if (checkUser.isPresent()) {
-	            PatientDetails user = checkUser.get();
-	            logger.info("Attempting login for mobileNumber: " + user.getMobileNumber() + ", entered OTP: " + userWebModel.getOtp());
-	            
-	            // Check if OTP matches directly instead of using authentication manager
-	            if (!userWebModel.getOtp().equals(user.getOtp())) {
-	                logger.error("Login failed: Invalid OTP");
-	                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-	                        .body(new Response(-1, "Fail", "Invalid OTP"));
-	            }
-	            
-	            // Create authentication token manually since we've already verified the OTP
-	            UserDetailsImpl userDetails = UserDetailsImpl.build(user);
-	            Authentication authentication = new UsernamePasswordAuthenticationToken(
-	                userDetails, null, userDetails.getAuthorities());
-	                
-	            SecurityContextHolder.getContext().setAuthentication(authentication);
-	            logger.info("Authentication successful for: " + user.getMobileNumber());
-	            
-	            // Generate refresh token
-	            //RefreshToken refreshToken = authService.createRefreshToken(user);
-	            
-	            // Retrieve hospital name
-	            String hospitalName = "";
-	            if (user.getHospitalId() != null) {
-	                Optional<HospitalDataList> hospitalData = hospitalDataListRepository.findById(user.getHospitalId());
-	                hospitalName = hospitalData.map(HospitalDataList::getHospitalName).orElse("");
-	            }
-	            
-	            // Generate JWT token
-	            String jwt = jwtUtils.generateJwtToken(authentication);
-	            
-	            return ResponseEntity.ok(new JwtResponse(
-	                jwt, 
-	                user.getPatientDetailsId(), 
-	                1, "",
-	              //  refreshToken.getToken(), 
-	                "PATIENT", 
-	                user.getEmailId(), 
-	                user.getHospitalId(),
-	                hospitalName
-	            ));
-	        } else {
-	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-	                    .body(new Response(-1, "Fail", "Invalid mobile number or OTP"));
-	        }
-	    } catch (Exception e) {
-	        logger.error("Error at adminPatientLogin() -> {}", e.getMessage(), e);
-	        return ResponseEntity.internalServerError()
-	                .body(new Response(-1, "Fail", "An error occurred during login"));
-	    }
-	}
-	
+
 	
 	@GetMapping("verifyMobileNumber")
 	public ResponseEntity<?> verifyMobileNumber(@RequestParam("mobileNumber") String mobileNumber) {

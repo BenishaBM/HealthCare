@@ -60,8 +60,8 @@ public class PatientDetails {
 	@Column(name = "emergencyContact")
 	private String emergencyContact;
 	
-	@Column(name = "hospitalId")
-	private Integer hospitalId;//map the hospital
+//	@Column(name = "hospitalId")
+//	private Integer hospitalId;//map the hospital
 	
 	@Column(name = "purposeOfVisit")
 	private String purposeOfVisit;
