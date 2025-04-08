@@ -346,22 +346,20 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	 @Override
 	 public ResponseEntity<?> getAllPatientPharamcyBypatientIdAndDate(Integer patientId, String appointmentDate) {
 	     try {
-	         // Fetch appointments by patientId and date
+	         // Use JOIN FETCH version to fetch medicines
 	         List<PatientAppointmentTable> appointments =
-	                 patientAppointmentRepository.findByPatient_PatientDetailsIdAndAppointmentDate(patientId, appointmentDate);
+	                 patientAppointmentRepository.findAppointmentsWithMedicines(patientId, appointmentDate);
 
-	         // Set to keep unique combinations of patientDetailsId + appointmentDate
 	         Set<String> uniqueKeys = new HashSet<>();
 
 	         List<Map<String, Object>> filteredData = appointments.stream()
 	                 .filter(appointment -> {
 	                     String key = appointment.getPatient().getPatientDetailsId() + "_" + appointment.getAppointmentDate();
-	                     return uniqueKeys.add(key); // Returns false if already exists (duplicate)
+	                     return uniqueKeys.add(key);
 	                 })
 	                 .map(appointment -> {
 	                     Map<String, Object> map = new HashMap<>();
 
-	                     // Appointment data
 	                     map.put("doctorSlotId", appointment.getDoctorSlotId());
 	                     map.put("daySlotId", appointment.getDaySlotId());
 	                     map.put("timeSlotId", appointment.getTimeSlotId());
@@ -388,7 +386,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                     map.put("labStatus", appointment.getLabStatus());
 	                     map.put("appointmentId", appointment.getAppointmentId());
 
-	                     // PatientDetails data
+	                     // PatientDetails
 	                     PatientDetails patient = appointment.getPatient();
 	                     if (patient != null) {
 	                         map.put("patientDetailsId", patient.getPatientDetailsId());
@@ -401,10 +399,11 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                         map.put("address", patient.getAddress());
 	                     }
 
-	                     // AppointmentMedicine data
+	                     // AppointmentMedicines
 	                     List<AppointmentMedicine> medicines = appointment.getAppointmentMedicines();
+	                     List<Map<String, Object>> medicineList = new ArrayList<>();
 	                     if (medicines != null && !medicines.isEmpty()) {
-	                         List<Map<String, Object>> medicineList = medicines.stream().map(med -> {
+	                         for (AppointmentMedicine med : medicines) {
 	                             Map<String, Object> medMap = new HashMap<>();
 	                             medMap.put("appointmentMedicineId", med.getId());
 	                             medMap.put("isActive", med.getIsActive());
@@ -413,20 +412,15 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                             medMap.put("updatedBy", med.getUpdatedBy());
 	                             medMap.put("updatedOn", med.getUpdatedOn());
 	                             medMap.put("medicineStatus", med.getPatientStatus());
-	                             
-	                             // Dosage timings
+
 	                             medMap.put("morningBF", med.getMorningBF());
 	                             medMap.put("morningAF", med.getMorningAF());
 	                             medMap.put("afternoonBF", med.getAfternoonBF());
 	                             medMap.put("afternoonAF", med.getAfternoonAF());
 	                             medMap.put("nightBF", med.getNightBF());
 	                             medMap.put("nightAF", med.getNightAF());
-
-	                             // Frequency flags
 	                             medMap.put("every6Hours", med.getEvery6Hours());
 	                             medMap.put("every8Hours", med.getEvery8Hours());
-
-	                             // Duration
 	                             medMap.put("days", med.getDays());
 
 	                             Medicines medicine = med.getMedicine();
@@ -441,11 +435,11 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                                 medMap.put("shortComposition2", medicine.getShortComposition2());
 	                             }
 
-	                             return medMap;
-	                         }).collect(Collectors.toList());
-
-	                         map.put("appointmentMedicines", medicineList);
+	                             medicineList.add(medMap);
+	                         }
 	                     }
+
+	                     map.put("appointmentMedicines", medicineList);
 
 	                     return map;
 	                 })
@@ -459,6 +453,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                 .body(new Response(0, "error", "An error occurred while fetching pharmacy appointments."));
 	     }
 	 }
+
 	 @Override
 	 public ResponseEntity<?> saveMedicineDetailByPharamacy(HospitalDataListWebModel userWebModel) {
 	     try {

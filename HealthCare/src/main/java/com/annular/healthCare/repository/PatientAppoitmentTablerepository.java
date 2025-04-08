@@ -70,6 +70,10 @@ public interface PatientAppoitmentTablerepository extends JpaRepository<PatientA
 	@Query("SELECT p FROM PatientAppointmentTable p WHERE p.appointmentDate = :appointmentDate AND p.timeSlotId = :slotTimeId")
 	List<PatientAppointmentTable> findByAppointmentDateAndDoctorSlotTimeId(String appointmentDate, Integer slotTimeId);
 
+	@Query("SELECT DISTINCT a FROM PatientAppointmentTable a LEFT JOIN FETCH a.appointmentMedicines m WHERE a.patient.patientDetailsId = :patientId AND a.appointmentDate = :appointmentDate")
+	List<PatientAppointmentTable> findAppointmentsWithMedicines(@Param("patientId") Integer patientId, @Param("appointmentDate") String appointmentDate);
+
+
 
 
 
