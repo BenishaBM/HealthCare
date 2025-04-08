@@ -44,5 +44,7 @@ public interface AuthService {
 
 	ResponseEntity<?> verifyMobileNumber(String mobileNumber);
 
+	ResponseEntity<?> checkExistingUserOrNewUserByPatentientId(Integer patientId, Integer hospitalId);
+
 	
 }

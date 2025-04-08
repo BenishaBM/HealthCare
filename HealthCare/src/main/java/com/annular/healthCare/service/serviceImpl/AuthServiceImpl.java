@@ -66,6 +66,7 @@ import com.annular.healthCare.repository.HospitalDataListRepository;
 import com.annular.healthCare.repository.MediaFileRepository;
 import com.annular.healthCare.repository.PatientAppoitmentTablerepository;
 import com.annular.healthCare.repository.PatientDetailsRepository;
+import com.annular.healthCare.repository.PatientMappedHospitalIdRepository;
 import com.annular.healthCare.repository.RefreshTokenRepository;
 import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.AuthService;
@@ -124,6 +125,9 @@ public class AuthServiceImpl implements AuthService {
 
 	@Autowired
 	PatientAppoitmentTablerepository patientAppoitnmentRepository;
+	
+	@Autowired
+	PatientMappedHospitalIdRepository patientMappedHospitalIdRepository;
 	
 	@Autowired
 	PatientDetailsRepository patientDetailsRepository;
@@ -1415,5 +1419,24 @@ public class AuthServiceImpl implements AuthService {
 
 	    return ResponseEntity.ok(response);
 	}
+
+	@Override
+	public ResponseEntity<?> checkExistingUserOrNewUserByPatentientId(Integer patientId, Integer hospitalId) {
+	    try {
+	        boolean exists = patientMappedHospitalIdRepository.existsByPatientIdAndHospitalId(patientId, hospitalId);
+
+	        Map<String, Object> responseMap = new HashMap<>();
+	        responseMap.put("existingUser", exists);
+	        responseMap.put("message", exists ? "Existing user in hospital" : "New user for hospital");
+
+	        return ResponseEntity.ok(new Response(1, "success", responseMap));
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	            .body(new Response(0, "error", "An error occurred while checking user existence."));
+	    }
+	}
+
 
 }
