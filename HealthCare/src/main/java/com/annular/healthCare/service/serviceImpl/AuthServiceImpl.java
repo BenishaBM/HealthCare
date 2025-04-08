@@ -51,6 +51,7 @@ import com.annular.healthCare.model.HospitalAdmin;
 import com.annular.healthCare.model.HospitalDataList;
 import com.annular.healthCare.model.MediaFile;
 import com.annular.healthCare.model.MediaFileCategory;
+import com.annular.healthCare.model.PatientDetails;
 import com.annular.healthCare.model.RefreshToken;
 import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.DoctorDaySlotRepository;
@@ -64,6 +65,7 @@ import com.annular.healthCare.repository.HospitalAdminRepository;
 import com.annular.healthCare.repository.HospitalDataListRepository;
 import com.annular.healthCare.repository.MediaFileRepository;
 import com.annular.healthCare.repository.PatientAppoitmentTablerepository;
+import com.annular.healthCare.repository.PatientDetailsRepository;
 import com.annular.healthCare.repository.RefreshTokenRepository;
 import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.AuthService;
@@ -122,6 +124,9 @@ public class AuthServiceImpl implements AuthService {
 
 	@Autowired
 	PatientAppoitmentTablerepository patientAppoitnmentRepository;
+	
+	@Autowired
+	PatientDetailsRepository patientDetailsRepository;
 
 	@Value("${annular.app.imageLocation}")
 	private String imageLocation;
@@ -1393,4 +1398,22 @@ public class AuthServiceImpl implements AuthService {
 //	}
 
 	}
+	@Override
+	public ResponseEntity<?> verifyMobileNumber(String mobileNumber) {
+	    Optional<PatientDetails> patientOpt = patientDetailsRepository.findByMobileNumber(mobileNumber);
+	    Map<String, Object> response = new HashMap<>();
+
+	    if (patientOpt.isPresent()) {
+	        response.put("statusCode", 1);
+	        response.put("status", "success");
+	        response.put("message", "Mobile number verified");
+	    } else {
+	        response.put("statusCode", 0);
+	        response.put("status", "failure");
+	        response.put("message", "Mobile number not registered");
+	    }
+
+	    return ResponseEntity.ok(response);
+	}
+
 }

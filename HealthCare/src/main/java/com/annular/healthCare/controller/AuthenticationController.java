@@ -361,4 +361,18 @@ public class AuthenticationController {
 	                .body(new Response(-1, "Fail", "An error occurred during login"));
 	    }
 	}
+	
+	
+	@GetMapping("verifyMobileNumber")
+	public ResponseEntity<?> verifyMobileNumber(@RequestParam("mobileNumber") String mobileNumber) {
+	    try {
+	        // Call the service to perform the update
+	        return authService.verifyMobileNumber(mobileNumber);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("verifyMobileNumber Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 }

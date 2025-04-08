@@ -42,5 +42,7 @@ public interface AuthService {
 
 	ResponseEntity<?> doctorSlotById(Integer doctorDaySlotId);
 
+	ResponseEntity<?> verifyMobileNumber(String mobileNumber);
+
 	
 }
