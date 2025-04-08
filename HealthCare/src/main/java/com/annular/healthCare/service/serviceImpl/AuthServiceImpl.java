@@ -1456,8 +1456,8 @@ public class AuthServiceImpl implements AuthService {
 	            patientMappedHospitalIdRepository.findByPatientIdAndHospitalId(patientId, hospitalId);
 
 	        if (existingMapping.isPresent()) {
-	            return ResponseEntity.status(HttpStatus.CONFLICT)
-	                .body(new Response(0, "Fail", "Mapping already exists"));
+	        	return ResponseEntity.badRequest()
+		                .body(new Response(1, "Fail", "Mapping already exists"));
 	        }
 
 	        // Create new mapping
