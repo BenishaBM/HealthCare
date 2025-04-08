@@ -586,13 +586,13 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	        webModel.setDisability(patient.getDisability());
 	        webModel.setUserUpdatedBy(patient.getUserUpdatedBy());
 
-	        // Override hospitalId if mapping exists in patient_mapped_hospital_id table
-	        Optional<PatientMappedHospitalId> optionalMapping =
-	                patientMappedHospitalIdRepository.findByPatientId(patient.getPatientDetailsId());
-
-	        optionalMapping.ifPresent(mapping ->
-	                webModel.setHospitalId(mapping.getHospitalId())
-	        );
+//	        // Override hospitalId if mapping exists in patient_mapped_hospital_id table
+//	        Optional<PatientMappedHospitalId> optionalMapping =
+//	                patientMappedHospitalIdRepository.findByPatientId(patient.getPatientDetailsId());
+//
+//	        optionalMapping.ifPresent(mapping ->
+//	                webModel.setHospitalId(mapping.getHospitalId())
+//	        );
 
 	        // Fetch media files
 	        List<FileOutputWebModel> mediaFiles = mediaFilesService.getMediaFilesByCategoryAndRefId(
