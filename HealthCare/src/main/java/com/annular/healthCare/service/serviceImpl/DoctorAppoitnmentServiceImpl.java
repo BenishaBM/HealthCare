@@ -413,6 +413,21 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                             medMap.put("updatedBy", med.getUpdatedBy());
 	                             medMap.put("updatedOn", med.getUpdatedOn());
 	                             medMap.put("medicineStatus", med.getPatientStatus());
+	                             
+	                             // Dosage timings
+	                             medMap.put("morningBF", med.getMorningBF());
+	                             medMap.put("morningAF", med.getMorningAF());
+	                             medMap.put("afternoonBF", med.getAfternoonBF());
+	                             medMap.put("afternoonAF", med.getAfternoonAF());
+	                             medMap.put("nightBF", med.getNightBF());
+	                             medMap.put("nightAF", med.getNightAF());
+
+	                             // Frequency flags
+	                             medMap.put("every6Hours", med.getEvery6Hours());
+	                             medMap.put("every8Hours", med.getEvery8Hours());
+
+	                             // Duration
+	                             medMap.put("days", med.getDays());
 
 	                             Medicines medicine = med.getMedicine();
 	                             if (medicine != null) {
