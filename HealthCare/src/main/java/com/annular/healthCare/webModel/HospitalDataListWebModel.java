@@ -67,6 +67,18 @@ public class HospitalDataListWebModel {
     private List<Integer> medicineIds;
     private List<Integer> medicalTestIds;
     private List<MedicineDetail> medicineDetails;
+    private List<MedicineDetail> medicines;
+    private Integer morningBF;
+    private Integer morningAF;
+    private Integer afternoonBF;
+    private Integer afternoonAF;
+    private Integer nightBF;
+    private Integer nightAF;
+    private Boolean every6Hours;
+    private Boolean every8Hours;
+    private Integer days;
+    // Medicine Schedule
+    private List<MedicineScheduleWebModel> schedules;
     
     @Getter
     @Setter

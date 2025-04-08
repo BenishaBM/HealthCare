@@ -36,6 +36,7 @@ import com.annular.healthCare.repository.PatientDetailsRepository;
 import com.annular.healthCare.repository.PatientMappedHospitalIdRepository;
 import com.annular.healthCare.service.DoctorAppoitmentService;
 import com.annular.healthCare.webModel.HospitalDataListWebModel;
+import com.annular.healthCare.webModel.MedicineScheduleWebModel;
 
 @Service
 public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
@@ -155,24 +156,35 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	         patientAppointmentRepository.save(appointment);
 
 	         Integer userId = userWebModel.getUserId(); // Who is saving this
+	         if (userWebModel.getSchedules() != null) {
+	        	    for (MedicineScheduleWebModel medSchedule : userWebModel.getSchedules()) {
+	        	        Optional<Medicines> medicineOpt = medicineRepository.findById(medSchedule.getMedicineId());
+	        	        if (medicineOpt.isPresent()) {
+	        	            AppointmentMedicine am = AppointmentMedicine.builder()
+	        	                .appointment(appointment)
+	        	                .medicine(medicineOpt.get())
+	        	                .isActive(true)
+	        	                .createdBy(userId)
+	        	                .updatedBy(userId)
+	        	                .patientStatus(false)
+	        	                .morningBF(medSchedule.getMorningBF())
+	        	                .morningAF(medSchedule.getMorningAF())
+	        	                .afternoonBF(medSchedule.getAfternoonBF())
+	        	                .afternoonAF(medSchedule.getAfternoonAF())
+	        	                .nightBF(medSchedule.getNightBF())
+	        	                .nightAF(medSchedule.getNightAF())
+	        	                .every6Hours(medSchedule.getEvery6Hours())
+	        	                .every8Hours(medSchedule.getEvery8Hours())
+	        	                .days(medSchedule.getDays())
+	        	                .build();
 
-	         // Save Medicines
-	         if (userWebModel.getMedicineIds() != null) {
-	             for (Integer medicineId : userWebModel.getMedicineIds()) {
-	                 Optional<Medicines> medicineOpt = medicineRepository.findById(medicineId);
-	                 if (medicineOpt.isPresent()) {
-	                     AppointmentMedicine am = AppointmentMedicine.builder()
-	                             .appointment(appointment)
-	                             .medicine(medicineOpt.get())
-	                             .patientStatus(false)
-	                             .isActive(true)
-	                             .createdBy(userId)
-	                             .updatedBy(userId)
-	                             .build();
-	                     appointmentMedicineRepository.save(am);
-	                 }
-	             }
-	         }
+	        	            appointmentMedicineRepository.save(am);
+	        	        }
+	        	    }
+	        	}
+
+	        	
+
 
 	         // Save Medical Tests
 	         if (userWebModel.getMedicalTestIds() != null) {

@@ -61,4 +61,35 @@ public class AppointmentMedicine {
 	
     @Column(name = "patientStatus")
     private Boolean patientStatus;
+    
+    // Morning
+    @Column(name = "morningBF")
+    private Integer morningBF;
+    
+    @Column(name = "morningAF")
+    private Integer morningAF;
+
+    // Afternoon
+    @Column(name = "afternoonBF")
+    private Integer afternoonBF;
+    
+    @Column(name = "afternoonAF")
+    private Integer afternoonAF;
+
+    // Night
+    @Column(name = "nightBF")
+    private Integer nightBF;
+    
+    @Column(name = "nightAF")
+    private Integer nightAF;
+
+    // Other frequency types
+    @Column(name = "every6Hours")
+    private Boolean every6Hours;
+    
+    @Column(name = "every8Hours")
+    private Boolean every8Hours;
+
+    @Column(name = "days")
+    private Integer days; // number of days for the medication
 }
