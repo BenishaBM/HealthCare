@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import com.annular.healthCare.Response;
@@ -80,6 +81,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("hh:mm a");
 
 
+	@Transactional
 	@Override
 	public ResponseEntity<?> register(PatientDetailsWebModel userWebModel) {
 	    try {
@@ -149,7 +151,8 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	        // Save media files if any
 	        savePatientMediaFiles(userWebModel, savedPatient);
 	     // Save patient-hospital mapping
-	        savePatientMappedHospital(savedPatient, userWebModel);
+
+
 
 	        return ResponseEntity.ok(new Response(1, "Success", "Patient registered successfully"));
 	    } catch (Exception e) {
@@ -158,23 +161,8 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	                .body(new Response(0, "Fail", "Something went wrong during registration"));
 	    }
 	}
-	private void savePatientMappedHospital(PatientDetails savedPatient, PatientDetailsWebModel userWebModel) {
-	    PatientMappedHospitalId mapped = PatientMappedHospitalId.builder()
-	            .createdBy(userWebModel.getCreatedBy())
-	            .userIsActive(true)
-	            .userUpdatedBy(userWebModel.getCreatedBy())
-	            .patientId(savedPatient.getPatientDetailsId())
-	            .hospitalId(userWebModel.getHospitalId())
-	            .medicalHistoryStatus(true)
-	            .personalDataStatus(true)
-	            .build();
 
-	    patientMappedHospitalIdRepository.save(mapped);
-	}
-
-
-
-	    public boolean checkIfSlotIsBooked(Integer doctorSlotId, Integer daySlotId, String slotStartTime, String slotEndTime) {
+   public boolean checkIfSlotIsBooked(Integer doctorSlotId, Integer daySlotId, String slotStartTime, String slotEndTime) {
 	        try {
 	            boolean isBooked = patientAppointmentRepository.isSlotBooked(doctorSlotId, daySlotId, slotStartTime, slotEndTime);
 
@@ -187,34 +175,51 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	        }
 	    }
 
-	    private PatientDetails createPatientDetails(PatientDetailsWebModel userWebModel) {
+   private PatientDetails createPatientDetails(PatientDetailsWebModel userWebModel) {
 
-	        PatientDetails newPatient = PatientDetails.builder()
-	                .patientName(userWebModel.getPatientName())
-	                .dob(userWebModel.getDob())
-	                .age(userWebModel.getAge())
-	                .gender(userWebModel.getGender())
-	                .bloodGroup(userWebModel.getBloodGroup())
-	                .mobileNumber(userWebModel.getMobileNumber())
-	                .emailId(userWebModel.getEmailId())
-	                .address(userWebModel.getAddress())
-	                .currentAddress(userWebModel.getCurrentAddress())
-	                .emergencyContact(userWebModel.getEmergencyContact())
-	                .purposeOfVisit(userWebModel.getPurposeOfVisit())
-	                .doctorId(userWebModel.getDoctorId())
-	                .userIsActive(true)
-	                .createdBy(userWebModel.getCreatedBy())
-	                .userCreatedOn(new Date())
-	                .previousMedicalHistory(userWebModel.getPreviousMedicalHistory())
-	                .insuranceDetails(userWebModel.getInsuranceDetails())
-	                .insurerName(userWebModel.getInsurerName())
-	                .insuranceProvider(userWebModel.getInsuranceProvider())
-	                .policyNumber(userWebModel.getPolicyNumber())
-	                .disability(userWebModel.getDisability())
-	                .build();
-	        
-	        return patientDetailsRepository.save(newPatient);
-	    }
+	    // Save patient details first
+	    PatientDetails savedPatient = patientDetailsRepository.save(
+	        PatientDetails.builder()
+	            .patientName(userWebModel.getPatientName())
+	            .dob(userWebModel.getDob())
+	            .age(userWebModel.getAge())
+	            .gender(userWebModel.getGender())
+	            .bloodGroup(userWebModel.getBloodGroup())
+	            .mobileNumber(userWebModel.getMobileNumber())
+	            .emailId(userWebModel.getEmailId())
+	            .address(userWebModel.getAddress())
+	            .currentAddress(userWebModel.getCurrentAddress())
+	            .emergencyContact(userWebModel.getEmergencyContact())
+	            .purposeOfVisit(userWebModel.getPurposeOfVisit())
+	            .doctorId(userWebModel.getDoctorId())
+	            .userIsActive(true)
+	            .createdBy(userWebModel.getCreatedBy())
+	            .userCreatedOn(new Date())
+	            .previousMedicalHistory(userWebModel.getPreviousMedicalHistory())
+	            .insuranceDetails(userWebModel.getInsuranceDetails())
+	            .insurerName(userWebModel.getInsurerName())
+	            .insuranceProvider(userWebModel.getInsuranceProvider())
+	            .policyNumber(userWebModel.getPolicyNumber())
+	            .disability(userWebModel.getDisability())
+	            .build()
+	    );
+
+	    // Now save patient-hospital mapping
+	    PatientMappedHospitalId mapped = PatientMappedHospitalId.builder()
+	        .createdBy(userWebModel.getCreatedBy())
+	        .userIsActive(true)
+	        .userUpdatedBy(userWebModel.getCreatedBy())
+	        .patientId(savedPatient.getPatientDetailsId())
+	        .hospitalId(userWebModel.getHospitalId())
+	        .medicalHistoryStatus(true)
+	        .personalDataStatus(true)
+	        .build();
+
+	    patientMappedHospitalIdRepository.save(mapped);
+
+	    // Return saved patient at the end
+	    return savedPatient;
+	}
 
 	    
 	 // Helper method to format LocalTime to "hh:mm a" format (e.g., "07:45 PM")
@@ -729,6 +734,17 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 
 		        // Save patient first to generate ID
 		        PatientDetails savedPatient = patientDetailsRepository.save(newPatient);
+		        
+		        PatientMappedHospitalId mapped = PatientMappedHospitalId.builder()
+			            .createdBy(userWebModel.getCreatedBy())
+			            .userIsActive(true)
+			            .userUpdatedBy(userWebModel.getCreatedBy())
+			            .patientId(savedPatient.getPatientDetailsId())
+			            .hospitalId(userWebModel.getHospitalId())
+			            .medicalHistoryStatus(true)
+			            .personalDataStatus(true)
+			            .build();
+		        patientMappedHospitalIdRepository.save(mapped);
 
 		        // Save media files if any
 		        if (!Utility.isNullOrEmptyList(userWebModel.getFiles())) {
@@ -741,7 +757,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 		            User userFromDB = userRepository.findById(userWebModel.getCreatedBy()).orElse(null); // Or handle accordingly
 
 		            mediaFilesService.saveMediaFiles(fileInput, userFromDB);
-		            savePatientMappedHospital(savedPatient, userWebModel);
+		        
 		        }
 
 		        return ResponseEntity.ok(new Response(1, "Success", "Patient registered successfully"));
