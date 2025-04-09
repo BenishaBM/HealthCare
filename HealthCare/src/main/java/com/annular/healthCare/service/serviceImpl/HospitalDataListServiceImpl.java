@@ -35,6 +35,7 @@ import com.annular.healthCare.Util.HealthCareConstant;
 import com.annular.healthCare.model.DoctorSpecialty;
 import com.annular.healthCare.model.HospitalAdmin;
 import com.annular.healthCare.model.HospitalDataList;
+import com.annular.healthCare.model.HospitalSpeciality;
 import com.annular.healthCare.model.MediaFile;
 import com.annular.healthCare.model.PatientAppointmentTable;
 import com.annular.healthCare.model.PatientDetails;
@@ -45,6 +46,7 @@ import com.annular.healthCare.repository.DoctorSlotTimeRepository;
 import com.annular.healthCare.repository.DoctorSpecialityRepository;
 import com.annular.healthCare.repository.HospitalAdminRepository;
 import com.annular.healthCare.repository.HospitalDataListRepository;
+import com.annular.healthCare.repository.HospitalSpecialityRepository;
 import com.annular.healthCare.repository.MediaFileRepository;
 import com.annular.healthCare.repository.PatientAppoitmentTablerepository;
 import com.annular.healthCare.repository.PatientDetailsRepository;
@@ -100,6 +102,9 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	
 	@Autowired
 	PatientDetailsRepository patientDetailsRepository;
+	
+	@Autowired
+	HospitalSpecialityRepository hospitalSpecialityRepository;
 
 	@Value("${annular.app.imageLocation}")
 	private String imageLocation;
@@ -129,6 +134,22 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 
 	        // Save the hospital data list (hospital)
 	        HospitalDataList savedHospitalData = userRepository.save(newHospitalData);
+	        
+	        // ✅ Save specialities into hospital_speciality table
+	        if (userWebModel.getSpecialityIds() != null && !userWebModel.getSpecialityIds().isEmpty()) {
+	            List<HospitalSpeciality> specialities = userWebModel.getSpecialityIds().stream()
+	                .map(specId -> HospitalSpeciality.builder()
+	                    .specialityId(specId)
+	                    .hospitalDataList(savedHospitalData)
+	                    .build())
+	                .collect(Collectors.toList());
+
+	            // Optional: set them into the hospital entity if you use bi-directional mapping
+	            savedHospitalData.setSpecialities(specialities);
+
+	            // Save all specialities
+	            hospitalSpecialityRepository.saveAll(specialities);
+	        }
 
 	        // Handle file uploads (e.g., hospital logo)
 	        if (userWebModel.getFilesInputWebModel() != null) {
