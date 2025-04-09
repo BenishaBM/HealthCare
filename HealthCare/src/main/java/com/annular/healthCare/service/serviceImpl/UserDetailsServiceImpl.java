@@ -59,8 +59,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         // If userType is PATIENT, try to load a patient
         if ("PATIENT".equals(userType)) {
             logger.info("Attempting to load a patient with email: {}", email);
-            Optional<PatientDetails> optionalPatient = patientDetailsRepository.findByEmailId(email);
-            
+            Optional<PatientDetails> optionalPatient = patientDetailsRepository.findByEmailIdIgnoreCase(email);
+           // logger.info("Attempting to load a patient with email: {}", identifier);
+           // Optional<PatientDetails> optionalPatient = patientDetailsRepository.findByEmailIdIgnoreCase(identifier);
             if (optionalPatient.isPresent()) {
                 PatientDetails patient = optionalPatient.get();
                 logger.info("Patient found: ID={}, Email={}", patient.getPatientDetailsId(), patient.getEmailId());
