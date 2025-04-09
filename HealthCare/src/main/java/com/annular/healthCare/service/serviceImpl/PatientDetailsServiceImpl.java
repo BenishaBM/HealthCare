@@ -292,7 +292,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	                .doctorSlotEndTime(doctorSlotTime.getSlotEndTime())
 	                .createdBy(userWebModel.getCreatedBy())
 	                .appointmentStatus("SCHEDULED")
-	                .appointmentType(userWebModel.getAppointmentType())
+	                .appointmentType("ONLINE")
 	                .patientNotes(userWebModel.getPatientNotes())
 	                .build();
 
