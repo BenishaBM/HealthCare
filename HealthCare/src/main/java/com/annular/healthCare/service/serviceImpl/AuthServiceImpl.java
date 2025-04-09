@@ -1,17 +1,13 @@
 package com.annular.healthCare.service.serviceImpl;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -20,11 +16,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -36,7 +29,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
 import com.annular.healthCare.Response;
 import com.annular.healthCare.Util.Base64FileUpload;
@@ -48,8 +40,6 @@ import com.annular.healthCare.model.DoctorSlot;
 import com.annular.healthCare.model.DoctorSlotDate;
 import com.annular.healthCare.model.DoctorSlotSpiltTime;
 import com.annular.healthCare.model.DoctorSlotTime;
-import com.annular.healthCare.model.DoctorSlotTimeOverride;
-import com.annular.healthCare.model.DoctorSpecialty;
 import com.annular.healthCare.model.HospitalAdmin;
 import com.annular.healthCare.model.HospitalDataList;
 import com.annular.healthCare.model.MediaFile;
@@ -81,9 +71,7 @@ import com.annular.healthCare.webModel.DoctorLeaveListWebModel;
 import com.annular.healthCare.webModel.DoctorSlotTimeWebModel;
 import com.annular.healthCare.webModel.FileInputWebModel;
 import com.annular.healthCare.webModel.HospitalDataListWebModel;
-import com.annular.healthCare.webModel.SplitSlotDurationWebModel;
 import com.annular.healthCare.webModel.UserWebModel;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -146,162 +134,307 @@ public class AuthServiceImpl implements AuthService {
 
 	@Value("${annular.app.imageLocation}")
 	private String imageLocation;
-
 	@Override
 	public ResponseEntity<?> register(UserWebModel userWebModel) {
-		HashMap<String, Object> response = new HashMap<>();
-		try {
-			logger.info("Register method start");
+	    HashMap<String, Object> response = new HashMap<>();
+	    try {
+	        logger.info("Register method start");
 
-			// Check if a user with the same emailId, userType, and hospitalId already
-			// exists
-			Optional<User> existingUser = userRepository.findByEmailIdAndUserTypeAndHospitalId(
-					userWebModel.getEmailId(), userWebModel.getUserType(), userWebModel.getHospitalId());
+	        // Check if a user with the same emailId, userType, and hospitalId already exists
+	        Optional<User> existingUser = userRepository.findByEmailIdAndUserTypeAndHospitalId(
+	                userWebModel.getEmailId(), userWebModel.getUserType(), userWebModel.getHospitalId());
 
-			if (existingUser.isPresent()) {
-				response.put("message", "User with this email, user type, and hospital ID already exists");
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-			}
+	        if (existingUser.isPresent()) {
+	            response.put("message", "User with this email, user type, and hospital ID already exists");
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+	        }
 
-			// Validate doctor slots if user is a doctor
-			if (userWebModel.getUserType().equalsIgnoreCase("DOCTOR") && userWebModel.getDoctorDaySlots() != null) {
+	        // Validate doctor slots if user is a doctor
+	        if (userWebModel.getUserType().equalsIgnoreCase("DOCTOR") && userWebModel.getDoctorDaySlots() != null) {
+	            // Check for slot time overlaps
+	            if (!validateDoctorSlots(userWebModel.getDoctorDaySlots())) {
+	                response.put("message", "Doctor slot times overlap. Please ensure slot times don't conflict.");
+	                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+	            }
+	        }
 
-				// Check for slot time overlaps
-				if (!validateDoctorSlots(userWebModel.getDoctorDaySlots())) {
-					response.put("message", "Doctor slot times overlap. Please ensure slot times don't conflict.");
-					return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-				}
-			}
+	        // Create new user entity
+	        User savedUser = createAndSaveUser(userWebModel);
 
-			// Create new user entity
-			User newUser = User.builder().emailId(userWebModel.getEmailId()).firstName(userWebModel.getFirstName())
-					.lastName(userWebModel.getLastName()).password(passwordEncoder.encode(userWebModel.getPassword())) // Encrypt
-					.yearOfExperiences(userWebModel.getYearOfExperiences()) // password
-					.userType(userWebModel.getUserType()).phoneNumber(userWebModel.getPhoneNumber()).userIsActive(true) // Default
-																														// active
-					.currentAddress(userWebModel.getCurrentAddress()).empId(userWebModel.getEmpId())
-					.gender(userWebModel.getGender()).createdBy(userWebModel.getCreatedBy())
-					.userName(userWebModel.getFirstName() + " " + userWebModel.getLastName()) // Concatenate first name
-																								// and last name
-					.hospitalId(userWebModel.getHospitalId()) // Assuming `hospitalId` exists in the User entity
-					.build();
+	        // Handle file uploads (e.g., hospital logo)
+	        if (userWebModel.getFilesInputWebModel() != null) {
+	            handleFileUploads(savedUser, userWebModel.getFilesInputWebModel());
+	        }
 
-			// Save user
-			User savedUser = userRepository.save(newUser);
-			// Handle file uploads (e.g., hospital logo)
-			if (userWebModel.getFilesInputWebModel() != null) {
-				handleFileUploads(newUser, userWebModel.getFilesInputWebModel());
-			}
+	        // Save user roles if provided
+	        saveUserRoles(savedUser, userWebModel.getRoleIds());
 
-			if (userWebModel.getRoleIds() != null && !userWebModel.getRoleIds().isEmpty()) {
-				for (Integer roleId : userWebModel.getRoleIds()) {
-					DoctorRole doctorRole = DoctorRole.builder().user(savedUser).roleId(roleId)
-							.createdBy(savedUser.getCreatedBy()).userIsActive(true).build();
-					doctorRoleRepository.save(doctorRole);
-				}
-			}
-			if (userWebModel.getUserType().equalsIgnoreCase("DOCTOR")) {
-			    DoctorSlot doctorSlot = DoctorSlot.builder()
-			        .user(savedUser)
-			        .createdBy(savedUser.getCreatedBy())
-			        .isActive(true)
-			        .build();
-			    doctorSlot = doctorSlotRepository.save(doctorSlot);
+	        // Process doctor-specific data if user is a doctor
+	        if (userWebModel.getUserType().equalsIgnoreCase("DOCTOR")) {
+	            processDoctorData(savedUser, userWebModel);
+	        }
 
-			    if (userWebModel.getDoctorDaySlots() != null) {
-			        for (DoctorDaySlotWebModel daySlotModel : userWebModel.getDoctorDaySlots()) {
-
-			            DoctorDaySlot doctorDaySlot = DoctorDaySlot.builder()
-			                .doctorSlot(doctorSlot)
-			                .day(daySlotModel.getDay())
-			                .startSlotDate(daySlotModel.getStartSlotDate())
-			                .endSlotDate(daySlotModel.getEndSlotDate())
-			                .createdBy(savedUser.getCreatedBy())
-			                .isActive(true)
-			                .build();
-			            doctorDaySlot = doctorDaySlotRepository.save(doctorDaySlot);
-
-			            if (daySlotModel.getDoctorSlotTimes() != null) {
-			                for (DoctorSlotTimeWebModel slotTimeModel : daySlotModel.getDoctorSlotTimes()) {
-
-			                    DoctorSlotTime doctorSlotTime = DoctorSlotTime.builder()
-			                        .doctorDaySlot(doctorDaySlot)
-			                        .slotStartTime(slotTimeModel.getSlotStartTime())
-			                        .slotEndTime(slotTimeModel.getSlotEndTime())
-			                        .slotTime(slotTimeModel.getSlotTime())
-			                        .createdBy(savedUser.getCreatedBy())
-			                        .isActive(true)
-			                        .build();
-			                    doctorSlotTime = doctorSlotTimeRepository.save(doctorSlotTime);
-
-			                    // 👉 Get matching dates for the selected day
-			                    List<LocalDate> matchingDates = getMatchingDatesByDay(
-			                        daySlotModel.getStartSlotDate(), 
-			                        daySlotModel.getEndSlotDate(), 
-			                        daySlotModel.getDay()
-			                    );
-
-			                    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH);
-
-			                    for (LocalDate date : matchingDates) {
-			                        // Save DoctorSlotDate
-			                        DoctorSlotDate doctorSlotDate = DoctorSlotDate.builder()
-			                            .doctorSlotId(doctorSlot.getDoctorSlotId())
-			                            .doctorDaySlotId(doctorDaySlot.getDoctorDaySlotId())
-			                            .doctorSlotTimeId(doctorSlotTime.getDoctorSlotTimeId())
-			                            .date(date.toString())
-			                            .createdBy(savedUser.getCreatedBy())
-			                            .isActive(true)
-			                            .build();
-			                        doctorSlotDate = doctorSlotDateRepository.save(doctorSlotDate); // Ensure the ID is available
-
-			                        // Split slot into intervals and save
-			                        LocalTime start = LocalTime.parse(slotTimeModel.getSlotStartTime(), timeFormatter);
-			                        LocalTime end = LocalTime.parse(slotTimeModel.getSlotEndTime(), timeFormatter);
-			                        int duration = Integer.parseInt(slotTimeModel.getSlotTime().replace("mins", "").trim());
-
-			                        while (start.plusMinutes(duration).compareTo(end) <= 0) {
-			                            LocalTime next = start.plusMinutes(duration);
-
-			                            DoctorSlotSpiltTime splitTime = DoctorSlotSpiltTime.builder()
-			                                .slotStartTime(start.format(timeFormatter))
-			                                .slotEndTime(next.format(timeFormatter))
-			                                .slotStatus("Available")
-			                                .createdBy(savedUser.getCreatedBy())
-			                                .doctorSlotDateId(doctorSlotDate.getDoctorSlotDateId()) // ✅ Set ID, not object
-			                                .isActive(true)
-			                                .build();
-
-			                            doctorSlotSplitTimeRepository.save(splitTime);
-
-			                            start = next;
-			                        }
-			                    }
-
-			                    }
-			                }
-			            }
-			        }
-			    }
-			
-				// Save doctor leaves if provided
-				if (userWebModel.getDoctorLeaveList() != null) {
-					for (DoctorLeaveListWebModel leaveModel : userWebModel.getDoctorLeaveList()) {
-						DoctorLeaveList doctorLeave = DoctorLeaveList.builder().user(savedUser)
-								.doctorLeaveDate(leaveModel.getDoctorLeaveDate()).createdBy(savedUser.getCreatedBy())
-								.userIsActive(true).build();
-						doctorLeaveListRepository.save(doctorLeave);
-					}
-				}
-
-			return ResponseEntity.ok(new Response(1, "success", "User registered successfully"));
-	
-		} catch (Exception e) {
-			logger.error("Error registering user: " + e.getMessage(), e);
-			response.put("message", "Registration failed");
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-		}
+	        return ResponseEntity.ok(new Response(1, "success", "User registered successfully"));
+	    } catch (Exception e) {
+	        logger.error("Error registering user: " + e.getMessage(), e);
+	        response.put("message", "Registration failed");
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
 	}
+
+	/**
+	 * Creates and saves a new user based on the provided web model
+	 */
+	private User createAndSaveUser(UserWebModel userWebModel) {
+	    User newUser = User.builder()
+	            .emailId(userWebModel.getEmailId())
+	            .firstName(userWebModel.getFirstName())
+	            .lastName(userWebModel.getLastName())
+	            .password(passwordEncoder.encode(userWebModel.getPassword()))
+	            .yearOfExperiences(userWebModel.getYearOfExperiences())
+	            .userType(userWebModel.getUserType())
+	            .phoneNumber(userWebModel.getPhoneNumber())
+	            .userIsActive(true) // Default active
+	            .currentAddress(userWebModel.getCurrentAddress())
+	            .empId(userWebModel.getEmpId())
+	            .gender(userWebModel.getGender())
+	            .createdBy(userWebModel.getCreatedBy())
+	            .userName(userWebModel.getFirstName() + " " + userWebModel.getLastName())
+	            .hospitalId(userWebModel.getHospitalId())
+	            .build();
+
+	    return userRepository.save(newUser);
+	}
+
+	/**
+	 * Saves user roles if provided
+	 */
+	private void saveUserRoles(User savedUser, List<Integer> roleIds) {
+	    if (roleIds != null && !roleIds.isEmpty()) {
+	        for (Integer roleId : roleIds) {
+	            DoctorRole doctorRole = DoctorRole.builder()
+	                    .user(savedUser)
+	                    .roleId(roleId)
+	                    .createdBy(savedUser.getCreatedBy())
+	                    .userIsActive(true)
+	                    .build();
+	            doctorRoleRepository.save(doctorRole);
+	        }
+	    }
+	}
+
+	/**
+	 * Processes doctor-specific data including slots and leaves
+	 */
+	private void processDoctorData(User savedUser, UserWebModel userWebModel) {
+	    // Create and save doctor slot
+	    DoctorSlot doctorSlot = createAndSaveDoctorSlot(savedUser);
+	    
+	    // Process doctor day slots if provided
+	    if (userWebModel.getDoctorDaySlots() != null) {
+	        processDoctorDaySlots(savedUser, doctorSlot, userWebModel.getDoctorDaySlots());
+	    }
+	    
+	    // Save doctor leaves if provided
+	    saveDoctorLeaves(savedUser, userWebModel.getDoctorLeaveList());
+	}
+
+	/**
+	 * Creates and saves a doctor slot
+	 */
+	private DoctorSlot createAndSaveDoctorSlot(User savedUser) {
+	    DoctorSlot doctorSlot = DoctorSlot.builder()
+	            .user(savedUser)
+	            .createdBy(savedUser.getCreatedBy())
+	            .isActive(true)
+	            .build();
+	    return doctorSlotRepository.save(doctorSlot);
+	}
+
+	/**
+	 * Processes doctor day slots
+	 */
+	private void processDoctorDaySlots(User savedUser, DoctorSlot doctorSlot, List<DoctorDaySlotWebModel> doctorDaySlots) {
+	    for (DoctorDaySlotWebModel daySlotModel : doctorDaySlots) {
+	        // Create and save doctor day slot
+	        DoctorDaySlot doctorDaySlot = createAndSaveDoctorDaySlot(doctorSlot, savedUser, daySlotModel);
+	        
+	        // Process slot times if provided
+	        if (daySlotModel.getDoctorSlotTimes() != null) {
+	            processDoctorSlotTimes(savedUser, doctorSlot, doctorDaySlot, daySlotModel);
+	        }
+	    }
+	}
+
+	/**
+	 * Creates and saves a doctor day slot
+	 */
+	private DoctorDaySlot createAndSaveDoctorDaySlot(DoctorSlot doctorSlot, User savedUser, DoctorDaySlotWebModel daySlotModel) {
+	    DoctorDaySlot doctorDaySlot = DoctorDaySlot.builder()
+	            .doctorSlot(doctorSlot)
+	            .day(daySlotModel.getDay())
+	            .startSlotDate(daySlotModel.getStartSlotDate())
+	            .endSlotDate(daySlotModel.getEndSlotDate())
+	            .createdBy(savedUser.getCreatedBy())
+	            .isActive(true)
+	            .build();
+	    return doctorDaySlotRepository.save(doctorDaySlot);
+	}
+
+	/**
+	 * Processes doctor slot times
+	 */
+	private void processDoctorSlotTimes(User savedUser, DoctorSlot doctorSlot, DoctorDaySlot doctorDaySlot, DoctorDaySlotWebModel daySlotModel) {
+	    for (DoctorSlotTimeWebModel slotTimeModel : daySlotModel.getDoctorSlotTimes()) {
+	        // Create and save doctor slot time
+	        DoctorSlotTime doctorSlotTime = createAndSaveDoctorSlotTime(doctorDaySlot, savedUser, slotTimeModel);
+	        
+	        // Get matching dates for the selected day
+	        List<LocalDate> matchingDates = getMatchingDatesByDay(
+	                daySlotModel.getStartSlotDate(),
+	                daySlotModel.getEndSlotDate(),
+	                daySlotModel.getDay()
+	        );
+	        
+	        // Process each matching date
+	        processMatchingDates(savedUser, doctorSlot, doctorDaySlot, doctorSlotTime, matchingDates, slotTimeModel);
+	    }
+	}
+
+	/**
+	 * Creates and saves a doctor slot time
+	 */
+	private DoctorSlotTime createAndSaveDoctorSlotTime(DoctorDaySlot doctorDaySlot, User savedUser, DoctorSlotTimeWebModel slotTimeModel) {
+	    DoctorSlotTime doctorSlotTime = DoctorSlotTime.builder()
+	            .doctorDaySlot(doctorDaySlot)
+	            .slotStartTime(slotTimeModel.getSlotStartTime())
+	            .slotEndTime(slotTimeModel.getSlotEndTime())
+	            .slotTime(slotTimeModel.getSlotTime())
+	            .createdBy(savedUser.getCreatedBy())
+	            .isActive(true)
+	            .build();
+	    return doctorSlotTimeRepository.save(doctorSlotTime);
+	}
+
+	/**
+	 * Processes matching dates for doctor slots
+	 */
+	private void processMatchingDates(User savedUser, DoctorSlot doctorSlot, DoctorDaySlot doctorDaySlot,
+	                                  DoctorSlotTime doctorSlotTime, List<LocalDate> matchingDates,
+	                                  DoctorSlotTimeWebModel slotTimeModel) {
+	    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH);
+	    
+	    for (LocalDate date : matchingDates) {
+	        // Save DoctorSlotDate
+	        DoctorSlotDate doctorSlotDate = createAndSaveDoctorSlotDate(savedUser, doctorSlot, doctorDaySlot, doctorSlotTime, date);
+	        
+	        // Split slot into intervals and save
+	        createDoctorSlotSplitTimes(savedUser, doctorSlotDate, slotTimeModel, timeFormatter);
+	    }
+	}
+
+	/**
+	 * Creates and saves a doctor slot date
+	 */
+	private DoctorSlotDate createAndSaveDoctorSlotDate(User savedUser, DoctorSlot doctorSlot, DoctorDaySlot doctorDaySlot,
+	                                                   DoctorSlotTime doctorSlotTime, LocalDate date) {
+	    DoctorSlotDate doctorSlotDate = DoctorSlotDate.builder()
+	            .doctorSlotId(doctorSlot.getDoctorSlotId())
+	            .doctorDaySlotId(doctorDaySlot.getDoctorDaySlotId())
+	            .doctorSlotTimeId(doctorSlotTime.getDoctorSlotTimeId())
+	            .date(date.toString())
+	            .createdBy(savedUser.getCreatedBy())
+	            .isActive(true)
+	            .build();
+	    return doctorSlotDateRepository.save(doctorSlotDate);
+	}
+
+	/**
+	 * Creates doctor slot split times for a specific slot date
+	 */
+	/**
+	 * Creates doctor slot split times for a specific slot date with improved error handling
+	 */
+	private void createDoctorSlotSplitTimes(User savedUser, DoctorSlotDate doctorSlotDate,
+            DoctorSlotTimeWebModel slotTimeModel, DateTimeFormatter timeFormatter) {
+try {
+// Parse start and end times
+LocalTime start = LocalTime.parse(slotTimeModel.getSlotStartTime(), timeFormatter);
+LocalTime end = LocalTime.parse(slotTimeModel.getSlotEndTime(), timeFormatter);
+
+// Parse duration (remove non-digit characters like "min" or "minutes")
+String durationStr = slotTimeModel.getSlotTime().replaceAll("[^0-9]", "").trim();
+int duration = Integer.parseInt(durationStr);
+
+logger.info("Creating split times from {} to {} with {} minute intervals for date {}",
+slotTimeModel.getSlotStartTime(), slotTimeModel.getSlotEndTime(),
+duration, doctorSlotDate.getDate());
+
+// Initialize counter
+int slotCount = 0;
+LocalTime currentStart = start;
+
+while (currentStart.plusMinutes(duration).compareTo(end) <= 0) {
+LocalTime currentEnd = currentStart.plusMinutes(duration); // Now defined before use
+
+// Check if the slot already exists
+boolean exists = doctorSlotSplitTimeRepository
+		.existsBySlotStartTimeAndSlotEndTimeAndDoctorSlotDateId(
+currentStart.format(timeFormatter),
+currentEnd.format(timeFormatter),
+doctorSlotDate.getDoctorSlotDateId());
+
+if (!exists) {
+DoctorSlotSpiltTime splitTime = DoctorSlotSpiltTime.builder()
+.slotStartTime(currentStart.format(timeFormatter))
+.slotEndTime(currentEnd.format(timeFormatter))
+.slotStatus("Available")
+.createdBy(savedUser.getCreatedBy())
+.doctorSlotDateId(doctorSlotDate.getDoctorSlotDateId())
+.isActive(true)
+.build();
+
+doctorSlotSplitTimeRepository.save(splitTime);
+slotCount++;
+}
+
+currentStart = currentEnd;
+}
+
+logger.info("Created {} split time slots for doctor slot date ID: {}",
+slotCount, doctorSlotDate.getDoctorSlotDateId());
+
+} catch (Exception e) {
+logger.error("Error creating doctor slot split times: {}", e.getMessage(), e);
+throw new RuntimeException("Failed to create doctor slot split times", e);
+}
+}
+
+	/**
+	 * Saves doctor leaves if provided
+	 */
+	private void saveDoctorLeaves(User savedUser, List<DoctorLeaveListWebModel> doctorLeaveList) {
+	    if (doctorLeaveList != null) {
+	        for (DoctorLeaveListWebModel leaveModel : doctorLeaveList) {
+	            DoctorLeaveList doctorLeave = DoctorLeaveList.builder()
+	                    .user(savedUser)
+	                    .doctorLeaveDate(leaveModel.getDoctorLeaveDate())
+	                    .createdBy(savedUser.getCreatedBy())
+	                    .userIsActive(true)
+	                    .build();
+	            doctorLeaveListRepository.save(doctorLeave);
+	        }
+	    }
+	}
+
+	/**
+	 * Returns a list of dates that match the specified day of week within the date range
+	 * 
+	 * @param startDate The start date of the range
+	 * @param endDate The end date of the range
+	 * @param dayOfWeek The day of week to match
+	 * @return List of matching dates
+	 */
 	private List<LocalDate> getMatchingDatesByDay(Date startDate, Date endDate, String dayOfWeek) {
 	    DayOfWeek targetDay = DayOfWeek.valueOf(dayOfWeek.toUpperCase());
 	    LocalDate start = startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
@@ -317,7 +450,6 @@ public class AuthServiceImpl implements AuthService {
 	    return dates;
 	}
 
-
 	/**
 	 * Validates that doctor time slots do not overlap within the same day
 	 * 
@@ -325,98 +457,108 @@ public class AuthServiceImpl implements AuthService {
 	 * @return true if valid (no overlaps), false otherwise
 	 */
 	private boolean validateDoctorSlots(List<DoctorDaySlotWebModel> doctorDaySlots) {
-		if (doctorDaySlots == null || doctorDaySlots.isEmpty()) {
-			return true; // No slots to validate
-		}
+	    if (doctorDaySlots == null || doctorDaySlots.isEmpty()) {
+	        return true; // No slots to validate
+	    }
 
-		// Group slots by day
-		Map<String, List<DoctorDaySlotWebModel>> slotsByDay = doctorDaySlots.stream()
-				.collect(Collectors.groupingBy(DoctorDaySlotWebModel::getDay));
+	    // Group slots by day
+	    Map<String, List<DoctorDaySlotWebModel>> slotsByDay = doctorDaySlots.stream()
+	            .collect(Collectors.groupingBy(DoctorDaySlotWebModel::getDay));
 
-		// Check each day's slots for overlaps
-		for (Map.Entry<String, List<DoctorDaySlotWebModel>> entry : slotsByDay.entrySet()) {
-			List<DoctorDaySlotWebModel> daySlots = entry.getValue();
+	    // Check each day's slots for overlaps
+	    for (Map.Entry<String, List<DoctorDaySlotWebModel>> entry : slotsByDay.entrySet()) {
+	        List<DoctorDaySlotWebModel> daySlots = entry.getValue();
 
-			for (DoctorDaySlotWebModel daySlot : daySlots) {
-				List<DoctorSlotTimeWebModel> timeSlots = daySlot.getDoctorSlotTimes();
-				if (timeSlots == null || timeSlots.isEmpty()) {
-					continue;
-				}
+	        for (DoctorDaySlotWebModel daySlot : daySlots) {
+	            List<DoctorSlotTimeWebModel> timeSlots = daySlot.getDoctorSlotTimes();
+	            if (timeSlots == null || timeSlots.isEmpty()) {
+	                continue;
+	            }
 
-				// Sort slots by start time for easier comparison
-				List<DoctorSlotTimeWebModel> sortedTimeSlots = new ArrayList<>(timeSlots);
-				sortedTimeSlots.sort(Comparator.comparing(slot -> parseTime(slot.getSlotStartTime())));
+	            // Sort slots by start time for easier comparison
+	            List<DoctorSlotTimeWebModel> sortedTimeSlots = new ArrayList<>(timeSlots);
+	            sortedTimeSlots.sort(Comparator.comparing(slot -> parseTime(slot.getSlotStartTime())));
 
-				// Check for overlaps
-				for (int i = 0; i < sortedTimeSlots.size() - 1; i++) {
-					LocalTime currentEnd = parseTime(sortedTimeSlots.get(i).getSlotEndTime());
-					LocalTime nextStart = parseTime(sortedTimeSlots.get(i + 1).getSlotStartTime());
+	            // Check for overlaps
+	            for (int i = 0; i < sortedTimeSlots.size() - 1; i++) {
+	                LocalTime currentEnd = parseTime(sortedTimeSlots.get(i).getSlotEndTime());
+	                LocalTime nextStart = parseTime(sortedTimeSlots.get(i + 1).getSlotStartTime());
 
-					if (currentEnd.isAfter(nextStart)) {
-						logger.warn("Slot overlap detected for day: " + entry.getKey() + " between "
-								+ sortedTimeSlots.get(i).getSlotStartTime() + "-"
-								+ sortedTimeSlots.get(i).getSlotEndTime() + " and "
-								+ sortedTimeSlots.get(i + 1).getSlotStartTime() + "-"
-								+ sortedTimeSlots.get(i + 1).getSlotEndTime());
-						return false;
-					}
-				}
-			}
-		}
-		return true;
+	                if (currentEnd.isAfter(nextStart)) {
+	                    logger.warn("Slot overlap detected for day: " + entry.getKey() + " between "
+	                            + sortedTimeSlots.get(i).getSlotStartTime() + "-"
+	                            + sortedTimeSlots.get(i).getSlotEndTime() + " and "
+	                            + sortedTimeSlots.get(i + 1).getSlotStartTime() + "-"
+	                            + sortedTimeSlots.get(i + 1).getSlotEndTime());
+	                    return false;
+	                }
+	            }
+	        }
+	    }
+	    return true;
 	}
 
+	/**
+	 * Parses a time string into a LocalTime object
+	 * 
+	 * @param timeString The time string to parse
+	 * @return The parsed LocalTime
+	 */
 	private LocalTime parseTime(String timeString) {
-		try {
-			// Trim and ensure correct format
-			timeString = timeString.trim();
-			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH);
-			return LocalTime.parse(timeString, formatter);
-		} catch (Exception e) {
-			logger.error("Time parsing failed for input: '" + timeString + "'", e);
-			throw e; // Rethrow to see the exact issue
-		}
+	    try {
+	        // Trim and ensure correct format
+	        timeString = timeString.trim();
+	        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH);
+	        return LocalTime.parse(timeString, formatter);
+	    } catch (Exception e) {
+	        logger.error("Time parsing failed for input: '" + timeString + "'", e);
+	        throw e; // Rethrow to see the exact issue
+	    }
 	}
 
-	// Helper method to handle file uploads (hospital logo)
-	public void handleFileUploads(User hospitalData, List<FileInputWebModel> filesInputWebModel) throws IOException {
-		if (filesInputWebModel == null || filesInputWebModel.isEmpty()) {
-			return; // No files to upload
-		}
+	/**
+	 * Helper method to handle file uploads (hospital logo)
+	 * 
+	 * @param user The user to associate the files with
+	 * @param filesInputWebModel The list of files to upload
+	 * @throws IOException If an I/O error occurs
+	 */
+	public void handleFileUploads(User user, List<FileInputWebModel> filesInputWebModel) throws IOException {
+	    if (filesInputWebModel == null || filesInputWebModel.isEmpty()) {
+	        return; // No files to upload
+	    }
 
-		List<MediaFile> filesList = new ArrayList<>();
-		for (FileInputWebModel fileInput : filesInputWebModel) {
-			if (fileInput.getFileData() != null) {
-				// Create a new MediaFile instance for each file
-				MediaFile mediaFile = new MediaFile();
-				String fileName = UUID.randomUUID().toString(); // Generate a unique file name for each file
+	    List<MediaFile> filesList = new ArrayList<>();
+	    for (FileInputWebModel fileInput : filesInputWebModel) {
+	        if (fileInput.getFileData() != null) {
+	            // Create a new MediaFile instance for each file
+	            MediaFile mediaFile = new MediaFile();
+	            String fileName = UUID.randomUUID().toString(); // Generate a unique file name for each file
 
-				// Set properties of the media file
-				mediaFile.setFileName(fileName);
-				User hospitalUser = userRepository.findById(hospitalData.getUserId())
-						.orElseThrow(() -> new RuntimeException("User not found"));
-				mediaFile.setUser(hospitalUser);
+	            // Set properties of the media file
+	            mediaFile.setFileName(fileName);
+	            User hospitalUser = userRepository.findById(user.getUserId())
+	                    .orElseThrow(() -> new RuntimeException("User not found"));
+	            mediaFile.setUser(hospitalUser);
 
-				mediaFile.setFileOriginalName(fileInput.getFileName());
-				mediaFile.setFileSize(fileInput.getFileSize());
-				mediaFile.setFileType(fileInput.getFileType());
-				mediaFile.setCategory(MediaFileCategory.patientDocument); // Define a suitable enum value
-				mediaFile.setFileDomainId(HealthCareConstant.ProfilePhoto); // This constant can be changed to represent
-																			// logo files
-				mediaFile.setFileDomainReferenceId(hospitalData.getUserId()); // Set the hospital ID reference
-				mediaFile.setFileIsActive(true);
-				mediaFile.setFileCreatedBy(hospitalData.getCreatedBy());
+	            mediaFile.setFileOriginalName(fileInput.getFileName());
+	            mediaFile.setFileSize(fileInput.getFileSize());
+	            mediaFile.setFileType(fileInput.getFileType());
+	            mediaFile.setCategory(MediaFileCategory.patientDocument); // Define a suitable enum value
+	            mediaFile.setFileDomainId(HealthCareConstant.ProfilePhoto); // This constant can be changed to represent logo files
+	            mediaFile.setFileDomainReferenceId(user.getUserId()); // Set the hospital ID reference
+	            mediaFile.setFileIsActive(true);
+	            mediaFile.setFileCreatedBy(user.getCreatedBy());
 
-				// Save media file to the database
-				mediaFile = mediaFileRepository.save(mediaFile);
-				filesList.add(mediaFile);
+	            // Save media file to the database
+	            mediaFile = mediaFileRepository.save(mediaFile);
+	            filesList.add(mediaFile);
 
-				// Save the file to the file system
-				Base64FileUpload.saveFile(imageLocation + "/profilePhoto", fileInput.getFileData(), fileName);
-			}
-		}
+	            // Save the file to the file system
+	            Base64FileUpload.saveFile(imageLocation + "/profilePhoto", fileInput.getFileData(), fileName);
+	        }
+	    }
 	}
-
 	@Override
 	public RefreshToken createRefreshToken(User user) {
 		try {
@@ -847,6 +989,7 @@ public class AuthServiceImpl implements AuthService {
 	                                splitMap.put("slotEndTime", splitTime.getSlotEndTime());
 	                                splitMap.put("slotStatus", splitTime.getSlotStatus());
 	                                splitMap.put("isActive", splitTime.getIsActive());
+	                                splitMap.put("id", splitTime.getDoctorSlotSpiltTimeId());
 	                                splitTimeList.add(splitMap);
 	                            }
 

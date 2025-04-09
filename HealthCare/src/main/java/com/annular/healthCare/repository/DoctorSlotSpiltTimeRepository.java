@@ -14,9 +14,13 @@ import com.annular.healthCare.model.User;
 @Repository
 public interface DoctorSlotSpiltTimeRepository extends JpaRepository<DoctorSlotSpiltTime,Integer>{
 
+	@Query("SELECT d FROM DoctorSlotSpiltTime d WHERE d.doctorSlotDateId = :doctorSlotDateId AND d.isActive = true")
 	List<DoctorSlotSpiltTime> findByDoctorSlotDateId(Integer doctorSlotDateId);
 
 	List<DoctorSlotSpiltTime> findByDoctorSlotDateIdAndIsActive(Integer doctorSlotDateId, boolean b);
+
+	boolean existsBySlotStartTimeAndSlotEndTimeAndDoctorSlotDateId(String format, String format2,
+			Integer doctorSlotDateId);
 
 //	@Query("SELECT s FROM DoctorSlotSplitTime s WHERE s.doctorSlotDateId = :id AND s.isActive = true")
 //	List<DoctorSlotSpiltTime> findByDoctorSlotDateIdAndIsActive(@Param("id") Integer doctorSlotDateId);

@@ -17,5 +17,8 @@ public interface DoctorSlotDateRepository extends JpaRepository<DoctorSlotDate, 
 	List<DoctorSlotDate> findByDoctorSlotTimeIdAndDoctorDaySlotIdAndDoctorSlotIdAndDateAndIsActive(
 			Integer doctorSlotTimeId, Integer doctorDaySlotId, Integer doctorSlotId, String string, boolean b);
 
+	Optional<DoctorSlotDate> findByDateAndDoctorSlotTimeIdAndIsActive(String dateString, Integer doctorSlotTimeId,
+			boolean b);
+
 
 }
