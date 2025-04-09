@@ -77,6 +77,7 @@ public class HospitalDataListWebModel {
     private Boolean every6Hours;
     private Boolean every8Hours;
     private Integer days;
+    private Integer patientMedicineDays;
     // Medicine Schedule
     private List<MedicineScheduleWebModel> schedules;
     
@@ -85,6 +86,8 @@ public class HospitalDataListWebModel {
     public static class MedicineDetail {
         private Integer medicineId;
         private Boolean patientStatus;
+        private Integer patientMedicineDays;
+        
     }
 
 

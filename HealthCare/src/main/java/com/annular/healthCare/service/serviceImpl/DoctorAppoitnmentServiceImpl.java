@@ -422,6 +422,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                             medMap.put("every6Hours", med.getEvery6Hours());
 	                             medMap.put("every8Hours", med.getEvery8Hours());
 	                             medMap.put("days", med.getDays());
+	                             medMap.put("patientMedicineDays", med.getPatientMedicineDays());
 
 	                             Medicines medicine = med.getMedicine();
 	                             if (medicine != null) {
@@ -479,6 +480,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 
 	             for (AppointmentMedicine existing : existingMedicines) {
 	                 existing.setPatientStatus(detail.getPatientStatus());
+	                 existing.setPatientMedicineDays(detail.getPatientMedicineDays());
 	                 existing.setUpdatedBy(appointment.getCreatedBy()); // or session user
 	                 existing.setUpdatedOn(new Date());
 	                 appointmentMedicineRepository.save(existing);

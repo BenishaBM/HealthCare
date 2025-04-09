@@ -92,4 +92,7 @@ public class AppointmentMedicine {
 
     @Column(name = "days")
     private Integer days; // number of days for the medication
+    
+    @Column(name = "patientMedicineDays")
+    private Integer patientMedicineDays;
 }
