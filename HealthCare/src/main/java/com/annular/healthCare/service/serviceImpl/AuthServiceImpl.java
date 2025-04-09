@@ -1456,7 +1456,7 @@ public class AuthServiceImpl implements AuthService {
 	            patientMappedHospitalIdRepository.findByPatientIdAndHospitalId(patientId, hospitalId);
 
 	        if (existingMapping.isPresent()) {
-	        	return ResponseEntity.ok(new Response(1, "Fail", "Mapping already exists"));
+	            return ResponseEntity.ok(new Response(1, "Fail", "Mapping already exists"));
 	        }
 
 	        // Create new mapping
@@ -1466,13 +1466,19 @@ public class AuthServiceImpl implements AuthService {
 	            .createdBy(userWebModel.getCreatedBy())
 	            .userUpdatedBy(userWebModel.getCreatedBy())
 	            .userIsActive(true)
-	            .medicalHistoryStatus(userWebModel.getMedicalHistoryStatus()) // set as needed
-	            .personalDataStatus(userWebModel.getPersonalDataStatus())   // set as needed
+	            .medicalHistoryStatus(userWebModel.getMedicalHistoryStatus())
+	            .personalDataStatus(userWebModel.getPersonalDataStatus())
 	            .build();
 
 	        patientMappedHospitalIdRepository.save(mapping);
 
+	        // Handle associated file uploads
+	        if (userWebModel.getFilesInputWebModel() != null && !userWebModel.getFilesInputWebModel().isEmpty()) {
+	            handleFileUploadss(userWebModel, userWebModel.getFilesInputWebModel());
+	        }
+
 	        return ResponseEntity.ok(new Response(1, "Success", "Patient-hospital mapping saved successfully"));
+
 	    } catch (Exception e) {
 	        logger.error("Error saving mapping: {}", e.getMessage(), e);
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -1480,5 +1486,39 @@ public class AuthServiceImpl implements AuthService {
 	    }
 	}
 
+	// Helper method to handle file uploads
+	public void handleFileUploadss(UserWebModel userWebModel, List<FileInputWebModel> filesInputWebModel) throws IOException {
+	    if (filesInputWebModel == null || filesInputWebModel.isEmpty()) {
+	        return;
+	    }
+
+	    for (FileInputWebModel fileInput : filesInputWebModel) {
+	        if (fileInput.getFileData() != null) {
+	            MediaFile mediaFile = new MediaFile();
+	            String fileName = UUID.randomUUID().toString();
+
+	            // Fetch the user (creator)
+	            User hospitalUser = userRepository.findById(userWebModel.getCreatedBy())
+	                .orElseThrow(() -> new RuntimeException("User not found"));
+
+	            mediaFile.setFileName(fileName);
+	            mediaFile.setUser(hospitalUser);
+	            mediaFile.setFileOriginalName(fileInput.getFileName());
+	            mediaFile.setFileSize(fileInput.getFileSize());
+	            mediaFile.setFileType(fileInput.getFileType());
+	            mediaFile.setCategory(MediaFileCategory.scanDocument);
+	            mediaFile.setFileDomainId(HealthCareConstant.scanDocument);
+	            mediaFile.setFileDomainReferenceId(userWebModel.getPatientId()); // Mapping to Patient ID
+	            mediaFile.setFileIsActive(true);
+	            mediaFile.setFileCreatedBy(userWebModel.getCreatedBy());
+
+	            // Save to DB
+	            mediaFileRepository.save(mediaFile);
+
+	            // Save to filesystem
+	            Base64FileUpload.saveFile(imageLocation + "/scanDocument", fileInput.getFileData(), fileName);
+	        }
+	    }
+	}
 
 }
