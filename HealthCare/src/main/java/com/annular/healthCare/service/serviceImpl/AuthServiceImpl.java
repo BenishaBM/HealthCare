@@ -2,6 +2,7 @@ package com.annular.healthCare.service.serviceImpl;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -44,6 +45,8 @@ import com.annular.healthCare.model.DoctorDaySlot;
 import com.annular.healthCare.model.DoctorLeaveList;
 import com.annular.healthCare.model.DoctorRole;
 import com.annular.healthCare.model.DoctorSlot;
+import com.annular.healthCare.model.DoctorSlotDate;
+import com.annular.healthCare.model.DoctorSlotSpiltTime;
 import com.annular.healthCare.model.DoctorSlotTime;
 import com.annular.healthCare.model.DoctorSlotTimeOverride;
 import com.annular.healthCare.model.DoctorSpecialty;
@@ -58,7 +61,9 @@ import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.DoctorDaySlotRepository;
 import com.annular.healthCare.repository.DoctorLeaveListRepository;
 import com.annular.healthCare.repository.DoctorRoleRepository;
+import com.annular.healthCare.repository.DoctorSlotDateRepository;
 import com.annular.healthCare.repository.DoctorSlotRepository;
+import com.annular.healthCare.repository.DoctorSlotSpiltTimeRepository;
 import com.annular.healthCare.repository.DoctorSlotTimeOverrideRepository;
 import com.annular.healthCare.repository.DoctorSlotTimeRepository;
 import com.annular.healthCare.repository.DoctorSpecialityRepository;
@@ -132,6 +137,12 @@ public class AuthServiceImpl implements AuthService {
 	
 	@Autowired
 	PatientDetailsRepository patientDetailsRepository;
+	
+	@Autowired
+	DoctorSlotSpiltTimeRepository doctorSlotSplitTimeRepository;
+	
+	@Autowired
+	DoctorSlotDateRepository doctorSlotDateRepository;
 
 	@Value("${annular.app.imageLocation}")
 	private String imageLocation;
@@ -189,34 +200,90 @@ public class AuthServiceImpl implements AuthService {
 					doctorRoleRepository.save(doctorRole);
 				}
 			}
-			// If user is a doctor, create default slot structure
 			if (userWebModel.getUserType().equalsIgnoreCase("DOCTOR")) {
-				DoctorSlot doctorSlot = DoctorSlot.builder().user(savedUser).createdBy(savedUser.getCreatedBy())
-						.isActive(true).build();
-				doctorSlot = doctorSlotRepository.save(doctorSlot); // Save doctor slot
+			    DoctorSlot doctorSlot = DoctorSlot.builder()
+			        .user(savedUser)
+			        .createdBy(savedUser.getCreatedBy())
+			        .isActive(true)
+			        .build();
+			    doctorSlot = doctorSlotRepository.save(doctorSlot);
 
-				// Loop through the provided days and create day slots
-				if (userWebModel.getDoctorDaySlots() != null) {
-					for (DoctorDaySlotWebModel daySlotModel : userWebModel.getDoctorDaySlots()) {
-						DoctorDaySlot doctorDaySlot = DoctorDaySlot.builder().doctorSlot(doctorSlot)
-								.day(daySlotModel.getDay()).startSlotDate(daySlotModel.getStartSlotDate())
-								.endSlotDate(daySlotModel.getEndSlotDate()).createdBy(savedUser.getCreatedBy())
-								.isActive(true).build();
-						doctorDaySlot = doctorDaySlotRepository.save(doctorDaySlot); // Save day slot
+			    if (userWebModel.getDoctorDaySlots() != null) {
+			        for (DoctorDaySlotWebModel daySlotModel : userWebModel.getDoctorDaySlots()) {
 
-						// Create time slots for each day slot
-						if (daySlotModel.getDoctorSlotTimes() != null) {
-							for (DoctorSlotTimeWebModel slotTimeModel : daySlotModel.getDoctorSlotTimes()) {
-								DoctorSlotTime doctorSlotTime = DoctorSlotTime.builder().doctorDaySlot(doctorDaySlot)
-										.slotStartTime(slotTimeModel.getSlotStartTime())
-										.slotEndTime(slotTimeModel.getSlotEndTime())
-										.slotTime(slotTimeModel.getSlotTime()).createdBy(savedUser.getCreatedBy())
-										.isActive(true).build();
-								doctorSlotTimeRepository.save(doctorSlotTime);
-							}
-						}
-					}
-				}
+			            DoctorDaySlot doctorDaySlot = DoctorDaySlot.builder()
+			                .doctorSlot(doctorSlot)
+			                .day(daySlotModel.getDay())
+			                .startSlotDate(daySlotModel.getStartSlotDate())
+			                .endSlotDate(daySlotModel.getEndSlotDate())
+			                .createdBy(savedUser.getCreatedBy())
+			                .isActive(true)
+			                .build();
+			            doctorDaySlot = doctorDaySlotRepository.save(doctorDaySlot);
+
+			            if (daySlotModel.getDoctorSlotTimes() != null) {
+			                for (DoctorSlotTimeWebModel slotTimeModel : daySlotModel.getDoctorSlotTimes()) {
+
+			                    DoctorSlotTime doctorSlotTime = DoctorSlotTime.builder()
+			                        .doctorDaySlot(doctorDaySlot)
+			                        .slotStartTime(slotTimeModel.getSlotStartTime())
+			                        .slotEndTime(slotTimeModel.getSlotEndTime())
+			                        .slotTime(slotTimeModel.getSlotTime())
+			                        .createdBy(savedUser.getCreatedBy())
+			                        .isActive(true)
+			                        .build();
+			                    doctorSlotTime = doctorSlotTimeRepository.save(doctorSlotTime);
+
+			                    // 👉 Get matching dates for the selected day
+			                    List<LocalDate> matchingDates = getMatchingDatesByDay(
+			                        daySlotModel.getStartSlotDate(), 
+			                        daySlotModel.getEndSlotDate(), 
+			                        daySlotModel.getDay()
+			                    );
+
+			                    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH);
+
+			                    for (LocalDate date : matchingDates) {
+			                        // Save DoctorSlotDate
+			                        DoctorSlotDate doctorSlotDate = DoctorSlotDate.builder()
+			                            .doctorSlotId(doctorSlot.getDoctorSlotId())
+			                            .doctorDaySlotId(doctorDaySlot.getDoctorDaySlotId())
+			                            .doctorSlotTimeId(doctorSlotTime.getDoctorSlotTimeId())
+			                            .date(date.toString())
+			                            .createdBy(savedUser.getCreatedBy())
+			                            .isActive(true)
+			                            .build();
+			                        doctorSlotDate = doctorSlotDateRepository.save(doctorSlotDate); // Ensure the ID is available
+
+			                        // Split slot into intervals and save
+			                        LocalTime start = LocalTime.parse(slotTimeModel.getSlotStartTime(), timeFormatter);
+			                        LocalTime end = LocalTime.parse(slotTimeModel.getSlotEndTime(), timeFormatter);
+			                        int duration = Integer.parseInt(slotTimeModel.getSlotTime().replace("mins", "").trim());
+
+			                        while (start.plusMinutes(duration).compareTo(end) <= 0) {
+			                            LocalTime next = start.plusMinutes(duration);
+
+			                            DoctorSlotSpiltTime splitTime = DoctorSlotSpiltTime.builder()
+			                                .slotStartTime(start.format(timeFormatter))
+			                                .slotEndTime(next.format(timeFormatter))
+			                                .slotStatus("Available")
+			                                .createdBy(savedUser.getCreatedBy())
+			                                .doctorSlotDateId(doctorSlotDate.getDoctorSlotDateId()) // ✅ Set ID, not object
+			                                .isActive(true)
+			                                .build();
+
+			                            doctorSlotSplitTimeRepository.save(splitTime);
+
+			                            start = next;
+			                        }
+			                    }
+
+			                    }
+			                }
+			            }
+			        }
+			    }
+			
 				// Save doctor leaves if provided
 				if (userWebModel.getDoctorLeaveList() != null) {
 					for (DoctorLeaveListWebModel leaveModel : userWebModel.getDoctorLeaveList()) {
@@ -226,16 +293,30 @@ public class AuthServiceImpl implements AuthService {
 						doctorLeaveListRepository.save(doctorLeave);
 					}
 				}
-			}
 
 			return ResponseEntity.ok(new Response(1, "success", "User registered successfully"));
-
+	
 		} catch (Exception e) {
 			logger.error("Error registering user: " + e.getMessage(), e);
 			response.put("message", "Registration failed");
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
+	private List<LocalDate> getMatchingDatesByDay(Date startDate, Date endDate, String dayOfWeek) {
+	    DayOfWeek targetDay = DayOfWeek.valueOf(dayOfWeek.toUpperCase());
+	    LocalDate start = startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+	    LocalDate end = endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+	    List<LocalDate> dates = new ArrayList<>();
+	    while (!start.isAfter(end)) {
+	        if (start.getDayOfWeek() == targetDay) {
+	            dates.add(start);
+	        }
+	        start = start.plusDays(1);
+	    }
+	    return dates;
+	}
+
 
 	/**
 	 * Validates that doctor time slots do not overlap within the same day
@@ -648,492 +729,164 @@ public class AuthServiceImpl implements AuthService {
 	        data.put("gender", user.getGender());
 	        data.put("dob", user.getDob());
 	        data.put("yearOfExperience", user.getYearOfExperiences());
-	        data.put("hospitalId", user.getHospitalId());
-	        data.put("userIsActive", user.getUserIsActive());
+	        Integer hospitalId = user.getHospitalId();
+	        data.put("hospitalId", hospitalId);
 
-	        // Hospital Name
-	        if (user.getHospitalId() != null) {
+	        if (hospitalId != null) {
 	            try {
-	                Optional<HospitalDataList> hospitalData = hospitalDataListRepository.findByHospitalId(user.getHospitalId());
+	                Optional<HospitalDataList> hospitalData = hospitalDataListRepository.findByHospitalId(hospitalId);
 	                data.put("hospitalName", hospitalData.map(HospitalDataList::getHospitalName).orElse("N/A"));
 	            } catch (Exception e) {
-	                logger.error("Error retrieving hospital name: {}", e.getMessage());
+	                logger.error("Error retrieving hospital name for hospitalId {}: {}", hospitalId, e.getMessage());
 	                data.put("hospitalName", "Error retrieving");
 	            }
 	        } else {
 	            data.put("hospitalName", "N/A");
 	        }
 
-	        // If Doctor
+	        data.put("userIsActive", user.getUserIsActive());
+
+	        // Roles
+	        List<Map<String, Object>> roleDetails = new ArrayList<>();
+	        if (user.getDoctorRoles() != null) {
+	            for (DoctorRole doctorRole : user.getDoctorRoles()) {
+	                Map<String, Object> roleMap = new HashMap<>();
+	                roleMap.put("roleId", doctorRole.getRoleId());
+	                roleMap.put("isActive", doctorRole.getUserIsActive());
+	                try {
+	                    String specialtyName = doctorSpecialtyRepository
+	                            .findSpecialtyNameByRoleId(doctorRole.getRoleId());
+	                    roleMap.put("specialtyName", specialtyName != null ? specialtyName : "N/A");
+	                } catch (Exception e) {
+	                    logger.error("Error fetching specialty name for roleId {}: {}", doctorRole.getRoleId(), e.getMessage());
+	                    roleMap.put("specialtyName", "Error retrieving");
+	                }
+	                roleDetails.add(roleMap);
+	            }
+	        }
+	        data.put("roles", roleDetails);
+
+	        // Profile Photos
+	        List<MediaFile> files = mediaFileRepository
+	                .findByFileDomainIdAndFileDomainReferenceId(HealthCareConstant.ProfilePhoto, user.getUserId());
+	        List<FileInputWebModel> filesInputWebModel = new ArrayList<>();
+	        if (files != null) {
+	            for (MediaFile mediaFile : files) {
+	                FileInputWebModel filesInput = new FileInputWebModel();
+	                filesInput.setFileName(mediaFile.getFileOriginalName());
+	                filesInput.setFileId(mediaFile.getFileId());
+	                filesInput.setFileSize(mediaFile.getFileSize());
+	                filesInput.setFileType(mediaFile.getFileType());
+
+	                try {
+	                    String fileData = Base64FileUpload.encodeToBase64String(imageLocation + "/ProfilePhoto",
+	                            mediaFile.getFileName());
+	                    filesInput.setFileData(fileData);
+	                } catch (Exception e) {
+	                    logger.error("Error encoding file {}: {}", mediaFile.getFileName(), e.getMessage());
+	                    filesInput.setFileData("Error encoding file");
+	                }
+	                filesInputWebModel.add(filesInput);
+	            }
+	        }
+	        data.put("profilePhotos", filesInputWebModel);
+
+	        // Doctor-specific data
 	        if ("DOCTOR".equalsIgnoreCase(user.getUserType())) {
+	            // Doctor Slots
 	            List<Map<String, Object>> doctorSlotList = new ArrayList<>();
 	            List<DoctorSlot> doctorSlots = doctorSlotRepository.findByUser(user);
+	            for (DoctorSlot doctorSlot : doctorSlots) {
+	                Map<String, Object> slotData = new HashMap<>();
+	                slotData.put("slotId", doctorSlot.getDoctorSlotId());
+	                slotData.put("isActive", doctorSlot.getIsActive());
 
-	            for (DoctorSlot slot : doctorSlots) {
-	                Map<String, Object> slotMap = new HashMap<>();
-	                slotMap.put("slotId", slot.getDoctorSlotId());
-	                slotMap.put("isActive", slot.getIsActive());
-
+	                // Day Slots
 	                List<Map<String, Object>> daySlotList = new ArrayList<>();
-	                List<DoctorDaySlot> doctorDaySlots = doctorDaySlotRepository.findByDoctorSlot(slot);
-
+	                List<DoctorDaySlot> doctorDaySlots = doctorDaySlotRepository.findByDoctorSlot(doctorSlot);
 	                for (DoctorDaySlot daySlot : doctorDaySlots) {
-	                    Map<String, Object> daySlotMap = new HashMap<>();
-	                    daySlotMap.put("daySlotId", daySlot.getDoctorDaySlotId());
-	                    daySlotMap.put("day", daySlot.getDay());
-	                    daySlotMap.put("startSlotDate", daySlot.getStartSlotDate());
-	                    daySlotMap.put("endSlotDate", daySlot.getEndSlotDate());
-	                    daySlotMap.put("isActive", daySlot.getIsActive());
+	                    Map<String, Object> daySlotData = new HashMap<>();
+	                    daySlotData.put("daySlotId", daySlot.getDoctorDaySlotId());
+	                    daySlotData.put("day", daySlot.getDay());
+	                    daySlotData.put("startSlotDate", daySlot.getStartSlotDate());
+	                    daySlotData.put("endSlotDate", daySlot.getEndSlotDate());
+	                    daySlotData.put("isActive", daySlot.getIsActive());
 
+	                    // Time Slots
 	                    List<Map<String, Object>> timeSlotList = new ArrayList<>();
 	                    List<DoctorSlotTime> doctorSlotTimes = doctorSlotTimeRepository.findByDoctorDaySlot(daySlot);
-
 	                    for (DoctorSlotTime slotTime : doctorSlotTimes) {
-	                        Map<String, Object> timeSlotMap = new HashMap<>();
-	                        timeSlotMap.put("timeSlotId", slotTime.getDoctorSlotTimeId());
-	                        timeSlotMap.put("slotStartTime", slotTime.getSlotStartTime());
-	                        timeSlotMap.put("slotEndTime", slotTime.getSlotEndTime());
-	                        timeSlotMap.put("slotTime", slotTime.getSlotTime());
-	                        timeSlotMap.put("isActive", slotTime.getIsActive());
+	                        Map<String, Object> timeSlotData = new HashMap<>();
+	                        timeSlotData.put("timeSlotId", slotTime.getDoctorSlotTimeId());
+	                        timeSlotData.put("slotStartTime", slotTime.getSlotStartTime());
+	                        timeSlotData.put("slotEndTime", slotTime.getSlotEndTime());
+	                        timeSlotData.put("slotTime", slotTime.getSlotTime());
+	                        timeSlotData.put("isActive", slotTime.getIsActive());
 
-	                        // Generate split slots
-	                        List<Map<String, String>> splitSlots = generateSplitSlots(
-	                                slotTime.getSlotStartTime(),
-	                                slotTime.getSlotEndTime(),
-	                                slotTime.getSlotTime());
-	                        timeSlotMap.put("splitSlotDuration", splitSlots);
+	                        // Slot Dates
+	                        List<DoctorSlotDate> slotDates = doctorSlotDateRepository
+	                                .findByDoctorSlotIdAndDoctorDaySlotIdAndDoctorSlotTimeId(
+	                                        doctorSlot.getDoctorSlotId(),
+	                                        daySlot.getDoctorDaySlotId(),
+	                                        slotTime.getDoctorSlotTimeId());
 
-	                        // Overrides
-	                        List<DoctorSlotTimeOverride> overrides = doctorSlotTimeOverrideRepository.findByOriginalSlot(slotTime);
-	                        List<Map<String, Object>> overrideList = new ArrayList<>();
+	                        List<Map<String, Object>> slotDatesWithSplit = new ArrayList<>();
+	                        for (DoctorSlotDate slotDate : slotDates) {
+	                            Map<String, Object> slotDateMap = new HashMap<>();
+	                            slotDateMap.put("date", slotDate.getDate());
+	                            slotDateMap.put("isActive", slotDate.getIsActive());
 
-	                        LocalDateTime now = LocalDateTime.now();
-	                        DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-	                                .parseCaseInsensitive()
-	                                .appendPattern("h:mm a")
-	                                .toFormatter(Locale.ENGLISH);
+	                            // Split Times
+	                            List<DoctorSlotSpiltTime> splitTimes = doctorSlotSplitTimeRepository
+	                                    .findByDoctorSlotDateId(slotDate.getDoctorSlotDateId());
 
-	                        for (DoctorSlotTimeOverride override : overrides) {
-	                            Map<String, Object> overrideMap = new HashMap<>();
-	                            overrideMap.put("overrideId", override.getOverrideId());
-	                            overrideMap.put("overrideDate", override.getOverrideDate());
-	                            overrideMap.put("pushedSlotTime", override.getNewSlotTime());
-	                            overrideMap.put("reason", override.getReason());
-	                            overrideMap.put("isActive", override.getIsActive());
-	                            overrideMap.put("createdOn", override.getCreatedOn());
-
-	                            // Check if override already started
-	                            boolean alreadyStarted = false;
-	                            try {
-	                                if (override.getOverrideDate() != null) {
-	                                    LocalDate overrideDate = override.getOverrideDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-	                                    LocalTime slotStart = LocalTime.parse(slotTime.getSlotStartTime(), formatter);
-	                                    LocalDateTime slotTimePoint = LocalDateTime.of(overrideDate, slotStart);
-	                                    alreadyStarted = now.isAfter(slotTimePoint);
-	                                }
-	                            } catch (Exception e) {
-	                                logger.error("Error checking slot start: {}", e.getMessage());
+	                            List<Map<String, Object>> splitTimeList = new ArrayList<>();
+	                            for (DoctorSlotSpiltTime splitTime : splitTimes) {
+	                                Map<String, Object> splitMap = new HashMap<>();
+	                                splitMap.put("slotStartTime", splitTime.getSlotStartTime());
+	                                splitMap.put("slotEndTime", splitTime.getSlotEndTime());
+	                                splitMap.put("slotStatus", splitTime.getSlotStatus());
+	                                splitMap.put("isActive", splitTime.getIsActive());
+	                                splitTimeList.add(splitMap);
 	                            }
 
-	                            overrideMap.put("slotAlreadyStarted", alreadyStarted);
-	                            overrideList.add(overrideMap);
+	                            slotDateMap.put("splitTimes", splitTimeList);
+	                            slotDatesWithSplit.add(slotDateMap);
 	                        }
 
-	                        timeSlotMap.put("overrides", overrideList);
-
-	                        // Summary for override effects
-	                        int totalExtraMins = 0;
-	                        int appliedCount = 0;
-	                        int skippedCount = 0;
-
-	                        List<Map<String, Object>> slotStatusList = new ArrayList<>();
-
-	                        for (int i = 0; i < splitSlots.size(); i++) {
-	                            Map<String, String> split = splitSlots.get(i);
-	                            Map<String, Object> status = new HashMap<>();
-	                            status.put("slotIndex", i);
-	                            status.put("startTime", split.get("startTime"));
-	                            status.put("endTime", split.get("endTime"));
-
-	                            // Check all overrides to find applicable ones (based on overrideDate)
-	                            Optional<DoctorSlotTimeOverride> activeOverride = overrides.stream()
-	                                .filter(o -> o.getIsActive() != null && o.getIsActive())
-	                                .findFirst(); // Taking just the first valid override for now
-
-	                            if (activeOverride.isPresent()) {
-	                                DoctorSlotTimeOverride override = activeOverride.get();
-	                                boolean alreadyStarted = false;
-	                                try {
-	                                    LocalDate date = override.getOverrideDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-	                                    LocalTime time = LocalTime.parse(split.get("startTime"), formatter);
-	                                    alreadyStarted = now.isAfter(LocalDateTime.of(date, time));
-	                                } catch (Exception e) {
-	                                    logger.error("Parse error: {}", e.getMessage());
-	                                }
-
-	                                status.put("hasOverride", true);
-	                                status.put("slotAlreadyStarted", alreadyStarted);
-
-	                                if (!alreadyStarted && override.getIsActive()) {
-	                                    try {
-	                                        int mins = Integer.parseInt(override.getNewSlotTime().replace("mins", "").trim());
-	                                        totalExtraMins += mins;
-	                                        appliedCount++;
-	                                        status.put("extraMinutes", mins);
-	                                        status.put("overrideApplied", true);
-	                                    } catch (Exception e) {
-	                                        status.put("overrideApplied", false);
-	                                        status.put("overrideError", "Invalid format");
-	                                    }
-	                                } else {
-	                                    status.put("overrideApplied", false);
-	                                    skippedCount++;
-	                                    status.put("overrideSkippedReason", alreadyStarted ? "Already started" : "Inactive override");
-	                                }
-	                            } else {
-	                                status.put("hasOverride", false);
-	                            }
-
-	                            slotStatusList.add(status);
-	                        }
-
-	                        timeSlotMap.put("slotStatusList", slotStatusList);
-	                        timeSlotMap.put("appliedSlotsCount", appliedCount);
-	                        timeSlotMap.put("skippedSlotsCount", skippedCount);
-
-	                        if (totalExtraMins > 0) {
-	                            LocalTime startTime = LocalTime.parse(slotTime.getSlotStartTime(), formatter).plusMinutes(totalExtraMins);
-	                            LocalTime endTime = LocalTime.parse(slotTime.getSlotEndTime(), formatter).plusMinutes(totalExtraMins);
-
-	                            String newStart = startTime.format(formatter);
-	                            String newEnd = endTime.format(formatter);
-
-	                            List<Map<String, String>> extendedSlots = generateSplitSlots(newStart, newEnd, slotTime.getSlotTime());
-
-	                            Map<String, Object> overrideSummary = new HashMap<>();
-	                            overrideSummary.put("newStartTime", newStart);
-	                            overrideSummary.put("newEndTime", newEnd);
-	                            overrideSummary.put("totalExtraMinutes", totalExtraMins);
-	                            overrideSummary.put("extendedSplitSlotDuration", extendedSlots);
-	                            overrideSummary.put("overrideMessage", String.format("%d slots applied, %d skipped", appliedCount, skippedCount));
-
-	                            timeSlotMap.put("overrideSummary", overrideSummary);
-	                        }
-
-	                        timeSlotList.add(timeSlotMap);
+	                        timeSlotData.put("dates", slotDatesWithSplit);
+	                        timeSlotList.add(timeSlotData);
 	                    }
 
-
-	                    daySlotMap.put("timeSlotList", timeSlotList);
-	                    daySlotList.add(daySlotMap);
+	                    daySlotData.put("timeSlots", timeSlotList);
+	                    daySlotList.add(daySlotData);
 	                }
 
-	                slotMap.put("daySlotList", daySlotList);
-	                doctorSlotList.add(slotMap);
+	                slotData.put("daySlots", daySlotList);
+	                doctorSlotList.add(slotData);
 	            }
+	            data.put("doctorSlots", doctorSlotList);
 
-	            data.put("doctorSlotList", doctorSlotList);
+	            // Doctor Leaves
+	            List<Map<String, Object>> doctorLeaveList = new ArrayList<>();
+	            List<DoctorLeaveList> doctorLeaves = doctorLeaveListRepository.findByUser(user);
+	            for (DoctorLeaveList doctorLeave : doctorLeaves) {
+	                Map<String, Object> leaveData = new HashMap<>();
+	                leaveData.put("leaveId", doctorLeave.getDoctorLeaveListId());
+	                leaveData.put("doctorLeaveDate", doctorLeave.getDoctorLeaveDate());
+	                leaveData.put("userIsActive", doctorLeave.getUserIsActive());
+	                doctorLeaveList.add(leaveData);
+	            }
+	            data.put("doctorLeaveList", doctorLeaveList);
 	        }
 
 	        return ResponseEntity.ok(data);
 	    } catch (Exception e) {
-	        logger.error("Exception in getUserDetailsByUserId: {}", e.getMessage());
+	        logger.error("Exception while retrieving user details: ", e);
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                .body(Collections.singletonMap("message", "Server error occurred"));
+	                .body(Collections.singletonMap("message", "Error retrieving user details"));
 	    }
 	}
-
-//	@Override
-//	public ResponseEntity<?> getUserDetailsByUserId(Integer userId) {
-//	    try {
-//	        Optional<User> userData = userRepository.findById(userId);
-//
-//	        if (!userData.isPresent()) {
-//	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//	                    .body(Collections.singletonMap("message", "User not found"));
-//	        }
-//
-//	        User user = userData.get();
-//	        Map<String, Object> data = new HashMap<>();
-//	        data.put("userId", user.getUserId());
-//	        data.put("userName", user.getUserName());
-//	        data.put("emailId", user.getEmailId());
-//	        data.put("userType", user.getUserType());
-//	        data.put("firstName", user.getFirstName());
-//	        data.put("lastName", user.getLastName());
-//	        data.put("phoneNumber", user.getPhoneNumber());
-//	        data.put("gender", user.getGender());
-//	        data.put("dob", user.getDob());
-//	        data.put("yearOfExperience", user.getYearOfExperiences());
-//	        Integer hospitalId = user.getHospitalId();
-//	        data.put("hospitalId", hospitalId);
-//
-//	        if (hospitalId != null) {
-//	            try {
-//	                Optional<HospitalDataList> hospitalData = hospitalDataListRepository.findByHospitalId(hospitalId);
-//	                data.put("hospitalName", hospitalData.isPresent() ? hospitalData.get().getHospitalName() : "N/A");
-//	            } catch (Exception e) {
-//	                logger.error("Error retrieving hospital name for hospitalId {}: {}", hospitalId, e.getMessage());
-//	                data.put("hospitalName", "Error retrieving");
-//	            }
-//	        } else {
-//	            data.put("hospitalName", "N/A");
-//	        }
-//
-//	        data.put("userIsActive", user.getUserIsActive());
-//
-//	        // Fetch role details if user is a doctor - include ALL roles regardless of active status
-//	        List<Map<String, Object>> roleDetails = new ArrayList<>();
-//	        if (user.getDoctorRoles() != null) {
-//	            for (DoctorRole doctorRole : user.getDoctorRoles()) {
-//	                // Removed the active status check to include all roles
-//	                Map<String, Object> roleMap = new HashMap<>();
-//	                roleMap.put("roleId", doctorRole.getRoleId());
-//	                roleMap.put("isActive", doctorRole.getUserIsActive());  // Include the active status in the response
-//
-//	                try {
-//	                    String specialtyName = doctorSpecialtyRepository
-//	                            .findSpecialtyNameByRoleId(doctorRole.getRoleId());
-//	                    roleMap.put("specialtyName", specialtyName != null ? specialtyName : "N/A");
-//	                } catch (Exception e) {
-//	                    logger.error("Error fetching specialty name for roleId {}: {}", doctorRole.getRoleId(),
-//	                            e.getMessage());
-//	                    roleMap.put("specialtyName", "Error retrieving");
-//	                }
-//
-//	                roleDetails.add(roleMap);
-//	            }
-//	        }
-//	        data.put("roles", roleDetails);
-//
-//	        // Fetch media files for profile photos
-//	        List<MediaFile> files = mediaFileRepository
-//	                .findByFileDomainIdAndFileDomainReferenceId(HealthCareConstant.ProfilePhoto, user.getUserId());
-//	        if (files == null) {
-//	            files = new ArrayList<>();
-//	        }
-//
-//	        List<FileInputWebModel> filesInputWebModel = new ArrayList<>();
-//	        for (MediaFile mediaFile : files) {
-//	            FileInputWebModel filesInput = new FileInputWebModel();
-//	            filesInput.setFileName(mediaFile.getFileOriginalName());
-//	            filesInput.setFileId(mediaFile.getFileId());
-//	            filesInput.setFileSize(mediaFile.getFileSize());
-//	            filesInput.setFileType(mediaFile.getFileType());
-//
-//	            try {
-//	                String fileData = Base64FileUpload.encodeToBase64String(imageLocation + "/ProfilePhoto",
-//	                        mediaFile.getFileName());
-//	                filesInput.setFileData(fileData);
-//	            } catch (Exception e) {
-//	                logger.error("Error encoding file {}: {}", mediaFile.getFileName(), e.getMessage());
-//	                filesInput.setFileData("Error encoding file");
-//	            }
-//
-//	            filesInputWebModel.add(filesInput);
-//	        }
-//
-//	        data.put("profilePhotos", filesInputWebModel);
-//
-//	        if ("DOCTOR".equalsIgnoreCase(user.getUserType())) {
-//	            List<Map<String, Object>> doctorSlotList = new ArrayList<>();
-//
-//	            // Get all slots regardless of active status
-//	            List<DoctorSlot> doctorSlots = doctorSlotRepository.findByUser(user);
-//	            for (DoctorSlot doctorSlot : doctorSlots) {
-//	                Map<String, Object> slotData = new HashMap<>();
-//	                slotData.put("slotId", doctorSlot.getDoctorSlotId());
-//	                slotData.put("isActive", doctorSlot.getIsActive());
-//
-//	                // Fetch day slots - include all regardless of active status
-//	                List<Map<String, Object>> daySlotList = new ArrayList<>();
-//	                List<DoctorDaySlot> doctorDaySlots = doctorDaySlotRepository.findByDoctorSlot(doctorSlot);
-//	                for (DoctorDaySlot daySlot : doctorDaySlots) {
-//	                    Map<String, Object> daySlotData = new HashMap<>();
-//	                    daySlotData.put("daySlotId", daySlot.getDoctorDaySlotId());
-//	                    daySlotData.put("day", daySlot.getDay());
-//	                    daySlotData.put("startSlotDate", daySlot.getStartSlotDate());
-//	                    daySlotData.put("endSlotDate", daySlot.getEndSlotDate());
-//	                    daySlotData.put("isActive", daySlot.getIsActive());
-//
-//	                    // Fetch time slots - include all regardless of active status
-//	                    List<Map<String, Object>> timeSlotList = new ArrayList<>();
-//	                    List<DoctorSlotTime> doctorSlotTimes = doctorSlotTimeRepository.findByDoctorDaySlot(daySlot);
-//	                    for (DoctorSlotTime slotTime : doctorSlotTimes) {
-//	                        Map<String, Object> timeSlotData = new HashMap<>();
-//	                        timeSlotData.put("timeSlotId", slotTime.getDoctorSlotTimeId());
-//	                        timeSlotData.put("slotStartTime", slotTime.getSlotStartTime());
-//	                        timeSlotData.put("slotEndTime", slotTime.getSlotEndTime());
-//	                        timeSlotData.put("slotTime", slotTime.getSlotTime());
-//	                        timeSlotData.put("isActive", slotTime.getIsActive());
-//
-//	                        // Split slots
-//	                        List<Map<String, String>> splitSlots = generateSplitSlots(slotTime.getSlotStartTime(),
-//	                                slotTime.getSlotEndTime(), slotTime.getSlotTime());
-//
-//	                        timeSlotData.put("splitSlotDuration", splitSlots);
-//	                        
-//	                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH);
-//
-//	                        // Fetch DoctorSlotTimeOverride entries - include all regardless of active status
-//	                        List<DoctorSlotTimeOverride> overrides = doctorSlotTimeOverrideRepository.findByOriginalSlot(slotTime);
-//	                        timeSlotData.put("isOverride", !overrides.isEmpty());
-//
-//	                        // Basic override info - include all regardless of active status
-//	                        List<Map<String, Object>> overrideList = new ArrayList<>();
-//	                        for (DoctorSlotTimeOverride override : overrides) {
-//	                            Map<String, Object> overrideMap = new HashMap<>();
-//	                            overrideMap.put("overrideId", override.getOverrideId());
-//	                            overrideMap.put("overrideDate", override.getOverrideDate());
-//	                            overrideMap.put("pushedSlotTime", override.getNewSlotTime());
-//	                            overrideMap.put("reason", override.getReason());
-//	                            overrideMap.put("isActive", override.getIsActive());
-//	                            overrideList.add(overrideMap);
-//	                        }
-//	                        timeSlotData.put("overrides", overrideList);
-//
-//	                        // Handle total override minutes - include all regardless of active status
-//	                        int totalExtraMinutes = 0;
-//	                        for (DoctorSlotTimeOverride override : overrides) {
-//	                            // Removed active check to include all overrides
-//	                            if (override.getNewSlotTime() != null) {
-//	                                try {
-//	                                    int mins = Integer.parseInt(override.getNewSlotTime().replace("mins", "").trim());
-//	                                    totalExtraMinutes += mins;
-//	                                } catch (NumberFormatException e) {
-//	                                    logger.warn("Invalid newSlotTime format: {}", override.getNewSlotTime());
-//	                                }
-//	                            }
-//	                        }
-//	                        if (totalExtraMinutes > 0) {
-//	                            // Create a DateTimeFormatter that correctly parses "9:00 AM" style times
-//	                            DateTimeFormatter timeFormatter = new DateTimeFormatterBuilder()
-//	                                    .parseCaseInsensitive()
-//	                                    .appendPattern("h:mm a")
-//	                                    .toFormatter(Locale.ENGLISH);
-//
-//	                            // Parse original slot start time
-//	                            LocalTime originalStartTime = LocalTime.parse(slotTime.getSlotStartTime().trim(), timeFormatter);
-//                                LocalTime originalEndTime = LocalTime.parse(slotTime.getSlotEndTime().trim(), timeFormatter);
-//	                            // Calculate new start time as originalStartTime + totalExtraMinutes + 1 minute
-//	                            LocalTime newStartTime = originalStartTime.plusMinutes(totalExtraMinutes);
-//                                LocalTime newEndTime = originalEndTime.plusMinutes(totalExtraMinutes);
-//	                           
-//	                            // Format new times back to "hh:mm a"
-//	                            String formattedNewStartTime = newStartTime.format(timeFormatter);
-//	                            String formattedNewEndTime = newEndTime.format(timeFormatter);
-//
-//	                            // Generate split slots
-//	                            List<Map<String, String>> extendedSplitSlots = generateSplitSlots(
-//	                                    formattedNewStartTime,
-//	                                    formattedNewEndTime,
-//	                                    slotTime.getSlotTime());
-//
-//	                            Map<String, Object> newOverrideData = new HashMap<>();
-//	                            newOverrideData.put("newStartTime", formattedNewStartTime);
-//	                            newOverrideData.put("newEndTime", formattedNewEndTime);
-//	                            newOverrideData.put("extendedSplitSlotDuration", extendedSplitSlots);
-//
-//	                            timeSlotData.put("newOverrideData", newOverrideData);
-//	                        }
-//
-//
-//
-//	                        // Add the final slot info to the list
-//	                        timeSlotList.add(timeSlotData);
-//	                    }
-//	                    
-//	                    daySlotData.put("timeSlots", timeSlotList);
-//	                    daySlotList.add(daySlotData);
-//	                }
-//	                
-//	                slotData.put("daySlots", daySlotList);
-//	                doctorSlotList.add(slotData);
-//	            }
-//	            
-//	            data.put("doctorSlots", doctorSlotList);
-//	        }
-//
-//	        // Fetch doctor leave details - include all regardless of active status
-//	        List<Map<String, Object>> doctorLeaveList = new ArrayList<>();
-//	        List<DoctorLeaveList> doctorLeaves = doctorLeaveListRepository.findByUser(user);
-//
-//	        for (DoctorLeaveList doctorLeave : doctorLeaves) {
-//	            Map<String, Object> leaveData = new HashMap<>();
-//	            leaveData.put("leaveId", doctorLeave.getDoctorLeaveListId());
-//	            leaveData.put("doctorLeaveDate", doctorLeave.getDoctorLeaveDate());
-//	            leaveData.put("userIsActive", doctorLeave.getUserIsActive());
-//	            doctorLeaveList.add(leaveData);
-//	        }
-//
-//	        data.put("doctorLeaveList", doctorLeaveList);
-//
-//	        return ResponseEntity.ok(data);
-//	    } catch (Exception e) {
-//	        logger.error("Exception while retrieving user details: ", e);
-//	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//	                .body(Collections.singletonMap("message", "Error retrieving user details"));
-//	    }
-//	}
-//
-//	    // Helper method to split time range into slot chunks
-//	    private List<Map<String, String>> generateSplitSlots(LocalTime startTime, LocalTime endTime, int slotMinutes) {
-//	        List<Map<String, String>> splitSlots = new ArrayList<>();
-//	        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm a");
-//
-//	        while (startTime.isBefore(endTime)) {
-//	            LocalTime nextTime = startTime.plusMinutes(slotMinutes);
-//	            if (nextTime.isAfter(endTime)) {
-//	                nextTime = endTime;
-//	            }
-//
-//	            Map<String, String> slot = new HashMap<>();
-//	            slot.put("startTime", startTime.format(formatter));
-//	            slot.put("endTime", nextTime.format(formatter));
-//	            splitSlots.add(slot);
-//
-//	            startTime = nextTime;
-//	        }
-//
-//	        return splitSlots;
-//	    }
-//
-//	// Helper method to generate split slots
-	private List<Map<String, String>> generateSplitSlots(String startTime, String endTime, String slotDuration) {
-		List<Map<String, String>> splitSlots = new ArrayList<>();
-		try {
-			SimpleDateFormat sdf = new SimpleDateFormat("hh:mm a");
-			Date start = sdf.parse(startTime);
-			Date end = sdf.parse(endTime);
-			int duration = Integer.parseInt(slotDuration.replaceAll("\\D+", "")); // Extracts numeric value from "30
-																					// minutes"
-
-			Calendar cal = Calendar.getInstance();
-			cal.setTime(start);
-
-			while (cal.getTime().before(end)) {
-				Date splitStart = cal.getTime();
-				cal.add(Calendar.MINUTE, duration);
-				Date splitEnd = cal.getTime();
-
-				if (splitEnd.after(end))
-					break;
-
-				Map<String, String> splitSlot = new HashMap<>();
-				splitSlot.put("startTime", sdf.format(splitStart));
-				splitSlot.put("endTime", sdf.format(splitEnd));
-				splitSlots.add(splitSlot);
-			}
-		} catch (Exception e) {
-			logger.error("Error parsing slot time: {}", e.getMessage());
-		}
-		return splitSlots;
-	}
-
-//	private List<Map<String, String>> generateSplitSlots(String newStart, String newEnd, String slotTime) {
-//		// TODO Auto-generated method stub
-//		return null;
-//	}
 
 	@Override
 	public ResponseEntity<?> deleteDoctorRoleById(Integer doctorRoleId) {
@@ -1166,269 +919,146 @@ public class AuthServiceImpl implements AuthService {
 
 	@Override
 	public ResponseEntity<?> getDoctorSlotById(Integer userId, LocalDate requestDate) {
-		try {
-			// Validate input parameters
-			if (userId == null || requestDate == null) {
-				return ResponseEntity.badRequest()
-						.body(Collections.singletonMap("message", "Invalid user ID or request date"));
-			}
+	    try {
+	        if (userId == null || requestDate == null) {
+	            return ResponseEntity.badRequest()
+	                    .body(Collections.singletonMap("message", "Invalid user ID or request date"));
+	        }
 
-			// Find user
-			Optional<User> userData = userRepository.findById(userId);
-			if (userData.isEmpty()) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(Collections.singletonMap("message", "User not found"));
-			}
+	        Optional<User> userData = userRepository.findById(userId);
+	        if (userData.isEmpty()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body(Collections.singletonMap("message", "User not found"));
+	        }
 
-			User user = userData.get();
-			Map<String, Object> response = new LinkedHashMap<>();
-			response.put("userId", user.getUserId());
-			response.put("userName", user.getUserName());
+	        User user = userData.get();
+	        Map<String, Object> response = new LinkedHashMap<>();
+	        response.put("userId", user.getUserId());
+	        response.put("userName", user.getUserName());
 
-			// Return basic info if not doctor
-			if (!"DOCTOR".equalsIgnoreCase(user.getUserType())) {
-				return ResponseEntity.ok(response);
-			}
+	        if (!"DOCTOR".equalsIgnoreCase(user.getUserType())) {
+	            return ResponseEntity.ok(response);
+	        }
 
-			// Check if doctor is on leave for the requested date
-			boolean isDoctorOnLeave = checkDoctorLeave(user, requestDate);
-			if (isDoctorOnLeave) {
-				response.put("doctorSlots", Collections.emptyList());
-				response.put("message", "Doctor is on leave for the requested date");
-				return ResponseEntity.ok(response);
-			}
+	        if (checkDoctorLeave(user, requestDate)) {
+	            response.put("doctorSlots", Collections.emptyList());
+	            response.put("message", "Doctor is on leave for the requested date");
+	            return ResponseEntity.ok(response);
+	        }
 
-			// Get doctor slots
-			List<Map<String, Object>> doctorSlotList = doctorDaySlotRepository.findByDoctorSlot_User(user).stream()
-					.filter(slot -> isValidSlot(slot, requestDate)).map(slot -> mapDoctorSlot(slot, requestDate))
-					.distinct().collect(Collectors.toList());
+	        List<Map<String, Object>> doctorSlotList = doctorDaySlotRepository.findByDoctorSlot_User(user).stream()
+	                .filter(slot -> isValidSlot(slot, requestDate))
+	                .map(slot -> mapDoctorSlot(slot, requestDate))
+	                .distinct()
+	                .collect(Collectors.toList());
 
-			response.put("doctorSlots", doctorSlotList);
-			return ResponseEntity.ok(response);
-		} catch (Exception e) {
-			logger.error("Error retrieving doctor slots for user {}: ", userId, e);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(Collections.singletonMap("message", "Error retrieving doctor slots"));
-		}
+	        response.put("doctorSlots", doctorSlotList);
+	        return ResponseEntity.ok(response);
+
+	    } catch (Exception e) {
+	        logger.error("Error retrieving doctor slots for user {}: ", userId, e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(Collections.singletonMap("message", "Error retrieving doctor slots"));
+	    }
 	}
 
-	/**
-	 * Check if the doctor is on leave for the specified date
-	 * 
-	 * @param doctor      The doctor user
-	 * @param requestDate The date to check
-	 * @return true if doctor is on leave, false otherwise
-	 */
 	private boolean checkDoctorLeave(User doctor, LocalDate requestDate) {
-		// Convert LocalDate to java.util.Date for comparison with entity
-		Date reqDate = Date.from(requestDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-
-		// Query the doctor_leave_list table to check if the doctor has leave on the
-		// requested date
-		return doctorLeaveListRepository.existsByUserAndDoctorLeaveDateAndUserIsActive(doctor, reqDate, true);
+	    Date reqDate = Date.from(requestDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+	    return doctorLeaveListRepository.existsByUserAndDoctorLeaveDateAndUserIsActive(doctor, reqDate, true);
 	}
 
 	private boolean isValidSlot(DoctorDaySlot doctorSlot, LocalDate requestDate) {
-		if (doctorSlot == null || requestDate == null)
-			return false;
+	    if (doctorSlot == null || requestDate == null) return false;
 
-		LocalDate startDate = convertToLocalDate(doctorSlot.getStartSlotDate());
-		LocalDate endDate = convertToLocalDate(doctorSlot.getEndSlotDate());
+	    LocalDate startDate = convertToLocalDate(doctorSlot.getStartSlotDate());
+	    LocalDate endDate = convertToLocalDate(doctorSlot.getEndSlotDate());
 
-		return doctorSlot.getIsActive() != null && doctorSlot.getIsActive() && !requestDate.isBefore(startDate)
-				&& !requestDate.isAfter(endDate);
-	}
-
-	private Map<String, Object> mapDoctorSlot(DoctorDaySlot daySlot, LocalDate requestDate) {
-		List<Map<String, Object>> daySlotList = doctorDaySlotRepository.findByDoctorSlot(daySlot.getDoctorSlot())
-				.stream().filter(slot -> isValidDaySlot(slot, requestDate))
-				.map(slot -> mapDoctorDaySlot(slot, requestDate)).collect(Collectors.toList());
-
-		Map<String, Object> doctorSlotData = new LinkedHashMap<>();
-		doctorSlotData.put("doctorSlotId", daySlot.getDoctorSlot().getDoctorSlotId());
-		doctorSlotData.put("daySlots", daySlotList);
-		return doctorSlotData;
-	}
-
-	private boolean isValidDaySlot(DoctorDaySlot daySlot, LocalDate requestDate) {
-		if (daySlot == null || requestDate == null)
-			return false;
-
-		LocalDate startDate = convertToLocalDate(daySlot.getStartSlotDate());
-		LocalDate endDate = convertToLocalDate(daySlot.getEndSlotDate());
-		String requestDay = requestDate.getDayOfWeek().toString();
-		String slotDay = daySlot.getDay().toUpperCase();
-
-		return daySlot.getIsActive() != null && daySlot.getIsActive() && !requestDate.isBefore(startDate)
-				&& !requestDate.isAfter(endDate) && requestDay.equals(slotDay);
-	}
-
-	private Map<String, Object> mapDoctorDaySlot(DoctorDaySlot daySlot, LocalDate requestDate) {
-		Map<String, Object> daySlotData = new LinkedHashMap<>();
-		daySlotData.put("daySlotId", daySlot.getDoctorDaySlotId());
-		daySlotData.put("day", daySlot.getDay());
-		daySlotData.put("startSlotDate", daySlot.getStartSlotDate());
-		daySlotData.put("endSlotDate", daySlot.getEndSlotDate());
-		daySlotData.put("isActive", daySlot.getIsActive());
-
-		List<Map<String, Object>> timeSlotList = doctorSlotTimeRepository.findByDoctorDaySlot(daySlot).stream()
-				.filter(slotTime -> slotTime.getIsActive() != null && slotTime.getIsActive())
-				.map(slotTime -> mapDoctorSlotTime(slotTime, requestDate)).collect(Collectors.toList());
-
-		daySlotData.put("slotTimes", timeSlotList);
-		return daySlotData;
-	}
-	private Map<String, Object> mapDoctorSlotTime(DoctorSlotTime slotTime, LocalDate requestDate) {
-	    Map<String, Object> timeSlotData = new LinkedHashMap<>();
-	    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH); // Accepts "9:00 AM"
-	    try {
-	        // Step 1: Parse slot times
-	        LocalTime slotStartTime = LocalTime.parse(slotTime.getSlotStartTime(), formatter);
-	        LocalTime slotEndTime = LocalTime.parse(slotTime.getSlotEndTime(), formatter);
-	        
-	        // Step 2: Check for overrides
-	        Date overrideCheckDate = Date.from(requestDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-	        List<DoctorSlotTimeOverride> overrides = doctorSlotTimeOverrideRepository
-	                .findByOriginalSlot_DoctorSlotTimeIdAndOverrideDate(slotTime.getDoctorSlotTimeId(),
-	                        overrideCheckDate);
-	        
-	        // Step 3: Apply overrides if present
-	        if (!overrides.isEmpty()) {
-	            int totalMinutesShift = 0;
-	            StringBuilder combinedOverrideValue = new StringBuilder();
-	            
-	            // Calculate total shift from all overrides
-	            for (DoctorSlotTimeOverride override : overrides) {
-	                String overrideValue = override.getNewSlotTime();
-	                logger.info("Override found for slot {}: shifting by {}", slotTime.getDoctorSlotTimeId(),
-	                        overrideValue);
-	                try {
-	                    // Extract the numeric part from strings like "10 mins"
-	                    String numericPart = overrideValue.replaceAll("[^0-9-]", "").trim();
-	                    int minutes = Integer.parseInt(numericPart);
-	                    totalMinutesShift += minutes;
-	                    
-	                    // Build combined override string
-	                    if (combinedOverrideValue.length() > 0) {
-	                        combinedOverrideValue.append(" + ");
-	                    }
-	                    combinedOverrideValue.append(overrideValue);
-	                } catch (NumberFormatException e) {
-	                    logger.error("Invalid override value for slot {}: {}. Error: {}", 
-	                        slotTime.getDoctorSlotTimeId(), overrideValue, e.getMessage());
-	                    // Continue with other overrides even if one is invalid
-	                }
-	            }
-	            
-	            // Store combined override value for logging
-	            String combinedValue = totalMinutesShift + " mins";
-	            logger.info("Combined override for slot {}: {} ({})", 
-	                slotTime.getDoctorSlotTimeId(), combinedValue, combinedOverrideValue.toString());
-	            
-	            // Apply the combined shift
-	            logger.info("Before shift - Start: {}, End: {}", slotStartTime.format(formatter),
-	                    slotEndTime.format(formatter));
-	            slotStartTime = slotStartTime.plusMinutes(totalMinutesShift);
-	            slotEndTime = slotEndTime.plusMinutes(totalMinutesShift);
-	            logger.info("After shift - Start: {}, End: {}", slotStartTime.format(formatter),
-	                    slotEndTime.format(formatter));
-	        }
-	        
-	        // Step 4: Build response with potentially shifted times
-	        timeSlotData.put("timeSlotId", slotTime.getDoctorSlotTimeId());
-	        timeSlotData.put("slotStartTime", slotStartTime.format(formatter));
-	        timeSlotData.put("slotEndTime", slotEndTime.format(formatter));
-	        timeSlotData.put("slotTime", slotTime.getSlotTime());
-	        timeSlotData.put("isActive", slotTime.getIsActive());
-	        
-	        // Step 5: Generate split slots with the potentially updated times
-	        List<Map<String, String>> splitSlots = generateSplitSlots(slotStartTime.format(formatter),
-	                slotEndTime.format(formatter), slotTime.getSlotTime(), requestDate, slotTime.getDoctorSlotTimeId());
-	        timeSlotData.put("splitSlotDuration", splitSlots);
-	        
-	    } catch (DateTimeParseException e) {
-	        logger.error("Error parsing slot time for slot {}: {}", slotTime.getDoctorSlotTimeId(), e.getMessage());
-	        // Fallback with original string values
-	        timeSlotData.put("timeSlotId", slotTime.getDoctorSlotTimeId());
-	        timeSlotData.put("slotStartTime", slotTime.getSlotStartTime());
-	        timeSlotData.put("slotEndTime", slotTime.getSlotEndTime());
-	        timeSlotData.put("slotTime", slotTime.getSlotTime());
-	        timeSlotData.put("isActive", slotTime.getIsActive());
-	        timeSlotData.put("parseError", true);
-	    }
-	    return timeSlotData;
-	}
-
-	private List<Map<String, String>> generateSplitSlots(String startTime, String endTime, String slotDuration,
-	        LocalDate requestDate, Integer timeSlotId) {
-	    List<Map<String, String>> splitSlots = new ArrayList<>();
-	    try {
-	        SimpleDateFormat sdf = new SimpleDateFormat("h:mm a");
-	        Date start = sdf.parse(startTime);
-	        Date end = sdf.parse(endTime);
-	        int duration = Integer.parseInt(slotDuration.replaceAll("[^0-9]", ""));
-	        long interval = duration * 60 * 1000; // Convert minutes to milliseconds
-	        
-	        // Define minimum acceptable slot duration (must be exact full duration)
-	        // Allowing 1 second tolerance for potential rounding issues
-	        long minimumDuration = interval - 1000; 
-	        
-	        Date currentStart = start;
-	        while (currentStart.before(end)) {
-	            Date currentEnd = new Date(currentStart.getTime() + interval);
-	            
-	            // Make sure we don't go past the end time
-	            if (currentEnd.after(end)) {
-	                currentEnd = end;
-	            }
-	            
-	            // Only add slots that are full duration slots
-	            long slotDurationMs = currentEnd.getTime() - currentStart.getTime();
-	            if (slotDurationMs >= minimumDuration) {
-	                Map<String, String> slot = new LinkedHashMap<>();
-	                
-	                // Make sure time format is consistent (lowercase am/pm)
-	                String formattedStartTime = formatTime(sdf.format(currentStart)).toLowerCase();
-	                String formattedEndTime = formatTime(sdf.format(currentEnd)).toLowerCase();
-	                
-	                slot.put("startTime", formattedStartTime);
-	                slot.put("endTime", formattedEndTime);
-	                
-	                boolean isBooked = patientAppoitnmentRepository.isSlotBookeds(timeSlotId, requestDate.toString(),
-	                        sdf.format(currentStart), sdf.format(currentEnd));
-	                slot.put("status", isBooked ? "booked" : "available");
-	                
-	                splitSlots.add(slot);
-	            } else {
-	                // Log skipping incomplete slot
-	                logger.debug("Skipping incomplete slot: {} - {} (duration: {} ms, required: {} ms)", 
-	                    sdf.format(currentStart), sdf.format(currentEnd), slotDurationMs, interval);
-	            }
-	            
-	            // Move to the next slot start
-	            currentStart = currentEnd;
-	        }
-	    } catch (Exception e) {
-	        logger.error("Error generating split slots: {}", e.getMessage());
-	    }
-	    return splitSlots;
-	}
-
-	private String formatTime(String time) {
-		try {
-// Ensure consistent time format
-			SimpleDateFormat inputFormat = new SimpleDateFormat("h:mm a");
-			SimpleDateFormat outputFormat = new SimpleDateFormat("hh:mm a");
-			Date date = inputFormat.parse(time);
-			return outputFormat.format(date).toLowerCase();
-		} catch (Exception e) {
-			logger.error("Error formatting time {}: {}", time, e.getMessage());
-			return time.toLowerCase();
-		}
+	    return Boolean.TRUE.equals(doctorSlot.getIsActive())
+	            && !requestDate.isBefore(startDate)
+	            && !requestDate.isAfter(endDate);
 	}
 
 	private LocalDate convertToLocalDate(Date date) {
-		return date != null ? date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate() : null;
+	    return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+	}
+
+	private Map<String, Object> mapDoctorSlot(DoctorDaySlot daySlot, LocalDate requestDate) {
+	    List<Map<String, Object>> daySlotList = doctorDaySlotRepository.findByDoctorSlot(daySlot.getDoctorSlot()).stream()
+	            .filter(slot -> isValidDaySlot(slot, requestDate))
+	            .map(slot -> mapDoctorDaySlot(slot, requestDate))
+	            .collect(Collectors.toList());
+
+	    Map<String, Object> doctorSlotData = new LinkedHashMap<>();
+	    doctorSlotData.put("doctorSlotId", daySlot.getDoctorSlot().getDoctorSlotId());
+	    doctorSlotData.put("daySlots", daySlotList);
+	    return doctorSlotData;
+	}
+
+	private boolean isValidDaySlot(DoctorDaySlot daySlot, LocalDate requestDate) {
+	    if (daySlot == null || requestDate == null) return false;
+
+	    LocalDate startDate = convertToLocalDate(daySlot.getStartSlotDate());
+	    LocalDate endDate = convertToLocalDate(daySlot.getEndSlotDate());
+	    String requestDay = requestDate.getDayOfWeek().toString();
+
+	    return Boolean.TRUE.equals(daySlot.getIsActive())
+	            && !requestDate.isBefore(startDate)
+	            && !requestDate.isAfter(endDate)
+	            && requestDay.equalsIgnoreCase(daySlot.getDay());
+	}
+
+	private Map<String, Object> mapDoctorDaySlot(DoctorDaySlot daySlot, LocalDate requestDate) {
+	    Map<String, Object> daySlotData = new LinkedHashMap<>();
+	    daySlotData.put("daySlotId", daySlot.getDoctorDaySlotId());
+	    daySlotData.put("day", daySlot.getDay());
+	    daySlotData.put("startSlotDate", daySlot.getStartSlotDate());
+	    daySlotData.put("endSlotDate", daySlot.getEndSlotDate());
+	    daySlotData.put("isActive", daySlot.getIsActive());
+
+	    List<Map<String, Object>> timeSlotList = doctorSlotTimeRepository.findByDoctorDaySlot(daySlot).stream()
+	            .filter(slotTime -> Boolean.TRUE.equals(slotTime.getIsActive()))
+	            .map(slotTime -> mapDoctorSlotTime(slotTime, requestDate))
+	            .collect(Collectors.toList());
+
+	    daySlotData.put("slotTimes", timeSlotList);
+	    return daySlotData;
+	}
+
+	private Map<String, Object> mapDoctorSlotTime(DoctorSlotTime slotTime, LocalDate requestDate) {
+	    Map<String, Object> timeSlotData = new LinkedHashMap<>();
+	    timeSlotData.put("slotTimeId", slotTime.getDoctorSlotTimeId());
+	    timeSlotData.put("startTime", slotTime.getSlotStartTime());
+	    timeSlotData.put("endTime", slotTime.getSlotEndTime());
+	    timeSlotData.put("isActive", slotTime.getIsActive());
+
+	    List<DoctorSlotDate> doctorSlotDates = doctorSlotDateRepository
+	            .findByDoctorSlotTimeIdAndDoctorDaySlotIdAndDoctorSlotIdAndDateAndIsActive(
+	                    slotTime.getDoctorSlotTimeId(),
+	                    slotTime.getDoctorDaySlot().getDoctorDaySlotId(),
+	                    slotTime.getDoctorDaySlot().getDoctorSlot().getDoctorSlotId(),
+	                    requestDate.toString(),
+	                    true
+	            );
+
+	    List<Map<String, Object>> splitTimeList = doctorSlotDates.stream()
+	    	    .flatMap((DoctorSlotDate slotDate) -> {
+	    	        List<DoctorSlotSpiltTime> splitTimes = doctorSlotSplitTimeRepository
+	    	            .findByDoctorSlotDateIdAndIsActive(slotDate.getDoctorSlotDateId(), true);
+
+	    	        return splitTimes.stream().map(split -> {
+	    	            Map<String, Object> splitData = new LinkedHashMap<>();
+	    	            splitData.put("slotSplitTimeId", split.getDoctorSlotSpiltTimeId());
+	    	            splitData.put("slotStartTime", split.getSlotStartTime());
+	    	            splitData.put("slotEndTime", split.getSlotEndTime());
+	    	            splitData.put("slotStatus", split.getSlotStatus());
+	    	            return splitData;
+	    	        });
+	    	    })
+	    	    .collect(Collectors.toList());
+
+
+	    timeSlotData.put("slotSplitTimes", splitTimeList);
+	    return timeSlotData;
 	}
 
 	@Override
