@@ -542,25 +542,23 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	     }
 	 }
 
-	@Override
-	public ResponseEntity<?> getAllPatientMedicalTestBypatientIdAndDate(Integer patientId, String appointmentDate) {
-		 try {
-	         // Fetch appointments by patientId and date
+	 @Override
+	 public ResponseEntity<?> getAllPatientMedicalTestBypatientIdAndDate(Integer patientId, String appointmentDate) {
+	     try {
 	         List<PatientAppointmentTable> appointments =
 	                 patientAppointmentRepository.findByPatient_PatientDetailsIdAndAppointmentDate(patientId, appointmentDate);
 
-	         // Set to keep unique combinations of patientDetailsId + appointmentDate
 	         Set<String> uniqueKeys = new HashSet<>();
 
 	         List<Map<String, Object>> filteredData = appointments.stream()
 	                 .filter(appointment -> {
 	                     String key = appointment.getPatient().getPatientDetailsId() + "_" + appointment.getAppointmentDate();
-	                     return uniqueKeys.add(key); // Returns false if already exists (duplicate)
+	                     return uniqueKeys.add(key);
 	                 })
 	                 .map(appointment -> {
 	                     Map<String, Object> map = new HashMap<>();
 
-	                     // Appointment data
+	                     // Appointment fields
 	                     map.put("doctorSlotId", appointment.getDoctorSlotId());
 	                     map.put("daySlotId", appointment.getDaySlotId());
 	                     map.put("timeSlotId", appointment.getTimeSlotId());
@@ -587,7 +585,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                     map.put("labStatus", appointment.getLabStatus());
 	                     map.put("appointmentId", appointment.getAppointmentId());
 
-	                     // PatientDetails data
+	                     // Patient details
 	                     PatientDetails patient = appointment.getPatient();
 	                     if (patient != null) {
 	                         map.put("patientDetailsId", patient.getPatientDetailsId());
@@ -600,33 +598,34 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                         map.put("address", patient.getAddress());
 	                     }
 
-	                     // AppointmentMedicine data
-	                     List<AppointmentMedicalTest> medicines = appointment.getAppointmentMedicalTests();
-	                     if (medicines != null && !medicines.isEmpty()) {
-	                         List<Map<String, Object>> medicineList = medicines.stream().map(med -> {
-	                             Map<String, Object> medMap = new HashMap<>();
-	                             medMap.put("appointmentMedicineId", med.getId());
-	                             medMap.put("isActive", med.getIsActive());
-	                             medMap.put("createdBy", med.getCreatedBy());
-	                             medMap.put("createdOn", med.getCreatedOn());
-	                             medMap.put("updatedBy", med.getUpdatedBy());
-	                             medMap.put("updatedOn", med.getUpdatedOn());
-	                             medMap.put("medicineStatus", med.getPatientStatus());
+	                     // Appointment Medical Test
+	                     List<AppointmentMedicalTest> tests = appointment.getAppointmentMedicalTests();
+	                     if (tests != null && !tests.isEmpty()) {
+	                         List<Map<String, Object>> testList = tests.stream().map(test -> {
+	                             Map<String, Object> testMap = new HashMap<>();
+	                             testMap.put("appointmentMedicalTestId", test.getId());
+	                             testMap.put("isActive", test.getIsActive());
+	                             testMap.put("createdBy", test.getCreatedBy());
+	                             testMap.put("createdOn", test.getCreatedOn());
+	                             testMap.put("updatedBy", test.getUpdatedBy());
+	                             testMap.put("updatedOn", test.getUpdatedOn());
+	                             testMap.put("testStatus", test.getPatientStatus());
 
-	                             MedicalTest medicine = med.getMedicalTest();
-	                             if (medicine != null) {
-	                                 medMap.put("medicineId", medicine.getId());
-	                                 medMap.put("testname", medicine.getTestName());
-	                                 medMap.put("mrp", medicine.getMrp());
-	                                 medMap.put("department", medicine.getDepartment());
-	                                 medMap.put("isActive", medicine.getIsActive());
-	                                
+	                             MedicalTest medicalTest = test.getMedicalTest();
+	                             if (medicalTest != null) {
+	                                 testMap.put("medicalTestId", medicalTest.getId());
+	                                 testMap.put("testName", medicalTest.getTestName());
+	                                 testMap.put("mrp", medicalTest.getMrp());
+	                                 testMap.put("department", medicalTest.getDepartment());
+	                                 testMap.put("isActive", medicalTest.getIsActive());
 	                             }
 
-	                             return medMap;
+	                             return testMap;
 	                         }).collect(Collectors.toList());
 
-	                         map.put("appointmentMedicialTest", medicineList);
+	                         map.put("appointmentMedicalTest", testList); // 🟢 Typo corrected here
+	                     } else {
+	                         map.put("appointmentMedicalTest", new ArrayList<>()); // Optional: empty array fallback
 	                     }
 
 	                     return map;
@@ -634,13 +633,12 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                 .collect(Collectors.toList());
 
 	         return ResponseEntity.ok(new Response(1, "success", filteredData));
-
 	     } catch (Exception e) {
 	         e.printStackTrace();
 	         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                 .body(new Response(0, "error", "An error occurred while fetching pharmacy appointments."));
+	                 .body(new Response(0, "error", "An error occurred while fetching medical test appointments."));
 	     }
-	}
+	 }
 
 
 
