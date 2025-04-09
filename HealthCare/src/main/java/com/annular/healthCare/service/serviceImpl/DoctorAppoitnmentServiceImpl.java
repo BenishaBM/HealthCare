@@ -479,7 +479,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                 appointmentMedicineRepository.findByAppointmentAppointmentIdAndMedicineId(appointmentId, medicineId);
 
 	             for (AppointmentMedicine existing : existingMedicines) {
-	                 existing.setPatientStatus(detail.getPatientStatus());
+	                 existing.setPatientStatus(true);
 	                 existing.setPatientMedicineDays(detail.getPatientMedicineDays());
 	                 existing.setUpdatedBy(appointment.getCreatedBy()); // or session user
 	                 existing.setUpdatedOn(new Date());
