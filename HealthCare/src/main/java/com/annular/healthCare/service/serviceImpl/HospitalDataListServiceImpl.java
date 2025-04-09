@@ -2,7 +2,9 @@ package com.annular.healthCare.service.serviceImpl;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
@@ -650,6 +652,91 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
+//	@Transactional
+//	public ResponseEntity<?> saveDoctorSlotTimeOverride(DoctorSlotTimeOverrideWebModel webModel) {
+//	    try {
+//	        if (webModel == null || webModel.getDoctorSlotTimeId() == null ||
+//	                webModel.getOverrideDate() == null || StringUtils.isEmpty(webModel.getNewSlotTime())) {
+//	            return ResponseEntity.badRequest().body(new Response(0, "error", "Missing required fields"));
+//	        }
+//
+//	        Optional<DoctorSlotTime> doctorSlotTimeOpt = doctorSlotTimeRepository.findById(webModel.getDoctorSlotTimeId());
+//	        if (!doctorSlotTimeOpt.isPresent()) {
+//	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//	                    .body(new Response(0, "error", "DoctorSlotTime not found with ID: " + webModel.getDoctorSlotTimeId()));
+//	        }
+//
+//	        DoctorSlotTime slot = doctorSlotTimeOpt.get();
+//
+//	        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH);
+//	        LocalTime originalStart = LocalTime.parse(slot.getSlotStartTime(), formatter);
+//
+//	        int durationMinutes = extractDurationInMinutes(webModel.getNewSlotTime());
+//	        if (durationMinutes <= 0) {
+//	            return ResponseEntity.badRequest().body(new Response(0, "error", "Invalid new slot time format."));
+//	        }
+//
+//	        List<DoctorSlotTimeOverride> existingOverrides = doctorSlotTimeOverrideRepository
+//	                .findByOriginalSlotDoctorSlotTimeIdAndOverrideDate(webModel.getDoctorSlotTimeId(), webModel.getOverrideDate());
+//
+//	        if (!existingOverrides.isEmpty()) {
+//	            for (DoctorSlotTimeOverride overrideItem : existingOverrides) {
+//	                overrideItem.setIsActive(false);
+//	            }
+//	            doctorSlotTimeOverrideRepository.saveAll(existingOverrides);
+//	        }
+//
+//
+//	        // ✅ Step 2: Save new override entry with isActive = true
+//	        DoctorSlotTimeOverride override = DoctorSlotTimeOverride.builder()
+//	                .originalSlot(slot)
+//	                .overrideDate(webModel.getOverrideDate())
+//	                .newSlotTime(webModel.getNewSlotTime()) // saves "30 mins"
+//	                .reason(webModel.getReason())
+//	                .isActive(true) // ✅ mark new one as active
+//	                .build();
+//
+//	        doctorSlotTimeOverrideRepository.save(override);
+//
+//	        // Update appointments
+//	        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+//	        String dateString = sdf.format(webModel.getOverrideDate());
+//
+//	        List<PatientAppointmentTable> appointments = patientAppoinmentRepository
+//	                .findByAppointmentDateAndDoctorSlotTimeId(dateString, slot.getDoctorSlotTimeId());
+//
+//	        for (PatientAppointmentTable appointment : appointments) {
+//	            LocalTime apptStart = LocalTime.parse(appointment.getSlotStartTime(), formatter);
+//	            LocalTime apptEnd = LocalTime.parse(appointment.getSlotEndTime(), formatter);
+//
+//	            appointment.setSlotStartTime(apptStart.plusMinutes(durationMinutes).format(formatter));
+//	            appointment.setSlotEndTime(apptEnd.plusMinutes(durationMinutes).format(formatter));
+//	            System.out.println("Updating appointment ID: " + appointment.getAppointmentId());
+//	        }
+//
+//	        patientAppoinmentRepository.saveAll(appointments);
+//
+//	        return ResponseEntity.ok(new Response(1, "success",
+//	                "Override saved and " + appointments.size() + " appointments updated."));
+//
+//	    } catch (DateTimeParseException e) {
+//	        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//	                .body(new Response(0, "error", "Invalid time format: " + e.getMessage()));
+//	    } catch (Exception e) {
+//	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//	                .body(new Response(0, "error", "Error while saving override: " + e.getMessage()));
+//	    }
+//	}
+//
+//	// Extracts minutes from "60 mins" or "30 mins"
+//	private int extractDurationInMinutes(String newSlotTime) {
+//	    try {
+//	        return Integer.parseInt(newSlotTime.trim().split(" ")[0]);
+//	    } catch (Exception e) {
+//	        return 0;
+//	    }
+//	}
+	//test
 	@Transactional
 	public ResponseEntity<?> saveDoctorSlotTimeOverride(DoctorSlotTimeOverrideWebModel webModel) {
 	    try {
@@ -684,7 +771,6 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            doctorSlotTimeOverrideRepository.saveAll(existingOverrides);
 	        }
 
-
 	        // ✅ Step 2: Save new override entry with isActive = true
 	        DoctorSlotTimeOverride override = DoctorSlotTimeOverride.builder()
 	                .originalSlot(slot)
@@ -702,20 +788,45 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 
 	        List<PatientAppointmentTable> appointments = patientAppoinmentRepository
 	                .findByAppointmentDateAndDoctorSlotTimeId(dateString, slot.getDoctorSlotTimeId());
+	        
+	        // Get current date and time
+	        LocalDate today = LocalDate.now();
+	        LocalTime currentTime = LocalTime.now();
+	        Date overrideDate = webModel.getOverrideDate();
+	        LocalDate overrideLocalDate = overrideDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+	        
+	        int updatedAppointments = 0;
 
 	        for (PatientAppointmentTable appointment : appointments) {
 	            LocalTime apptStart = LocalTime.parse(appointment.getSlotStartTime(), formatter);
 	            LocalTime apptEnd = LocalTime.parse(appointment.getSlotEndTime(), formatter);
-
-	            appointment.setSlotStartTime(apptStart.plusMinutes(durationMinutes).format(formatter));
-	            appointment.setSlotEndTime(apptEnd.plusMinutes(durationMinutes).format(formatter));
-	            System.out.println("Updating appointment ID: " + appointment.getAppointmentId());
+	            
+	            // Only update future appointments if the override date is today
+	            boolean shouldUpdate = true;
+	            
+	            if (overrideLocalDate.isEqual(today)) {
+	                // We're modifying today's schedule - only update slots that haven't started yet
+	                if (apptStart.isBefore(currentTime) || apptStart.equals(currentTime)) {
+	                    // Skip this appointment as it has already started or is starting now
+	                    shouldUpdate = false;
+	                }
+	            }
+	            
+	            if (shouldUpdate) {
+	                appointment.setSlotStartTime(apptStart.plusMinutes(durationMinutes).format(formatter));
+	                appointment.setSlotEndTime(apptEnd.plusMinutes(durationMinutes).format(formatter));
+	                updatedAppointments++;
+	                System.out.println("Updating appointment ID: " + appointment.getAppointmentId());
+	            } else {
+	                System.out.println("Skipping appointment ID: " + appointment.getAppointmentId() + " as it has already started");
+	            }
 	        }
 
 	        patientAppoinmentRepository.saveAll(appointments);
 
 	        return ResponseEntity.ok(new Response(1, "success",
-	                "Override saved and " + appointments.size() + " appointments updated."));
+	                "Override saved and " + updatedAppointments + " appointments updated. " + 
+	                (appointments.size() - updatedAppointments) + " appointments were not modified as they already started."));
 
 	    } catch (DateTimeParseException e) {
 	        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -734,5 +845,133 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	        return 0;
 	    }
 	}
+	
+//	@Transactional
+//	public ResponseEntity<?> saveDoctorSlotTimeOverride(DoctorSlotTimeOverrideWebModel webModel) {
+//	    try {
+//	        if (webModel == null || webModel.getDoctorSlotTimeId() == null ||
+//	                webModel.getOverrideDate() == null || StringUtils.isEmpty(webModel.getNewSlotTime())) {
+//	            return ResponseEntity.badRequest().body(new Response(0, "error", "Missing required fields"));
+//	        }
+//
+//	        Optional<DoctorSlotTime> doctorSlotTimeOpt = doctorSlotTimeRepository.findById(webModel.getDoctorSlotTimeId());
+//	        if (!doctorSlotTimeOpt.isPresent()) {
+//	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//	                    .body(new Response(0, "error", "DoctorSlotTime not found with ID: " + webModel.getDoctorSlotTimeId()));
+//	        }
+//
+//	        DoctorSlotTime slot = doctorSlotTimeOpt.get();
+//
+//	        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH);
+//	        LocalTime originalStart = LocalTime.parse(slot.getSlotStartTime(), formatter);
+//
+//	        int durationMinutes = extractDurationInMinutes(webModel.getNewSlotTime());
+//	        if (durationMinutes <= 0) {
+//	            return ResponseEntity.badRequest().body(new Response(0, "error", "Invalid new slot time format."));
+//	        }
+//
+//	        List<DoctorSlotTimeOverride> existingOverrides = doctorSlotTimeOverrideRepository
+//	                .findByOriginalSlotDoctorSlotTimeIdAndOverrideDate(webModel.getDoctorSlotTimeId(), webModel.getOverrideDate());
+//
+//	        if (!existingOverrides.isEmpty()) {
+//	            for (DoctorSlotTimeOverride overrideItem : existingOverrides) {
+//	                overrideItem.setIsActive(false);
+//	            }
+//	            doctorSlotTimeOverrideRepository.saveAll(existingOverrides);
+//	        }
+//
+//	        // ✅ Step 2: Save new override entry with isActive = true
+//	        DoctorSlotTimeOverride override = DoctorSlotTimeOverride.builder()
+//	                .originalSlot(slot)
+//	                .overrideDate(webModel.getOverrideDate())
+//	                .newSlotTime(webModel.getNewSlotTime()) // saves "30 mins"
+//	                .reason(webModel.getReason())
+//	                .isActive(true) // ✅ mark new one as active
+//	                .build();
+//
+//	        doctorSlotTimeOverrideRepository.save(override);
+//
+//	        // Update appointments
+//	        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+//	        String dateString = sdf.format(webModel.getOverrideDate());
+//
+//	        List<PatientAppointmentTable> appointments = patientAppoinmentRepository
+//	                .findByAppointmentDateAndDoctorSlotTimeId(dateString, slot.getDoctorSlotTimeId());
+//	        
+//	        // Get current date and time
+//	        LocalDate today = LocalDate.now();
+//	        LocalTime currentTime = LocalTime.now();
+//	        Date overrideDate = webModel.getOverrideDate();
+//	        LocalDate overrideLocalDate = overrideDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+//	        
+//	        List<PatientAppointmentTable> appointmentsToUpdate = new ArrayList<>();
+//	        List<String> skippedAppointmentIds = new ArrayList<>();
+//
+//	        for (PatientAppointmentTable appointment : appointments) {
+//	            LocalTime apptStart = LocalTime.parse(appointment.getSlotStartTime(), formatter);
+//	            LocalTime apptEnd = LocalTime.parse(appointment.getSlotEndTime(), formatter);
+//	            
+//	            // Only update future appointments if the override date is today
+//	            boolean shouldUpdate = true;
+//	            
+//	            if (overrideLocalDate.isEqual(today)) {
+//	                // We're modifying today's schedule - only update slots that haven't started yet
+//	                if (apptStart.isBefore(currentTime) || apptStart.equals(currentTime)) {
+//	                    // Skip this appointment as it has already started or is starting now
+//	                    shouldUpdate = false;
+//	                    skippedAppointmentIds.add(appointment.getAppointmentId().toString());
+//	                }
+//	            }
+//	            
+//	            if (shouldUpdate) {
+//	                appointment.setSlotStartTime(apptStart.plusMinutes(durationMinutes).format(formatter));
+//	                appointment.setSlotEndTime(apptEnd.plusMinutes(durationMinutes).format(formatter));
+//	                appointmentsToUpdate.add(appointment);
+//	                System.out.println("Updating appointment ID: " + appointment.getAppointmentId());
+//	            } else {
+//	                System.out.println("Skipping appointment ID: " + appointment.getAppointmentId() + " as it has already started");
+//	            }
+//	        }
+//
+//	        // Save only appointments that need updating
+//	        if (!appointmentsToUpdate.isEmpty()) {
+//	            patientAppoinmentRepository.saveAll(appointmentsToUpdate);
+//	        }
+//
+//	        // Prepare response message
+//	        Map<String, Object> responseData = new HashMap<>();
+//	        responseData.put("overrideId", override.getId());
+//	        responseData.put("updatedAppointmentsCount", appointmentsToUpdate.size());
+//	        responseData.put("skippedAppointmentsCount", skippedAppointmentIds.size());
+//	        
+//	        if (!skippedAppointmentIds.isEmpty()) {
+//	            responseData.put("skippedAppointmentIds", skippedAppointmentIds);
+//	            responseData.put("message", "Some appointments were not updated as they have already started or passed");
+//	        } else if (appointments.isEmpty()) {
+//	            responseData.put("message", "No appointments found for this slot and date");
+//	        } else {
+//	            responseData.put("message", "All appointments successfully updated");
+//	        }
+//
+//	        return ResponseEntity.ok(new Response(1, "success", responseData));
+//
+//	    } catch (DateTimeParseException e) {
+//	        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//	                .body(new Response(0, "error", "Invalid time format: " + e.getMessage()));
+//	    } catch (Exception e) {
+//	        e.printStackTrace(); // For debugging
+//	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//	                .body(new Response(0, "error", "Error while saving override: " + e.getMessage()));
+//	    }
+//	}
+//
+//	// Extracts minutes from "60 mins" or "30 mins"
+//	private int extractDurationInMinutes(String newSlotTime) {
+//	    try {
+//	        return Integer.parseInt(newSlotTime.trim().split(" ")[0]);
+//	    } catch (Exception e) {
+//	        return 0;
+//	    }
+//	}
 
 }
