@@ -80,7 +80,7 @@ public class WebSecurityConfig {
                 .and()
                 .authorizeRequests(
                         (authorize) -> authorize
-                                .antMatchers("/auth/login","/auth/refreshToken","/user/login","/user/refreshToken","/patientDetails/register","/user/getByHopitalName","/user/getHospitalDataByUserTypeAndHospitalId","/auth/getDoctorSlotById","/auth/adminPatientLogin")
+                                .antMatchers("/auth/login","/auth/refreshToken","/user/login","/user/refreshToken","/patientDetails/register","/user/getByHopitalName","/user/getHospitalDataByUserTypeAndHospitalId","/auth/getDoctorSlotById","/auth/adminPatientLogin","/auth/verifyMobileNumber")
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated()
