@@ -42,7 +42,7 @@ public interface AuthService {
 
 	ResponseEntity<?> doctorSlotById(Integer doctorDaySlotId);
 
-	ResponseEntity<?> verifyMobileNumber(String mobileNumber);
+	ResponseEntity<?> verifyMobileNumber(String mobileNumber, Integer hospitalId);
 
 	ResponseEntity<?> checkExistingUserOrNewUserByPatentientId(Integer patientId, Integer hospitalId);
 

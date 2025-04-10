@@ -1529,14 +1529,31 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 
 	}
 	@Override
-	public ResponseEntity<?> verifyMobileNumber(String mobileNumber) {
-	    Optional<PatientDetails> patientOpt = patientDetailsRepository.findByMobileNumber(mobileNumber);
+	public ResponseEntity<?> verifyMobileNumber(String mobileNumber, Integer hospitalId) {
 	    Map<String, Object> response = new HashMap<>();
 
+	    // 1. Find patient by mobile number
+	    Optional<PatientDetails> patientOpt = patientDetailsRepository.findByMobileNumber(mobileNumber);
+
 	    if (patientOpt.isPresent()) {
-	        response.put("statusCode", 1);
-	        response.put("status", "success");
-	        response.put("message", patientOpt.get().getPatientDetailsId());
+	        PatientDetails patient = patientOpt.get();
+
+	        // 2. Check if patient is mapped to hospital
+	        boolean isMapped = false;
+	        if (hospitalId != null) {
+	            isMapped = patientMappedHospitalIdRepository.existsByPatientIdAndHospitalId(patient.getPatientDetailsId(), hospitalId);
+	        }
+
+	        if (isMapped) {
+	            response.put("statusCode", 2);
+	            response.put("status", "success");
+	            response.put("message", "Mobile number exists and is mapped to the hospital");
+	        } else {
+	            response.put("statusCode", 1);
+	            response.put("status", "success");
+	            response.put("message", "Mobile number exists but not mapped to the hospital");
+	        }
+	        response.put("patientId", patient.getPatientDetailsId());
 	    } else {
 	        response.put("statusCode", 0);
 	        response.put("status", "failure");

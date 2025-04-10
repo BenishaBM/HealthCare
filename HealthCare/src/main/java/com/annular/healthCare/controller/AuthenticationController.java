@@ -312,10 +312,10 @@ public class AuthenticationController {
 
 	
 	@GetMapping("verifyMobileNumber")
-	public ResponseEntity<?> verifyMobileNumber(@RequestParam("mobileNumber") String mobileNumber) {
+	public ResponseEntity<?> verifyMobileNumber(@RequestParam("mobileNumber") String mobileNumber,@RequestParam("hospitalId")Integer hospitalId) {
 	    try {
 	        // Call the service to perform the update
-	        return authService.verifyMobileNumber(mobileNumber);
+	        return authService.verifyMobileNumber(mobileNumber,hospitalId);
 	    } catch (Exception e) {
 	        // Handle errors and return a meaningful response
 	        logger.error("verifyMobileNumber Method Exception: {}", e.getMessage(), e);
