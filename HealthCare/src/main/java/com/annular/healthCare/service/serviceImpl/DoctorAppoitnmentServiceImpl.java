@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.annular.healthCare.Response;
 import com.annular.healthCare.model.AppointmentMedicalTest;
 import com.annular.healthCare.model.AppointmentMedicine;
+import com.annular.healthCare.model.DoctorSlotSpiltTime;
 import com.annular.healthCare.model.MedicalTest;
 import com.annular.healthCare.model.Medicines;
 import com.annular.healthCare.model.PatientAppointmentTable;
@@ -29,6 +30,7 @@ import com.annular.healthCare.model.PatientDetails;
 import com.annular.healthCare.model.PatientMappedHospitalId;
 import com.annular.healthCare.repository.AppointmentMedicalTestRepository;
 import com.annular.healthCare.repository.AppointmentMedicineRepository;
+import com.annular.healthCare.repository.DoctorSlotSpiltTimeRepository;
 import com.annular.healthCare.repository.MedicalTestRepository;
 import com.annular.healthCare.repository.MedicinesRepository;
 import com.annular.healthCare.repository.PatientAppoitmentTablerepository;
@@ -46,6 +48,9 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	
 	@Autowired
 	PatientDetailsRepository patientDetailsRepository;
+	
+	@Autowired
+	DoctorSlotSpiltTimeRepository doctorSlotSpiltTimeRepository;
 	
 	@Autowired
 	MedicinesRepository medicineRepository;
@@ -642,6 +647,28 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                 .body(new Response(0, "error", "An error occurred while fetching medical test appointments."));
 	     }
 	 }
+	 @Override
+	 public ResponseEntity<?> deleteParticularSpiltSlot(Integer id) {
+	     try {
+	         Optional<DoctorSlotSpiltTime> optionalSlot = doctorSlotSpiltTimeRepository.findById(id);
+
+	         if (!optionalSlot.isPresent()) {
+	             return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                     .body(new Response(0, "Fail", "Slot not found with ID: " + id));
+	         }
+
+	         DoctorSlotSpiltTime slot = optionalSlot.get();
+	         slot.setIsActive(false);  // Soft delete
+	         slot.setUpdatedOn(new Date()); // Optional: update timestamp
+	         doctorSlotSpiltTimeRepository.save(slot);
+
+	         return ResponseEntity.ok(new Response(1, "Success", "Slot marked as inactive successfully"));
+	     } catch (Exception e) {
+	         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                 .body(new Response(0, "Error", "An error occurred while deleting the slot"));
+	     }
+	 }
+
 
 
 

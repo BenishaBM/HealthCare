@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -159,6 +160,20 @@ public class DoctorAppointmentController {
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
-
+	
+	@DeleteMapping("deleteParticularSpiltSlot")
+	public ResponseEntity<?> deleteParticularSpiltSlot(@RequestParam("id")Integer id) {
+	    try {
+	        // Call the service to perform the update
+	        return doctorAppoitmentService.deleteParticularSpiltSlot(id);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("deleteParticularSpiltSlote Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 }
+
+
 
