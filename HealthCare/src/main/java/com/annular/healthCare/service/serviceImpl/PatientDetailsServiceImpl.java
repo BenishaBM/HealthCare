@@ -30,6 +30,7 @@ import com.annular.healthCare.Response;
 import com.annular.healthCare.Util.Base64FileUpload;
 import com.annular.healthCare.Util.Utility;
 import com.annular.healthCare.model.DoctorRole;
+import com.annular.healthCare.model.DoctorSlotSpiltTime;
 import com.annular.healthCare.model.DoctorSlotTime;
 import com.annular.healthCare.model.DoctorSpecialty;
 import com.annular.healthCare.model.MediaFile;
@@ -38,6 +39,7 @@ import com.annular.healthCare.model.PatientAppointmentTable;
 import com.annular.healthCare.model.PatientDetails;
 import com.annular.healthCare.model.PatientMappedHospitalId;
 import com.annular.healthCare.model.User;
+import com.annular.healthCare.repository.DoctorSlotSpiltTimeRepository;
 import com.annular.healthCare.repository.DoctorSlotTimeRepository;
 import com.annular.healthCare.repository.DoctorSpecialityRepository;
 import com.annular.healthCare.repository.PatientAppoitmentTablerepository;
@@ -71,6 +73,9 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	
 	@Autowired
 	DoctorSlotTimeRepository doctorSlotTimeRepository;
+	
+	@Autowired
+	DoctorSlotSpiltTimeRepository doctorSlotSplitTimeRepository;
 	
 	@Autowired
 	PatientMappedHospitalIdRepository patientMappedHospitalIdRepository;
@@ -147,6 +152,19 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	            return ResponseEntity.badRequest()
 	                    .body(new Response(0, "Fail", "slot Already booked"));
 	        }
+	        if (userWebModel.getDoctorSlotSpiltTimeId() != null) {
+                Optional<DoctorSlotSpiltTime> optionalSlot = doctorSlotSplitTimeRepository.findById(userWebModel.getDoctorSlotSpiltTimeId());
+                if (optionalSlot.isPresent()) {
+                    DoctorSlotSpiltTime slot = optionalSlot.get();
+                    slot.setSlotStatus("Booked");
+                    slot.setUpdatedBy(userWebModel.getCreatedBy());
+                    slot.setUpdatedOn(new Date());
+                    doctorSlotSplitTimeRepository.save(slot);
+                    logger.info("Marked doctorSlotSplitTimeId {} as Booked", userWebModel.getDoctorSlotSpiltTimeId());
+                } else {
+                    logger.warn("doctorSlotSplitTimeId {} not found for updating status", userWebModel.getDoctorSlotSpiltTimeId());
+                }
+            }
 
 	        // Save media files if any
 	        savePatientMediaFiles(userWebModel, savedPatient);
@@ -956,62 +974,71 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
         }
 
 
-		@Override
-		public ResponseEntity<?> patientAppoitmentByOnline(PatientDetailsWebModel userWebModel) {
-		    try {
-		        logger.info("Registering patient: {}", userWebModel.getPatientName());
+        @Override
+        public ResponseEntity<?> patientAppoitmentByOnline(PatientDetailsWebModel userWebModel) {
+            try {
+                logger.info("Registering patient: {}", userWebModel.getPatientName());
 
-		       
-		        // Check if slot is available before booking an appointment
-		        if (userWebModel.getDoctorId() != null 
-		                && userWebModel.getAppointmentDate() != null 
-		                && userWebModel.getDoctorSlotId() != null 
-		                && userWebModel.getDaySlotId() != null 
-		                && userWebModel.getSlotStartTime() != null 
-		                && userWebModel.getSlotEndTime() != null) {  // Fixed duplicate check
+                if (userWebModel.getDoctorId() != null 
+                        && userWebModel.getAppointmentDate() != null 
+                        && userWebModel.getDoctorSlotId() != null 
+                        && userWebModel.getDaySlotId() != null 
+                        && userWebModel.getSlotStartTime() != null 
+                        && userWebModel.getSlotEndTime() != null) {
 
-		            boolean isSlotBooked = checkIfSlotIsBooked(
-		                userWebModel.getDoctorSlotId(),
-		                userWebModel.getDaySlotId(),
-		                userWebModel.getSlotStartTime(),  // Pass correct start time
-		                userWebModel.getSlotEndTime()     // Pass correct end time
-		            );
+                    boolean isSlotBooked = checkIfSlotIsBooked(
+                        userWebModel.getDoctorSlotId(),
+                        userWebModel.getDaySlotId(),
+                        userWebModel.getSlotStartTime(),
+                        userWebModel.getSlotEndTime()
+                    );
 
-		            if (isSlotBooked) {
-		                logger.warn("Slot is already booked for doctorId: {}, date: {}, time: {} - {}",
-		                        userWebModel.getDoctorId(),
-		                        userWebModel.getAppointmentDate(),
-		                        userWebModel.getSlotStartTime(),
-		                        userWebModel.getSlotEndTime()
-		                );
-		                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-		                        .body(new Response(0, "Fail", "The selected slot on " 
-		                                + userWebModel.getAppointmentDate() + " is already booked."));
-		            }
-		        }
+                    if (isSlotBooked) {
+                        logger.warn("Slot is already booked for doctorId: {}, date: {}, time: {} - {}",
+                                userWebModel.getDoctorId(),
+                                userWebModel.getAppointmentDate(),
+                                userWebModel.getSlotStartTime(),
+                                userWebModel.getSlotEndTime()
+                        );
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body(new Response(0, "Fail", "The selected slot on " 
+                                        + userWebModel.getAppointmentDate() + " is already booked."));
+                    }
+                }
 
-		        PatientDetails db = patientDetailsRepository.findByIds(userWebModel.getPatientDetailsId());
+                // Fetch patient record
+                PatientDetails db = patientDetailsRepository.findByIds(userWebModel.getPatientDetailsId());
 
+                // Book appointment
+                PatientAppointmentTable appointment = bookAppointment(userWebModel, db);
+                if (appointment == null) {
+                    return ResponseEntity.badRequest()
+                            .body(new Response(0, "Fail", "Slot already booked"));
+                }
 
-		        // Book appointment if appointment details are provided
-		        PatientAppointmentTable appointment = bookAppointment(userWebModel, db);  // Fixed return type
-		        if (appointment == null) {  // No need to check for isEmpty() since it's not a list
-		            return ResponseEntity.badRequest()
-		                    .body(new Response(0, "Fail", "slot Already booked"));
-		        }
+                // ✅ Update slot status in doctorSlotSplitTime
+                if (userWebModel.getDoctorSlotSpiltTimeId() != null) {
+                    Optional<DoctorSlotSpiltTime> optionalSlot = doctorSlotSplitTimeRepository.findById(userWebModel.getDoctorSlotSpiltTimeId());
+                    if (optionalSlot.isPresent()) {
+                        DoctorSlotSpiltTime slot = optionalSlot.get();
+                        slot.setSlotStatus("Booked");
+                        slot.setUpdatedBy(userWebModel.getCreatedBy());
+                        slot.setUpdatedOn(new Date());
+                        doctorSlotSplitTimeRepository.save(slot);
+                        logger.info("Marked doctorSlotSplitTimeId {} as Booked", userWebModel.getDoctorSlotSpiltTimeId());
+                    } else {
+                        logger.warn("doctorSlotSplitTimeId {} not found for updating status", userWebModel.getDoctorSlotSpiltTimeId());
+                    }
+                }
 
-		        // Save media files if any
-		        
+                return ResponseEntity.ok(new Response(1, "Success", "Online registered successfully"));
 
-		        return ResponseEntity.ok(new Response(1, "Success", "online registered successfully"));
-		    } catch (Exception e) {
-		        logger.error("Registration failed: {}", e.getMessage(), e);
-		        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-		                .body(new Response(0, "Fail", "Something went wrong during registration"));
-		    }
-		}
-
-
+            } catch (Exception e) {
+                logger.error("Registration failed: {}", e.getMessage(), e);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new Response(0, "Fail", "Something went wrong during registration"));
+            }
+        }
 
 
 }

@@ -38,6 +38,7 @@ public class PatientDetailsWebModel {
 	private Integer createdBy;
 	private Date userCreatedOn;
 	private Integer userUpdatedBy;
+	private Integer doctorSlotDateId;
 	private Date userUpdatedOn;
 	private String emergencyContact;
     private String dateOfBirth;
@@ -64,6 +65,8 @@ public class PatientDetailsWebModel {
 	private String patientNotes;
 	private Integer otp;
 	private String appointmentType;
-
+    private Integer doctorSlotSpiltTimeId;
    private List<PatientAppointmentWebModel> appointments;
+
+
 }
