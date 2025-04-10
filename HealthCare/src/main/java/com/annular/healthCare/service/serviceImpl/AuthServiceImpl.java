@@ -1236,65 +1236,194 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 
 	@Override
 	public ResponseEntity<?> addTimeSlotByDoctor(HospitalDataListWebModel userWebModel) {
-		try {
-			// Fetch the DoctorSlot manually
-			DoctorSlot doctorSlot = doctorSlotRepository.findById(userWebModel.getDoctorSlotId()).orElseThrow(
-					() -> new RuntimeException("DoctorSlot not found with ID: " + userWebModel.getDoctorSlotId()));
+	    try {
+	        DoctorSlot doctorSlot = doctorSlotRepository.findById(userWebModel.getDoctorSlotId()).orElseThrow(
+	                () -> new RuntimeException("DoctorSlot not found with ID: " + userWebModel.getDoctorSlotId()));
 
-			// Fetch existing doctor day slots for validation
-			List<DoctorDaySlot> existingDoctorDaySlots = doctorDaySlotRepository.findByDoctorSlot(doctorSlot);
+	        List<DoctorDaySlot> existingDoctorDaySlots = doctorDaySlotRepository.findByDoctorSlot(doctorSlot);
 
-			// Validate for overlaps with existing data and new entries
-			if (!validateDoctorSlots(existingDoctorDaySlots, userWebModel.getDoctorDaySlots())) {
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(0, "Error",
-						"Doctor slot times overlap. Please ensure slot times don't conflict."));
-			}
+	        if (!validateDoctorSlots(existingDoctorDaySlots, userWebModel.getDoctorDaySlots())) {
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+	                    new Response(0, "Error", "Doctor slot times overlap. Please ensure slot times don't conflict."));
+	        }
 
-			// Loop through provided day slots and save them
-			if (userWebModel.getDoctorDaySlots() != null) {
-				for (DoctorDaySlotWebModel daySlotModel : userWebModel.getDoctorDaySlots()) {
-					try {
-						DoctorDaySlot doctorDaySlot = DoctorDaySlot.builder().doctorSlot(doctorSlot)
-								.day(daySlotModel.getDay()).startSlotDate(daySlotModel.getStartSlotDate())
-								.endSlotDate(daySlotModel.getEndSlotDate()).createdBy(userWebModel.getCreatedBy())
-								.isActive(true).build();
+	        if (userWebModel.getDoctorDaySlots() != null) {
+	            for (DoctorDaySlotWebModel daySlotModel : userWebModel.getDoctorDaySlots()) {
+	                DoctorDaySlot doctorDaySlot = DoctorDaySlot.builder()
+	                        .doctorSlot(doctorSlot)
+	                        .day(daySlotModel.getDay())
+	                        .startSlotDate(daySlotModel.getStartSlotDate())
+	                        .endSlotDate(daySlotModel.getEndSlotDate())
+	                        .createdBy(userWebModel.getCreatedBy())
+	                        .isActive(true)
+	                        .build();
 
-						doctorDaySlot = doctorDaySlotRepository.save(doctorDaySlot);
+	                doctorDaySlot = doctorDaySlotRepository.save(doctorDaySlot);
 
-						// Create time slots for each day slot
-						if (daySlotModel.getDoctorSlotTimes() != null) {
-							for (DoctorSlotTimeWebModel slotTimeModel : daySlotModel.getDoctorSlotTimes()) {
-								try {
-									DoctorSlotTime doctorSlotTime = DoctorSlotTime.builder()
-											.doctorDaySlot(doctorDaySlot)
-											.slotStartTime(slotTimeModel.getSlotStartTime())
-											.slotEndTime(slotTimeModel.getSlotEndTime())
-											.slotTime(slotTimeModel.getSlotTime())
-											.createdBy(userWebModel.getCreatedBy()).isActive(true).build();
-									doctorSlotTimeRepository.save(doctorSlotTime);
-								} catch (Exception e) {
-									e.printStackTrace();
-									return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-											new Response(0, "Error", "Failed to save time slot: " + e.getMessage()));
-								}
-							}
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-						return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-								.body(new Response(0, "Error", "Failed to save day slot: " + e.getMessage()));
-					}
-				}
-			}
+	                if (daySlotModel.getDoctorSlotTimes() != null) {
+	                    for (DoctorSlotTimeWebModel slotTimeModel : daySlotModel.getDoctorSlotTimes()) {
+	                        DoctorSlotTime doctorSlotTime = DoctorSlotTime.builder()
+	                                .doctorDaySlot(doctorDaySlot)
+	                                .slotStartTime(slotTimeModel.getSlotStartTime())
+	                                .slotEndTime(slotTimeModel.getSlotEndTime())
+	                                .slotTime(slotTimeModel.getSlotTime())
+	                                .createdBy(userWebModel.getCreatedBy())
+	                                .isActive(true)
+	                                .build();
 
-			return ResponseEntity.ok(new Response(1, "Success", "Time slots and leaves added successfully"));
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new Response(0, "Error", "An error occurred: " + e.getMessage()));
-		}
+	                        doctorSlotTime = doctorSlotTimeRepository.save(doctorSlotTime);
+
+	                        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
+	                        // Convert Date to LocalDate
+	                        LocalDate startDate = convertToLocalDate(doctorDaySlot.getStartSlotDate());
+	                        LocalDate endDate = convertToLocalDate(doctorDaySlot.getEndSlotDate());
+	                        
+	                        // Get the target day of week from the daySlotModel
+	                        DayOfWeek targetDayOfWeek = getDayOfWeek(daySlotModel.getDay());
+	                        
+	                        // Adjust startDate to the first occurrence of the target day if needed
+	                        while (startDate.getDayOfWeek() != targetDayOfWeek) {
+	                            startDate = startDate.plusDays(1);
+	                            // If we've gone past the end date, break out
+	                            if (startDate.isAfter(endDate)) {
+	                                break;
+	                            }
+	                        }
+
+	                        // Process only the specific days of the week within the date range
+	                        while (!startDate.isAfter(endDate)) {
+	                            // Only process if it's the target day of week
+	                            DoctorSlotDate doctorSlotDate = createAndSaveDoctorSlotDate(
+	                                    userWebModel.getCreatedBy(), doctorSlot, doctorDaySlot, doctorSlotTime, startDate);
+
+	                            createDoctorSlotSplitTimes(userWebModel.getCreatedBy(), doctorSlotDate, slotTimeModel, timeFormatter);
+
+	                            // Move to the next occurrence of the same day (add 7 days)
+	                            startDate = startDate.plusDays(7);
+	                        }
+	                    }
+	                }
+	            }
+	        }
+
+	        return ResponseEntity.ok(new Response(1, "Success", "Time slots and leaves added successfully"));
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "Error", "An error occurred: " + e.getMessage()));
+	    }
 	}
 
+	/**
+	 * Helper method to convert day name to DayOfWeek enum
+	 */
+	private DayOfWeek getDayOfWeek(String dayName) {
+	    switch (dayName.toUpperCase()) {
+	        case "MONDAY":
+	            return DayOfWeek.MONDAY;
+	        case "TUESDAY":
+	            return DayOfWeek.TUESDAY;
+	        case "WEDNESDAY":
+	            return DayOfWeek.WEDNESDAY;
+	        case "THURSDAY":
+	            return DayOfWeek.THURSDAY;
+	        case "FRIDAY":
+	            return DayOfWeek.FRIDAY;
+	        case "SATURDAY":
+	            return DayOfWeek.SATURDAY;
+	        case "SUNDAY":
+	            return DayOfWeek.SUNDAY;
+	        default:
+	            throw new IllegalArgumentException("Invalid day name: " + dayName);
+	    }
+	}
+
+	
+	/**
+	 * Creates and saves a doctor slot date.
+	 */
+	private DoctorSlotDate createAndSaveDoctorSlotDate(Integer createdBy, DoctorSlot doctorSlot,
+	                                                   DoctorDaySlot doctorDaySlot,
+	                                                   DoctorSlotTime doctorSlotTime, LocalDate date) {
+	    DoctorSlotDate doctorSlotDate = DoctorSlotDate.builder()
+	            .doctorSlotId(doctorSlot.getDoctorSlotId())
+	            .doctorDaySlotId(doctorDaySlot.getDoctorDaySlotId())
+	            .doctorSlotTimeId(doctorSlotTime.getDoctorSlotTimeId())
+	            .date(date.toString())
+	            .createdBy(createdBy)
+	            .isActive(true)
+	            .build();
+
+	    return doctorSlotDateRepository.save(doctorSlotDate);
+	}
+
+	/**
+	 * Creates doctor slot split times for a specific slot date with error handling.
+	 */
+	private void createDoctorSlotSplitTimes(Integer createdBy, DoctorSlotDate doctorSlotDate,
+	                                        DoctorSlotTimeWebModel slotTimeModel, DateTimeFormatter timeFormatter) {
+	    try {
+	        DateTimeFormatter timeFormatter1 = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH);
+
+	        LocalTime start = LocalTime.parse(slotTimeModel.getSlotStartTime(), timeFormatter1);
+	        LocalTime end = LocalTime.parse(slotTimeModel.getSlotEndTime(), timeFormatter1);
+
+	        String durationStr = slotTimeModel.getSlotTime().replaceAll("[^0-9]", "").trim();
+	        int duration = Integer.parseInt(durationStr);
+
+	        logger.info("Creating split times from {} to {} with {} minute intervals for date {}",
+	                slotTimeModel.getSlotStartTime(), slotTimeModel.getSlotEndTime(),
+	                duration, doctorSlotDate.getDate());
+
+	        int slotCount = 0;
+	        LocalTime currentStart = start;
+
+	        while (currentStart.plusMinutes(duration).compareTo(end) <= 0) {
+	            LocalTime currentEnd = currentStart.plusMinutes(duration);
+
+	            boolean exists = doctorSlotSplitTimeRepository
+	                    .existsBySlotStartTimeAndSlotEndTimeAndDoctorSlotDateId(
+	                            currentStart.format(timeFormatter1),
+	                            currentEnd.format(timeFormatter1),
+	                            doctorSlotDate.getDoctorSlotDateId());
+
+	            if (!exists) {
+	                DoctorSlotSpiltTime splitTime = DoctorSlotSpiltTime.builder()
+	                        .slotStartTime(currentStart.format(timeFormatter1))
+	                        .slotEndTime(currentEnd.format(timeFormatter1))
+	                        .slotStatus("Available")
+	                        .createdBy(createdBy)
+	                        .doctorSlotDateId(doctorSlotDate.getDoctorSlotDateId())
+	                        .isActive(true)
+	                        .build();
+
+	                doctorSlotSplitTimeRepository.save(splitTime);
+	                slotCount++;
+	            }
+
+	            currentStart = currentEnd;
+	        }
+
+	        logger.info("Created {} split time slots for doctor slot date ID: {}",
+	                slotCount, doctorSlotDate.getDoctorSlotDateId());
+
+	    } catch (Exception e) {
+	        logger.error("Error creating doctor slot split times: {}", e.getMessage(), e);
+	        throw new RuntimeException("Failed to create doctor slot split times", e);
+	    }
+	}
+	/**
+	 * Helper method to convert java.util.Date to java.time.LocalDate
+	 */
+//	private LocalDate convertToLocalDate(Date date) {
+//	    if (date == null) {
+//	        return null;
+//	    }
+//	    return date.toInstant()
+//	            .atZone(ZoneId.systemDefault())
+//	            .toLocalDate();
+//	}
 	/**
 	 * Validates if any new slots overlap with existing slots or among themselves.
 	 */
@@ -1318,6 +1447,7 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 		}
 		return true;
 	}
+	
 
 	/**
 	 * Checks if two time slots overlap.
