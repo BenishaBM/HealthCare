@@ -843,7 +843,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	                    DoctorSlotSpiltTime newSplit = DoctorSlotSpiltTime.builder()
 	                            .slotStartTime(newStart.format(formatter))
 	                            .slotEndTime(newEnd.format(formatter))
-	                            //.slotStatus("OVERRIDDEN")
+	                            .slotStatus("OVERRIDDEN")
 	                            .doctorSlotDateId(doctorSlotDateId)
 	                            .isActive(true)
 	                            .createdBy(webModel.getUpdatedBy())
