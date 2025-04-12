@@ -39,5 +39,8 @@ public class MedicalTestConfigWebModel {
 		private Date updatedOn;
 		private Boolean isActive;
 		private Integer hospitalId;
+		private List<String> medicalTestNames;
+	    private List<Integer> medicalIds;
+	    private List<MedicalTestDto> tests; // List of MedicalTestDto
 
 }

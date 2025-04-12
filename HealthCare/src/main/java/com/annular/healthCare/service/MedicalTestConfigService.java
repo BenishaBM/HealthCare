@@ -16,4 +16,6 @@ public interface MedicalTestConfigService {
 
 	ResponseEntity<?> deleteMedicalTestNameById(Integer id);
 
+	ResponseEntity<?> deleteDepartmentById(Integer id);
+
 }

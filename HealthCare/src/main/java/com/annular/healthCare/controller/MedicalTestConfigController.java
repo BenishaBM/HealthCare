@@ -97,4 +97,17 @@ public class MedicalTestConfigController {
 					.body(new Response(-1, "Fail", e.getMessage()));
 		}
 }
+	
+	@DeleteMapping("deleteDepartmentById")
+	public ResponseEntity<?> deleteDepartmentById(@RequestParam("id")Integer id) {
+		try {
+			logger.info("deleteDepartmentById controller start");
+			return medicalTestConfigService.deleteDepartmentById(id);
+		} catch (Exception e) {
+			logger.error("deleteDepartmentById Method Exception {}" + e);
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(new Response(-1, "Fail", e.getMessage()));
+		}
+}
 }
