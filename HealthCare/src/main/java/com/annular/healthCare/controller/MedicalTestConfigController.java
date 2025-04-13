@@ -110,4 +110,33 @@ public class MedicalTestConfigController {
 					.body(new Response(-1, "Fail", e.getMessage()));
 		}
 }
+	
+	
+	@PostMapping("saveMedicalTestSlotByDepartmentId")
+	public ResponseEntity<?> saveMedicalTestSlotByDepartmentId(@RequestBody MedicalTestConfigWebModel medicalTestConfigWebModel) {
+		try {
+			logger.info("saveMedicalTestSlotByDepartmentId controller start");
+			return medicalTestConfigService.saveMedicalTestSlotByDepartmentId(medicalTestConfigWebModel);
+		} catch (Exception e) {
+			logger.error("saveMedicalTestSlotByDepartmentId Method Exception {}" + e);
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(new Response(-1, "Fail", e.getMessage()));
+		}
+
+	}
+	
+	@GetMapping("getMedicalTestSlotByDepartmentId")
+	public ResponseEntity<?> getMedicalTestSlotByDepartmentId(@RequestParam("id") Integer id) {
+		try {
+			logger.info("getMedicalTestSlotByDepartmentId controller start");
+			return medicalTestConfigService.getMedicalTestSlotByDepartmentId(id);
+		} catch (Exception e) {
+			logger.error("getMedicalTestSlotByDepartmentId Method Exception {}" + e);
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(new Response(-1, "Fail", e.getMessage()));
+		}
+
+	}
 }

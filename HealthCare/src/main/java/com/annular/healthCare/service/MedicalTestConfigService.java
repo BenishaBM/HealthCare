@@ -18,4 +18,8 @@ public interface MedicalTestConfigService {
 
 	ResponseEntity<?> deleteDepartmentById(Integer id);
 
+	ResponseEntity<?> saveMedicalTestSlotByDepartmentId(MedicalTestConfigWebModel medicalTestConfigWebModel);
+
+	ResponseEntity<?> getMedicalTestSlotByDepartmentId(Integer id);
+
 }

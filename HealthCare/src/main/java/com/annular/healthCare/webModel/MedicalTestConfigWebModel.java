@@ -42,5 +42,10 @@ public class MedicalTestConfigWebModel {
 		private List<String> medicalTestNames;
 	    private List<Integer> medicalIds;
 	    private List<MedicalTestDto> tests; // List of MedicalTestDto
+	    private List<MedicalTestDaySlotWebModel> medicalTestDaySlots;
+	    private Integer medicalTestSlotId;
+	    private Integer departmentId;
+	    private List<DaySlotWebModel> daySlots;
+	    private String name;
 
 }
