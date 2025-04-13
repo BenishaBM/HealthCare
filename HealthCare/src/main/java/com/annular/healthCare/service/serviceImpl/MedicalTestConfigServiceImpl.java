@@ -2,11 +2,15 @@ package com.annular.healthCare.service.serviceImpl;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -17,22 +21,27 @@ import org.springframework.expression.ParseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.annular.healthCare.Response;
 import com.annular.healthCare.model.Department;
 import com.annular.healthCare.model.DoctorSlotDate;
 import com.annular.healthCare.model.DoctorSlotSpiltTime;
+import com.annular.healthCare.model.DoctorSlotTime;
 import com.annular.healthCare.model.MedicalTestConfig;
 import com.annular.healthCare.model.MedicalTestDaySlot;
 import com.annular.healthCare.model.MedicalTestSlot;
 import com.annular.healthCare.model.MedicalTestSlotDate;
 import com.annular.healthCare.model.MedicalTestSlotSpiltTime;
 import com.annular.healthCare.model.MedicalTestSlotTime;
+import com.annular.healthCare.model.MedicalTestSlotTimeOveride;
 import com.annular.healthCare.repository.MedicalTestConfigRepository;
 import com.annular.healthCare.repository.MedicalTestDaySlotRepository;
 import com.annular.healthCare.repository.MedicalTestSlotDateRepository;
 import com.annular.healthCare.repository.MedicalTestSlotRepository;
 import com.annular.healthCare.repository.MedicalTestSlotSpiltTimeRepository;
+import com.annular.healthCare.repository.MedicalTestSlotTimeOverideRepository;
 import com.annular.healthCare.repository.MedicalTestSlotTimeRepository;
 import com.annular.healthCare.service.MedicalTestConfigService;
 import com.annular.healthCare.webModel.DaySlotWebModel;
@@ -67,6 +76,9 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 	
 	@Autowired
 	MedicalTestSlotSpiltTimeRepository medicalTestSlotSpiltTimeRepository;
+	
+	@Autowired
+	MedicalTestSlotTimeOverideRepository medicalTestSlotTimeOverideRepository;
 
 	@Override
 	public ResponseEntity<?> saveMedicalTestName(MedicalTestConfigWebModel request) {
@@ -782,6 +794,144 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 	    }
 
 	    return ResponseEntity.ok(responseList);
+	}
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public ResponseEntity<?> saveMedicalTestOvverride(MedicalTestConfigWebModel medicalTestConfigWebModel) {
+	    try {
+	        // Step 1: Validate input
+	        if (medicalTestConfigWebModel == null ||
+	            medicalTestConfigWebModel.getMedicalTestSlotTimeId() == null ||
+	            medicalTestConfigWebModel.getOverrideDate() == null ||
+	            StringUtils.isEmpty(medicalTestConfigWebModel.getNewSlotTime())) {
+
+	            return ResponseEntity.badRequest().body(new Response(0, "error", "Missing required fields"));
+	        }
+	       
+	     
+
+	        // Step 2: Normalize overrideDate to remove time portion
+	        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+	        // Step 2.1: Check the type of overrideDate and handle accordingly
+	        Date overrideDate = null;
+
+	        Object overrideDateObj = medicalTestConfigWebModel.getOverrideDate();
+
+	        if (overrideDateObj == null) {
+	            return ResponseEntity.badRequest().body(new Response(0, "error", "Override date is null"));
+	        }
+
+	        if (overrideDateObj instanceof String) {
+	            // If it's a String, try to parse it to a Date
+	            String dateString = (String) overrideDateObj;
+	            try {
+	                overrideDate = sdf.parse(dateString);
+	            } catch (ParseException e) {
+	                return ResponseEntity.badRequest().body(new Response(0, "error", "Invalid date string format"));
+	            }
+	        } else if (overrideDateObj instanceof Date) {
+	            // If it's already a Date, use it directly
+	            overrideDate = (Date) overrideDateObj;
+	        } else {
+	            // If the type is neither String nor Date, return an error
+	            return ResponseEntity.badRequest().body(new Response(0, "error", "Invalid override date format"));
+	        }
+
+	        // If overrideDate is still null after parsing, return an error response
+	        if (overrideDate == null) {
+	            return ResponseEntity.badRequest().body(new Response(0, "error", "Invalid override date format."));
+	        }
+
+	        // Now format the overrideDate to String (without time)
+	        String overrideDateOnly = sdf.format(overrideDate);
+
+	        // Step 3: Query using normalized date and slotTimeId
+	        Optional<MedicalTestSlotDate> medicalTestSlotDateOpt = medicalTestSlotDateRepository
+	                .findByMedicalTestSlotTimeIdAndIsActive(
+	                        medicalTestConfigWebModel.getMedicalTestSlotTimeId(),
+	                        true
+	                );
+
+	        if (!medicalTestSlotDateOpt.isPresent()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body(new Response(0, "error", "No active MedicalTestSlotDate found for the given date and slot time."));
+	        }
+
+	        MedicalTestSlotDate medicalTestSlotDate = medicalTestSlotDateOpt.get();
+	        Optional<MedicalTestSlotTime> date = medicalTestSlotTimeRepository.findById(medicalTestSlotDate.getMedicalTestSlotTimeId());
+	        MedicalTestSlotTime db = date.get();
+	        
+	        // Step 6: Save override entry
+	        MedicalTestSlotTimeOveride override = MedicalTestSlotTimeOveride.builder()
+	                .originalSlot(db) // Assuming this is available in the model
+	                .overrideDate(overrideDateOnly)  // Ensure this is passed as String
+	                .newSlotTime(medicalTestConfigWebModel.getNewSlotTime())
+	                .reason(medicalTestConfigWebModel.getReason())
+	                .createdBy(medicalTestConfigWebModel.getUpdatedBy())
+	                .isActive(true)
+	                .build();
+	        medicalTestSlotTimeOverideRepository.save(override);
+
+	        // Step 7: Deactivate existing split times
+	        List<MedicalTestSlotSpiltTime> existingSplitTimes = medicalTestSlotSpiltTimeRepository
+	                .findByMedicalTestSlotDate_MedicalTestSlotDateIdAndIsActive(
+	                        medicalTestSlotDate.getMedicalTestSlotDateId(), true);
+
+	        for (MedicalTestSlotSpiltTime split : existingSplitTimes) {
+	            split.setIsActive(false);
+	            medicalTestSlotSpiltTimeRepository.save(split);
+	        }
+
+	        // Step 8: Recreate split times using new duration
+	        int updatedSplitTimes = 0;
+	        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH);
+
+	        for (MedicalTestSlotSpiltTime split : existingSplitTimes) {
+	            LocalTime slotStart = LocalTime.parse(split.getSlotStartTime(), formatter);
+	            LocalTime slotEnd = LocalTime.parse(split.getSlotEndTime(), formatter);
+
+	            LocalTime current = slotStart;
+	            LocalTime next = slotEnd;
+
+	            // Calculate next time for the split
+	            while (current.isBefore(next)) {
+	                LocalTime nextSlot = current.plusMinutes(extractDurationInMinutes(medicalTestConfigWebModel.getNewSlotTime()));
+
+	                MedicalTestSlotSpiltTime newSplit = MedicalTestSlotSpiltTime.builder()
+	                        .slotStartTime(current.format(formatter))
+	                        .slotEndTime(nextSlot.format(formatter))
+	                        .ovverridenStatus("OVERRIDDEN")
+	                        .medicalTestSlotDate(medicalTestSlotDate)
+	                        .isActive(true)
+	                        .createdBy(medicalTestConfigWebModel.getUpdatedBy())
+	                        .createdOn(new Date())
+	                        .build();
+
+	                medicalTestSlotSpiltTimeRepository.save(newSplit);
+	                updatedSplitTimes++;
+
+	                current = nextSlot;
+	            }
+	        }
+
+	        // Step 9: Return success
+	        return ResponseEntity.ok(new Response(1, "success",
+	                "Override saved successfully. Updated " + updatedSplitTimes + " split times."));
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "error", "Error while saving override: " + e.getMessage()));
+	    }
+	}
+
+	private int extractDurationInMinutes(String newSlotTime) {
+	    try {
+	        return Integer.parseInt(newSlotTime.trim().split(" ")[0]);
+	    } catch (Exception e) {
+	        return 0;
+	    }
 	}
 
 

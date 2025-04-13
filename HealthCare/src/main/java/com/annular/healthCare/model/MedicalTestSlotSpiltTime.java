@@ -61,6 +61,9 @@ public class MedicalTestSlotSpiltTime {
 	@Column(name = "isActive")
 	private Boolean isActive;
 	
+	@Column(name = "overriddenStatus")
+	private String ovverridenStatus;
+	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "medicalTestSlotDateId", referencedColumnName = "medicalTestSlotDateId")
 	private MedicalTestSlotDate medicalTestSlotDate;

@@ -22,4 +22,6 @@ public interface MedicalTestConfigService {
 
 	ResponseEntity<?> getMedicalTestSlotByDepartmentId(Integer id);
 
+	ResponseEntity<?> saveMedicalTestOvverride(MedicalTestConfigWebModel medicalTestConfigWebModel);
+
 }

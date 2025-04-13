@@ -139,4 +139,18 @@ public class MedicalTestConfigController {
 		}
 
 	}
+	
+	@PostMapping("saveMedicalTestOvverride")
+	public ResponseEntity<?> saveMedicalTestOvverride(@RequestBody MedicalTestConfigWebModel medicalTestConfigWebModel) {
+		try {
+			logger.info("saveMedicalTestOvverride controller start");
+			return medicalTestConfigService.saveMedicalTestOvverride(medicalTestConfigWebModel);
+		} catch (Exception e) {
+			logger.error("saveMedicalTestOvverride Method Exception {}" + e);
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(new Response(-1, "Fail", e.getMessage()));
+		}
+
+	}
 }
