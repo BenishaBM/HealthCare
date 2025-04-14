@@ -21,7 +21,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Table(name = "medicalTestSlotTimeOveride")
+@Table(name = "medicalTestSlotTimeOverides")
 @Builder
 @Getter
 @Setter
@@ -39,7 +39,7 @@ public class MedicalTestSlotTimeOveride {
 	    private MedicalTestSlotTime originalSlot;
 
 	    @Column(name = "overrideDate")
-	    private String overrideDate;
+	    private Date overrideDate;
 
 	    @Column(name = "newSlotTime")
 	    private String newSlotTime;

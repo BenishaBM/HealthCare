@@ -2,9 +2,15 @@ package com.annular.healthCare.service.serviceImpl;
 
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -13,6 +19,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,9 +34,12 @@ import org.springframework.util.StringUtils;
 
 import com.annular.healthCare.Response;
 import com.annular.healthCare.model.Department;
+import com.annular.healthCare.model.DoctorDaySlot;
+import com.annular.healthCare.model.DoctorSlot;
 import com.annular.healthCare.model.DoctorSlotDate;
 import com.annular.healthCare.model.DoctorSlotSpiltTime;
 import com.annular.healthCare.model.DoctorSlotTime;
+import com.annular.healthCare.model.DoctorSlotTimeOverride;
 import com.annular.healthCare.model.MedicalTestConfig;
 import com.annular.healthCare.model.MedicalTestDaySlot;
 import com.annular.healthCare.model.MedicalTestSlot;
@@ -36,6 +47,7 @@ import com.annular.healthCare.model.MedicalTestSlotDate;
 import com.annular.healthCare.model.MedicalTestSlotSpiltTime;
 import com.annular.healthCare.model.MedicalTestSlotTime;
 import com.annular.healthCare.model.MedicalTestSlotTimeOveride;
+import com.annular.healthCare.model.PatientAppointmentTable;
 import com.annular.healthCare.repository.MedicalTestConfigRepository;
 import com.annular.healthCare.repository.MedicalTestDaySlotRepository;
 import com.annular.healthCare.repository.MedicalTestSlotDateRepository;
@@ -45,6 +57,8 @@ import com.annular.healthCare.repository.MedicalTestSlotTimeOverideRepository;
 import com.annular.healthCare.repository.MedicalTestSlotTimeRepository;
 import com.annular.healthCare.service.MedicalTestConfigService;
 import com.annular.healthCare.webModel.DaySlotWebModel;
+import com.annular.healthCare.webModel.DoctorDaySlotWebModel;
+import com.annular.healthCare.webModel.DoctorSlotTimeWebModel;
 import com.annular.healthCare.webModel.MedicalTestConfigWebModel;
 import com.annular.healthCare.webModel.MedicalTestDaySlotWebModel;
 import com.annular.healthCare.webModel.MedicalTestDto;
@@ -652,7 +666,10 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 	    SimpleDateFormat inputFormat = new SimpleDateFormat("HH:mm");
 	    
 	    // Format for output times with AM/PM
-	    SimpleDateFormat outputFormat = new SimpleDateFormat("hh:mm a");
+	   // SimpleDateFormat outputFormat = new SimpleDateFormat("hh:mm a");
+	 // To this:
+	    SimpleDateFormat outputFormat = new SimpleDateFormat("hh:mm a", Locale.ENGLISH);
+	    outputFormat.getDateFormatSymbols().setAmPmStrings(new String[]{"AM", "PM"});
 	    
 	    Calendar startCal = Calendar.getInstance();
 	    startCal.setTime(inputFormat.parse(startTime));
@@ -796,143 +813,420 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 	    return ResponseEntity.ok(responseList);
 	}
 	@Override
-	@Transactional(rollbackFor = Exception.class)
-	public ResponseEntity<?> saveMedicalTestOvverride(MedicalTestConfigWebModel medicalTestConfigWebModel) {
-	    try {
-	        // Step 1: Validate input
-	        if (medicalTestConfigWebModel == null ||
-	            medicalTestConfigWebModel.getMedicalTestSlotTimeId() == null ||
-	            medicalTestConfigWebModel.getOverrideDate() == null ||
-	            StringUtils.isEmpty(medicalTestConfigWebModel.getNewSlotTime())) {
+	@Transactional
+	public ResponseEntity<?> saveMedicalTestOvverride(MedicalTestConfigWebModel webModel) {
+		 try {
+		        if (webModel == null || webModel.getMedicalTestSlotTimeId() == null ||
+		                webModel.getOverrideDate() == null || StringUtils.isEmpty(webModel.getNewSlotTime())) {
+		            return ResponseEntity.badRequest().body(new Response(0, "error", "Missing required fields"));
+		        }
 
-	            return ResponseEntity.badRequest().body(new Response(0, "error", "Missing required fields"));
-	        }
-	       
-	     
+		        Optional<MedicalTestSlotTime> doctorSlotTimeOpt = medicalTestSlotTimeRepository.findById(webModel.getMedicalTestSlotTimeId());
+		        if (!doctorSlotTimeOpt.isPresent()) {
+		            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+		                    .body(new Response(0, "error", "MedicalTestSlotTime not found with ID: " + webModel.getMedicalTestSlotTimeId()));
+		        }
 
-	        // Step 2: Normalize overrideDate to remove time portion
-	        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		        MedicalTestSlotTime slot = doctorSlotTimeOpt.get();
+		        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH);
+		        LocalTime originalStart = LocalTime.parse(slot.getSlotStartTime(), formatter);
+		        LocalTime originalEnd = LocalTime.parse(slot.getSlotEndTime(), formatter);
 
-	        // Step 2.1: Check the type of overrideDate and handle accordingly
-	        Date overrideDate = null;
+		        int durationMinutes = extractDurationInMinutes(webModel.getNewSlotTime());
+		        if (durationMinutes <= 0) {
+		            return ResponseEntity.badRequest().body(new Response(0, "error", "Invalid new slot time format."));
+		        }
 
-	        Object overrideDateObj = medicalTestConfigWebModel.getOverrideDate();
+		        // Save override entry
+		        MedicalTestSlotTimeOveride override = MedicalTestSlotTimeOveride.builder()
+		                .originalSlot(slot)
+		                .overrideDate(webModel.getOverrideDate())
+		                .newSlotTime(webModel.getNewSlotTime())
+		                .reason(webModel.getReason())
+		                .isActive(true)
+		                .build();
+		        medicalTestSlotTimeOverideRepository.save(override);
 
-	        if (overrideDateObj == null) {
-	            return ResponseEntity.badRequest().body(new Response(0, "error", "Override date is null"));
-	        }
+		        // Find DoctorSlotDate
+		        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		        String dateString = sdf.format(webModel.getOverrideDate());
+		        Optional<MedicalTestSlotDate> doctorSlotDateOpt = medicalTestSlotDateRepository
+		                .findByDateAndMedicalTestSlotTimeIdAndIsActive(dateString, slot.getMedicalTestSlotTimeId(), true);
 
-	        if (overrideDateObj instanceof String) {
-	            // If it's a String, try to parse it to a Date
-	            String dateString = (String) overrideDateObj;
-	            try {
-	                overrideDate = sdf.parse(dateString);
-	            } catch (ParseException e) {
-	                return ResponseEntity.badRequest().body(new Response(0, "error", "Invalid date string format"));
-	            }
-	        } else if (overrideDateObj instanceof Date) {
-	            // If it's already a Date, use it directly
-	            overrideDate = (Date) overrideDateObj;
-	        } else {
-	            // If the type is neither String nor Date, return an error
-	            return ResponseEntity.badRequest().body(new Response(0, "error", "Invalid override date format"));
-	        }
+		        if (doctorSlotDateOpt.isPresent()) {
+		            Integer doctorSlotDateId = doctorSlotDateOpt.get().getMedicalTestSlotDateId();
+		            List<MedicalTestSlotSpiltTime> existingSplitTimes = medicalTestSlotSpiltTimeRepository
+		                    .findByMedicalTestSlotDate_MedicalTestSlotDateIdAndIsActive(doctorSlotDateId, true);
+		            
+		            Optional<MedicalTestSlotDate> db = medicalTestSlotDateRepository.findById(doctorSlotDateId);
+		            if (db.isPresent()) {
+		                MedicalTestSlotDate slotDate = db.get();
 
-	        // If overrideDate is still null after parsing, return an error response
-	        if (overrideDate == null) {
-	            return ResponseEntity.badRequest().body(new Response(0, "error", "Invalid override date format."));
-	        }
+		            // Get current time and override date
+		            LocalDate today = LocalDate.now();
+		            LocalTime now = LocalTime.now();
+		            LocalDate overrideLocalDate = webModel.getOverrideDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
-	        // Now format the overrideDate to String (without time)
-	        String overrideDateOnly = sdf.format(overrideDate);
+		            // Update only future split times
+		            int overriddenSlots = 0;
+		            for (MedicalTestSlotSpiltTime splitTime : existingSplitTimes) {
+		                LocalTime slotStart = LocalTime.parse(splitTime.getSlotStartTime(), formatter);
 
-	        // Step 3: Query using normalized date and slotTimeId
-	        Optional<MedicalTestSlotDate> medicalTestSlotDateOpt = medicalTestSlotDateRepository
-	                .findByMedicalTestSlotTimeIdAndIsActive(
-	                        medicalTestConfigWebModel.getMedicalTestSlotTimeId(),
-	                        true
-	                );
+		                boolean shouldOverride = true;
 
-	        if (!medicalTestSlotDateOpt.isPresent()) {
-	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-	                    .body(new Response(0, "error", "No active MedicalTestSlotDate found for the given date and slot time."));
-	        }
+		                if (overrideLocalDate.isEqual(today)) {
+		                    if (!slotStart.isAfter(now)) {
+		                        shouldOverride = false;
+		                    }
+		                }
 
-	        MedicalTestSlotDate medicalTestSlotDate = medicalTestSlotDateOpt.get();
-	        Optional<MedicalTestSlotTime> date = medicalTestSlotTimeRepository.findById(medicalTestSlotDate.getMedicalTestSlotTimeId());
-	        MedicalTestSlotTime db = date.get();
-	        
-	        // Step 6: Save override entry
-	        MedicalTestSlotTimeOveride override = MedicalTestSlotTimeOveride.builder()
-	                .originalSlot(db) // Assuming this is available in the model
-	                .overrideDate(overrideDateOnly)  // Ensure this is passed as String
-	                .newSlotTime(medicalTestConfigWebModel.getNewSlotTime())
-	                .reason(medicalTestConfigWebModel.getReason())
-	                .createdBy(medicalTestConfigWebModel.getUpdatedBy())
-	                .isActive(true)
-	                .build();
-	        medicalTestSlotTimeOverideRepository.save(override);
+		                if (shouldOverride) {
+		                    // Deactivate current
+		                    splitTime.setIsActive(false);
+		                    medicalTestSlotSpiltTimeRepository.save(splitTime);
 
-	        // Step 7: Deactivate existing split times
-	        List<MedicalTestSlotSpiltTime> existingSplitTimes = medicalTestSlotSpiltTimeRepository
-	                .findByMedicalTestSlotDate_MedicalTestSlotDateIdAndIsActive(
-	                        medicalTestSlotDate.getMedicalTestSlotDateId(), true);
+		                    // Calculate new start/end with override offset
+		                    LocalTime newStart = slotStart.plusMinutes(durationMinutes);
+		                    LocalTime newEnd = LocalTime.parse(splitTime.getSlotEndTime(), formatter).plusMinutes(durationMinutes);
 
-	        for (MedicalTestSlotSpiltTime split : existingSplitTimes) {
-	            split.setIsActive(false);
-	            medicalTestSlotSpiltTimeRepository.save(split);
-	        }
+		                    MedicalTestSlotSpiltTime newSplit = MedicalTestSlotSpiltTime.builder()
+		                            .slotStartTime(newStart.format(formatter))
+		                            .slotEndTime(newEnd.format(formatter))
+		                            
+		                            .ovverridenStatus("OVERRIDDEN")
+		                            .medicalTestSlotDate(slotDate)
+		                            .isActive(true)
+		                            .createdBy(webModel.getUpdatedBy())
+		                            .createdOn(new Date())
+		                            .build();
 
-	        // Step 8: Recreate split times using new duration
-	        int updatedSplitTimes = 0;
-	        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH);
+		                    medicalTestSlotSpiltTimeRepository.save(newSplit);
+		                    overriddenSlots++;
+		                }
+		            }
+		        }
+		        }
 
-	        for (MedicalTestSlotSpiltTime split : existingSplitTimes) {
-	            LocalTime slotStart = LocalTime.parse(split.getSlotStartTime(), formatter);
-	            LocalTime slotEnd = LocalTime.parse(split.getSlotEndTime(), formatter);
+//		        // Update appointments
+//		        List<PatientAppointmentTable> appointments = patientAppoinmentRepository
+//		                .findByAppointmentDateAndDoctorSlotTimeId(dateString, slot.getDoctorSlotTimeId());
+//
+//		        LocalDate today = LocalDate.now();
+//		        LocalTime now = LocalTime.now();
+//		        LocalDate overrideDate = webModel.getOverrideDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+//
+//		        int updatedAppointments = 0;
+//
+//		        for (PatientAppointmentTable appointment : appointments) {
+//		            LocalTime apptStart = LocalTime.parse(appointment.getSlotStartTime(), formatter);
+//		            LocalTime apptEnd = LocalTime.parse(appointment.getSlotEndTime(), formatter);
+//
+//		            boolean shouldUpdate = true;
+//
+//		            if (overrideDate.isEqual(today)) {
+//		                if (!apptStart.isAfter(now)) {
+//		                    shouldUpdate = false;
+//		                }
+//		            }
+//
+//		            if (shouldUpdate) {
+//		                appointment.setSlotStartTime(apptStart.plusMinutes(durationMinutes).format(formatter));
+//		                appointment.setSlotEndTime(apptEnd.plusMinutes(durationMinutes).format(formatter));
+//		                updatedAppointments++;
+//		            }
+//		        }
+//
+//		        patientAppoinmentRepository.saveAll(appointments);
+//
+		        return ResponseEntity.ok(new Response(1, "success",
+		                "Override saved. Updated " + " appointments and " +
+		                        "overridden future slots."));
 
-	            LocalTime current = slotStart;
-	            LocalTime next = slotEnd;
+		    } catch (DateTimeParseException e) {
+		        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+		                .body(new Response(0, "error", "Invalid time format: " + e.getMessage()));
+		    } catch (Exception e) {
+		        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+		                .body(new Response(0, "error", "Error while saving override: " + e.getMessage()));
+		    }
+		}
 
-	            // Calculate next time for the split
-	            while (current.isBefore(next)) {
-	                LocalTime nextSlot = current.plusMinutes(extractDurationInMinutes(medicalTestConfigWebModel.getNewSlotTime()));
+		private int extractDurationInMinutes(String newSlotTime) {
+		    try {
+		        return Integer.parseInt(newSlotTime.trim().split(" ")[0]);
+		    } catch (Exception e) {
+		        return 0;
+		    }
+		}
+		@Override
+		public ResponseEntity<?> addTimeSlotByMedicalTest(MedicalTestConfigWebModel medicalTestConfigWebModel) {
+			// TODO Auto-generated method stub
+			  try {
+			        MedicalTestSlot doctorSlot = medicalTestSlotRepository.findById(medicalTestConfigWebModel.getMedicalTestSlotId()).orElseThrow(
+			                () -> new RuntimeException("medicalTestSlot not found with ID: " + medicalTestConfigWebModel.getMedicalTestSlotId()));
 
-	                MedicalTestSlotSpiltTime newSplit = MedicalTestSlotSpiltTime.builder()
-	                        .slotStartTime(current.format(formatter))
-	                        .slotEndTime(nextSlot.format(formatter))
-	                        .ovverridenStatus("OVERRIDDEN")
-	                        .medicalTestSlotDate(medicalTestSlotDate)
-	                        .isActive(true)
-	                        .createdBy(medicalTestConfigWebModel.getUpdatedBy())
-	                        .createdOn(new Date())
-	                        .build();
+			        List<MedicalTestDaySlot> existingDoctorDaySlots = medicalTestDaySlotRepository.findByMedicalTestSlot(doctorSlot);
 
-	                medicalTestSlotSpiltTimeRepository.save(newSplit);
-	                updatedSplitTimes++;
+			        if (!validateMedicalTestSlots(existingDoctorDaySlots, medicalTestConfigWebModel.getMedicalTestDaySlots())) {
+			            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+			                    new Response(0, "Error", "Doctor slot times overlap. Please ensure slot times don't conflict."));
+			        }
 
-	                current = nextSlot;
-	            }
-	        }
+			        if (medicalTestConfigWebModel.getMedicalTestDaySlots() != null) {
+			            for (MedicalTestDaySlotWebModel daySlotModel : medicalTestConfigWebModel.getMedicalTestDaySlots()) {
+			                MedicalTestDaySlot doctorDaySlot = MedicalTestDaySlot.builder()
+			                        .medicalTestSlot(doctorSlot)
+			                        .day(daySlotModel.getDay())
+			                        .startSlotDate(daySlotModel.getStartSlotDate())
+			                        .endSlotDate(daySlotModel.getEndSlotDate())
+			                        .createdBy(medicalTestConfigWebModel.getCreatedBy())
+			                        .isActive(true)
+			                        .build();
 
-	        // Step 9: Return success
-	        return ResponseEntity.ok(new Response(1, "success",
-	                "Override saved successfully. Updated " + updatedSplitTimes + " split times."));
+			                doctorDaySlot = medicalTestDaySlotRepository.save(doctorDaySlot);
 
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                .body(new Response(0, "error", "Error while saving override: " + e.getMessage()));
-	    }
-	}
+			                if (daySlotModel.getMedicalTestSlotTimes() != null) {
+			                    for (MedicalTestSlotTimeWebModel slotTimeModel : daySlotModel.getMedicalTestSlotTimes()) {
+			                        MedicalTestSlotTime doctorSlotTime = MedicalTestSlotTime.builder()
+			                                .medicalTestDaySlot(doctorDaySlot)
+			                                .slotStartTime(slotTimeModel.getSlotStartTime())
+			                                .slotEndTime(slotTimeModel.getSlotEndTime())
+			                                .slotTime(slotTimeModel.getSlotTime())
+			                                .createdBy(medicalTestConfigWebModel.getCreatedBy())
+			                                .isActive(true)
+			                                .build();
 
-	private int extractDurationInMinutes(String newSlotTime) {
-	    try {
-	        return Integer.parseInt(newSlotTime.trim().split(" ")[0]);
-	    } catch (Exception e) {
-	        return 0;
-	    }
-	}
+			                        doctorSlotTime = medicalTestSlotTimeRepository.save(doctorSlotTime);
+
+			                        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
+			                        // Convert Date to LocalDate
+			                        LocalDate startDate = convertToLocalDate(doctorDaySlot.getStartSlotDate());
+			                        LocalDate endDate = convertToLocalDate(doctorDaySlot.getEndSlotDate());
+			                        
+			                        // Get the target day of week from the daySlotModel
+			                        DayOfWeek targetDayOfWeek = getDayOfWeek(daySlotModel.getDay());
+			                        
+			                        // Adjust startDate to the first occurrence of the target day if needed
+			                        while (startDate.getDayOfWeek() != targetDayOfWeek) {
+			                            startDate = startDate.plusDays(1);
+			                            // If we've gone past the end date, break out
+			                            if (startDate.isAfter(endDate)) {
+			                                break;
+			                            }
+			                        }
+
+			                        // Process only the specific days of the week within the date range
+			                        while (!startDate.isAfter(endDate)) {
+			                            // Only process if it's the target day of week
+			                            MedicalTestSlotDate doctorSlotDate = createAndSaveMedicalTestSlotDate(
+			                            		medicalTestConfigWebModel.getCreatedBy(), doctorSlot, doctorDaySlot, doctorSlotTime, startDate);
+
+			                            createMedicalTestSlotSplitTimes(medicalTestConfigWebModel.getCreatedBy(), doctorSlotDate, slotTimeModel, timeFormatter);
+
+			                            // Move to the next occurrence of the same day (add 7 days)
+			                            startDate = startDate.plusDays(7);
+			                        }
+			                    }
+			                }
+			            }
+			        }
+
+			        return ResponseEntity.ok(new Response(1, "Success", "Time slots and leaves added successfully"));
+			    } catch (Exception e) {
+			        e.printStackTrace();
+			        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+			                .body(new Response(0, "Error", "An error occurred: " + e.getMessage()));
+			    }
+			}
+		
+		private LocalDate convertToLocalDate(Date date) {
+		    return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+		}
+
+
+			/**
+			 * Helper method to convert day name to DayOfWeek enum
+			 */
+			private DayOfWeek getDayOfWeek(String dayName) {
+			    switch (dayName.toUpperCase()) {
+			        case "MONDAY":
+			            return DayOfWeek.MONDAY;
+			        case "TUESDAY":
+			            return DayOfWeek.TUESDAY;
+			        case "WEDNESDAY":
+			            return DayOfWeek.WEDNESDAY;
+			        case "THURSDAY":
+			            return DayOfWeek.THURSDAY;
+			        case "FRIDAY":
+			            return DayOfWeek.FRIDAY;
+			        case "SATURDAY":
+			            return DayOfWeek.SATURDAY;
+			        case "SUNDAY":
+			            return DayOfWeek.SUNDAY;
+			        default:
+			            throw new IllegalArgumentException("Invalid day name: " + dayName);
+			    }
+			}
+
+			
+			/**
+			 * Creates and saves a doctor slot date.
+			 */
+			private MedicalTestSlotDate createAndSaveMedicalTestSlotDate(Integer createdBy, MedicalTestSlot doctorSlot,
+			                                                   MedicalTestDaySlot doctorDaySlot,
+			                                                   MedicalTestSlotTime doctorSlotTime, LocalDate date) {
+			    MedicalTestSlotDate doctorSlotDate = MedicalTestSlotDate.builder()
+			            .medicalTestSlotId(doctorSlot.getMedicalTestSlotId())
+			            .medicalTestDaySlotId(doctorDaySlot.getMedicalTestDaySlotId())
+			            .medicalTestSlotTimeId(doctorSlotTime.getMedicalTestSlotTimeId())
+			            .date(date.toString())
+			            .createdBy(createdBy)
+			            .isActive(true)
+			            .build();
+
+			    return medicalTestSlotDateRepository.save(doctorSlotDate);
+			}
+
+			/**
+			 * Creates doctor slot split times for a specific slot date with error handling.
+			 */
+			private void createMedicalTestSlotSplitTimes(Integer createdBy, MedicalTestSlotDate doctorSlotDate,
+			                                        MedicalTestSlotTimeWebModel slotTimeModel, DateTimeFormatter timeFormatter) {
+			    try {
+			        DateTimeFormatter timeFormatter1 = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH);
+
+			        LocalTime start = LocalTime.parse(slotTimeModel.getSlotStartTime(), timeFormatter1);
+			        LocalTime end = LocalTime.parse(slotTimeModel.getSlotEndTime(), timeFormatter1);
+
+			        String durationStr = slotTimeModel.getSlotTime().replaceAll("[^0-9]", "").trim();
+			        int duration = Integer.parseInt(durationStr);
+
+			        log.info("Creating split times from {} to {} with {} minute intervals for date {}",
+			                slotTimeModel.getSlotStartTime(), slotTimeModel.getSlotEndTime(),
+			                duration, doctorSlotDate.getDate());
+
+			        int slotCount = 0;
+			        LocalTime currentStart = start;
+
+			        while (currentStart.plusMinutes(duration).compareTo(end) <= 0) {
+			            LocalTime currentEnd = currentStart.plusMinutes(duration);
+
+			            boolean exists = medicalTestSlotSpiltTimeRepository
+			                    .existsBySlotStartTimeAndSlotEndTimeAndMedicalTestSlotDate_MedicalTestSlotDateId(
+			                            currentStart.format(timeFormatter1),
+			                            currentEnd.format(timeFormatter1),
+			                            doctorSlotDate.getMedicalTestSlotDateId());
+
+			            if (!exists) {
+			                MedicalTestSlotSpiltTime splitTime = 	MedicalTestSlotSpiltTime.builder()
+			                        .slotStartTime(currentStart.format(timeFormatter1))
+			                        .slotEndTime(currentEnd.format(timeFormatter1))
+			                        .slotStatus("Available")
+			                        .createdBy(createdBy)
+			                        .medicalTestSlotDate(doctorSlotDate)
+			                        .isActive(true)
+			                        .build();
+
+			                medicalTestSlotSpiltTimeRepository.save(splitTime);
+			                slotCount++;
+			            }
+
+			            currentStart = currentEnd;
+			        }
+
+			        log.info("Created {} split time slots for doctor slot date ID: {}",
+			                slotCount, doctorSlotDate.getMedicalTestSlotDateId());
+
+			    } catch (Exception e) {
+			        log.error("Error creating doctor slot split times: {}", e.getMessage(), e);
+			        throw new RuntimeException("Failed to create doctor slot split times", e);
+			    }
+			}
+			/**
+			 * Helper method to convert java.util.Date to java.time.LocalDate
+			 */
+//			private LocalDate convertToLocalDate(Date date) {
+//			    if (date == null) {
+//			        return null;
+//			    }
+//			    return date.toInstant()
+//			            .atZone(ZoneId.systemDefault())
+//			            .toLocalDate();
+//			}
+			/**
+			 * Validates if any new slots overlap with existing slots or among themselves.
+			 */
+			private boolean validateMedicalTestSlots(List<MedicalTestDaySlot> existingSlots, List<MedicalTestDaySlotWebModel> newSlots) {
+				for (MedicalTestDaySlotWebModel newSlot : newSlots) {
+					for (MedicalTestDaySlot existingSlot : existingSlots) {
+						if (newSlot.getDay().equals(existingSlot.getDay()) && slotsOverlap(newSlot.getStartSlotDate(),
+								newSlot.getEndSlotDate(), existingSlot.getStartSlotDate(), existingSlot.getEndSlotDate())) {
+							return false;
+						}
+					}
+
+					// Check for overlap among new slots themselves
+					for (MedicalTestDaySlotWebModel otherNewSlot : newSlots) {
+						if (newSlot != otherNewSlot && newSlot.getDay().equals(otherNewSlot.getDay())
+								&& slotsOverlap(newSlot.getStartSlotDate(), newSlot.getEndSlotDate(),
+										otherNewSlot.getStartSlotDate(), otherNewSlot.getEndSlotDate())) {
+							return false;
+						}
+					}
+				}
+				return true;
+			}
+			
+
+			/**
+			 * Checks if two time slots overlap.
+			 */
+			private boolean slotsOverlap(LocalDateTime start1, LocalDateTime end1, LocalDateTime start2, LocalDateTime end2) {
+				return start1.isBefore(end2) && start2.isBefore(end1);
+			}
+
+			private boolean slotsOverlap(Date start1, Date end1, Date start2, Date end2) {
+				LocalDateTime startDateTime1 = convertToLocalDateTime(start1);
+				LocalDateTime endDateTime1 = convertToLocalDateTime(end1);
+				LocalDateTime startDateTime2 = convertToLocalDateTime(start2);
+				LocalDateTime endDateTime2 = convertToLocalDateTime(end2);
+
+				return startDateTime1.isBefore(endDateTime2) && startDateTime2.isBefore(endDateTime1);
+			}
+
+			/**
+			 * Converts a Date to LocalDateTime.
+			 */
+			private LocalDateTime convertToLocalDateTime(Date date) {
+				return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+			}
+			
+			
+			@Override
+			@Transactional
+			public ResponseEntity<?> deleteSlotByMedicalTestById(Integer id) {
+			    if (id == null) {
+			        return ResponseEntity.badRequest().body(new Response(0, "error", "Invalid ID"));
+			    }
+
+			    Optional<MedicalTestSlotSpiltTime> slotOpt = medicalTestSlotSpiltTimeRepository.findById(id);
+			    if (!slotOpt.isPresent()) {
+			        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Response(0, "error", "Slot not found with ID: " + id));
+			    }
+
+			    MedicalTestSlotSpiltTime slot = slotOpt.get();
+			    if (Boolean.FALSE.equals(slot.getIsActive())) {
+			        return ResponseEntity.ok(new Response(1, "success", "Slot already inactive"));
+			    }
+
+			    slot.setIsActive(false);
+			    slot.setUpdatedOn(new Date()); // optional if you want to track the update timestamp
+			    medicalTestSlotSpiltTimeRepository.save(slot);
+
+			    return ResponseEntity.ok(new Response(1, "success", "Slot deactivated successfully"));
+			}
+
 
 
 	}

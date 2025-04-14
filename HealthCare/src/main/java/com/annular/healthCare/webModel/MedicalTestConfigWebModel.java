@@ -48,7 +48,7 @@ public class MedicalTestConfigWebModel {
 	    private List<DaySlotWebModel> daySlots;
 	    private String name;
 	    private String ovverridenStatus;
-	    private String overrideDate;
+	    private Date overrideDate;
 	    private String newSlotTime;
 	    private String reason;
 	    private Integer medicalTestSlotTimeId;

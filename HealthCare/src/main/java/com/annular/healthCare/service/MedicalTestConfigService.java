@@ -24,4 +24,8 @@ public interface MedicalTestConfigService {
 
 	ResponseEntity<?> saveMedicalTestOvverride(MedicalTestConfigWebModel medicalTestConfigWebModel);
 
+	ResponseEntity<?> addTimeSlotByMedicalTest(MedicalTestConfigWebModel medicalTestConfigWebModel);
+
+	ResponseEntity<?> deleteSlotByMedicalTestById(Integer id);
+
 }

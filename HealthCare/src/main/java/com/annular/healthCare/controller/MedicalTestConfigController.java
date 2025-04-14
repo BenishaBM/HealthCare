@@ -153,4 +153,30 @@ public class MedicalTestConfigController {
 		}
 
 	}
+	
+	@PostMapping("addTimeSlotByMedicalTest")
+	public ResponseEntity<?> addTimeSlotByMedicalTest(@RequestBody MedicalTestConfigWebModel medicalTestConfigWebModel) {
+	    try {
+	        // Call the service to perform the update
+	        return medicalTestConfigService.addTimeSlotByMedicalTest(medicalTestConfigWebModel);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("addTimeSlotByMedicalTest Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+	
+	@DeleteMapping("deleteSlotByMedicalTestById")
+	public ResponseEntity<?> deleteSlotByMedicalTestById(@RequestParam("id") Integer id) {
+	    try {
+	        // Call the service to perform the update
+	        return medicalTestConfigService.deleteSlotByMedicalTestById(id);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("deleteSlotByMedicalTestById Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 }

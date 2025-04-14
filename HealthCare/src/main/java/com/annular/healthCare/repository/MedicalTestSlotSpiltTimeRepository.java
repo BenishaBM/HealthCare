@@ -17,9 +17,15 @@ public interface MedicalTestSlotSpiltTimeRepository extends JpaRepository<Medica
 	List<MedicalTestSlotSpiltTime> findByMedicalTestSlotDate_MedicalTestSlotDateId(Integer medicalTestSlotDateId);
 
 
-	List<MedicalTestSlotSpiltTime> findByMedicalTestSlotDate_MedicalTestSlotDateIdAndIsActive(Integer medicalTestSlotDateId, boolean isActive);
+	//List<MedicalTestSlotSpiltTime> findByMedicalTestSlotDate_MedicalTestSlotDateIdAndIsActive(Integer medicalTestSlotDateId, boolean isActive);
 
 
 	@Query("SELECT m FROM MedicalTestSlotSpiltTime m WHERE m.medicalTestSlotDate.medicalTestSlotDateId = :slotDateId AND m.isActive = true")
     List<MedicalTestSlotSpiltTime> findActiveBySlotDateId(@Param("slotDateId") Integer slotDateId);
+
+
+	List<MedicalTestSlotSpiltTime> findByMedicalTestSlotDate_MedicalTestSlotDateIdAndIsActive(Integer id, boolean isActive);
+
+
+	boolean existsBySlotStartTimeAndSlotEndTimeAndMedicalTestSlotDate_MedicalTestSlotDateId(String start, String end, Integer id);
 }
