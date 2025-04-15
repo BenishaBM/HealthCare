@@ -67,6 +67,10 @@ public class PatientDetailsWebModel {
 	private String appointmentType;
     private Integer doctorSlotSpiltTimeId;
    private List<PatientAppointmentWebModel> appointments;
+   private Integer PatientSubChildDetailsId;
+   private List<PatientSubChildDetailsWebModel> subChildDetails;
+
+
 
 
 }

@@ -1,5 +1,6 @@
 package com.annular.healthCare.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,5 +12,7 @@ import com.annular.healthCare.model.PatientSubChildDetails;
 public interface PatientSubChildDetailsRepository extends JpaRepository<PatientSubChildDetails,Integer> {
 
 	Optional<PatientSubChildDetails> findByPatientDetailsIdAndPatientName(Integer patientDetailsId, String patientName);
+
+	List<PatientSubChildDetails> findByPatientDetailsId(Integer patientDetailsID);
 
 }
