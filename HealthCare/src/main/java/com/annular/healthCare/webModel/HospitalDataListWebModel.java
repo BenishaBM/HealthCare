@@ -66,6 +66,7 @@ public class HospitalDataListWebModel {
     private Integer appointmentId;
     private List<Integer> medicineIds;
     private List<Integer> medicalTestIds;
+    private List<AppointmentMedicalTestWebModel> medicalTests;
     private List<MedicineDetail> medicineDetails;
     private List<MedicineDetail> medicines;
     private Integer morningBF;

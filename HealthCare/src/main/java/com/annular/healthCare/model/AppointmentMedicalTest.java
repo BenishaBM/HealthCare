@@ -62,4 +62,9 @@ public class AppointmentMedicalTest {
 	@Column(name = "updated_on")
 	@CreationTimestamp
 	private Date updatedOn;
+	
+   @Column(name = "medicalTestSlotSpiltTimeId")
+   private Integer medicalTestSlotSpiltTimeId;
+	
+	
 }

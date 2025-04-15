@@ -1,8 +1,11 @@
 package com.annular.healthCare.controller;
 
+import java.time.LocalDate;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -179,4 +182,16 @@ public class MedicalTestConfigController {
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+	
+//	@GetMapping("getMedicalTestSlotById")
+//	public ResponseEntity<?> getMedicalTestSlotById(@RequestParam("id") Integer id, 
+//	                                           @RequestParam("date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
+//	    try {
+//	        return medicalTestConfigService.getMedicalTestSlotById(id, date);
+//	    } catch (Exception e) {
+//	        logger.error("getMedicalTestSlotById Method Exception: {}", e.getMessage(), e);
+//	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//	                .body(new Response(-1, "Fail", e.getMessage()));
+//	    }
+//	}
 }

@@ -52,6 +52,7 @@ public class MedicalTestConfigWebModel {
 	    private String newSlotTime;
 	    private String reason;
 	    private Integer medicalTestSlotTimeId;
+	    private List<MedicalTestItem> medicalTests;
 
 
 }

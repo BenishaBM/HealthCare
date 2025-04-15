@@ -48,6 +48,7 @@ import com.annular.healthCare.model.MedicalTestSlotSpiltTime;
 import com.annular.healthCare.model.MedicalTestSlotTime;
 import com.annular.healthCare.model.MedicalTestSlotTimeOveride;
 import com.annular.healthCare.model.PatientAppointmentTable;
+import com.annular.healthCare.repository.DepartmentRepository;
 import com.annular.healthCare.repository.MedicalTestConfigRepository;
 import com.annular.healthCare.repository.MedicalTestDaySlotRepository;
 import com.annular.healthCare.repository.MedicalTestSlotDateRepository;
@@ -62,6 +63,7 @@ import com.annular.healthCare.webModel.DoctorSlotTimeWebModel;
 import com.annular.healthCare.webModel.MedicalTestConfigWebModel;
 import com.annular.healthCare.webModel.MedicalTestDaySlotWebModel;
 import com.annular.healthCare.webModel.MedicalTestDto;
+import com.annular.healthCare.webModel.MedicalTestItem;
 import com.annular.healthCare.webModel.MedicalTestSlotTimeWebModel;
 import com.annular.healthCare.webModel.TimeSlotModel;
 
@@ -96,79 +98,75 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 
 	@Override
 	public ResponseEntity<?> saveMedicalTestName(MedicalTestConfigWebModel request) {
+	    // Check if department exists
+	    Department department = departmentRepository.findByName(request.getDepartment())
+	            .orElse(null);
 
-		    // Check if department exists, create if it doesn't
-		    Department department = departmentRepository.findByName(request.getDepartment())
-		            .orElse(null);
-		    
-		    // If department doesn't exist, create a new one
-		    if (department == null) {
-		        department = Department.builder()
-		                .name(request.getDepartment())
-		                .createdBy(request.getCreatedBy())
-		                .hospitalId(request.getHospitalId())
-		                .updatedBy(request.getUpdatedBy())
-		                .isActive(true)
-		                .build();
-		        
-		        department = departmentRepository.save(department);
-		    }
-		    
-		    List<String> successfulTests = new ArrayList<>();
-		    List<String> failedTests = new ArrayList<>();
-		    
-		    // Process each test name in the array
-		    for (String testName : request.getMedicalTestNames()) {
-		        try {
-		            // Use a simpler query to check for existing tests
-		            boolean exists = medicalTestConfigRepository.existsByHospitalIdAndMedicalTestNameAndDepartmentId(
-		                request.getHospitalId(), 
-		                testName, 
-		                department.getId()
-		            );
-		            
-		            if (exists) {
-		                failedTests.add(testName);
-		                continue;
-		            }
-		            
-		            // Create and save the new test
-		            MedicalTestConfig medicalTestConfig = MedicalTestConfig.builder()
-		                    .department(department)
-		                    .medicalTestName(testName)
-		                    .mrp(request.getMrp())
-		                    .gst(request.getGst())
-		                    .createdBy(request.getCreatedBy())
-		                    .updatedBy(request.getUpdatedBy())
-		                    .isActive(true)
-		                    .hospitalId(request.getHospitalId())
-		                    .build();
-		                
-		            medicalTestConfigRepository.save(medicalTestConfig);
-		            successfulTests.add(testName);
-		        } catch (Exception e) {
-		            failedTests.add(testName);
-		        }
-		    }
-		    
-		    // Prepare response message
-		    String message;
-		    if (failedTests.isEmpty()) {
-		        message = "All medical tests saved successfully.";
-		    } else if (successfulTests.isEmpty()) {
-		        message = "Failed to save any medical tests. Tests that already exist or encountered errors: " 
-		                + String.join(", ", failedTests);
-		    } else {
-		        message = "Partially successful. Saved tests: " + String.join(", ", successfulTests) 
-		                + ". Failed tests: " + String.join(", ", failedTests);
-		    }
-		    
-		    return ResponseEntity.ok(new Response(
-		            !successfulTests.isEmpty() ? 1 : 0,
-		            !successfulTests.isEmpty() ? "success" : "fail",
-		            message
-		    ));
-		}
+	    // If department doesn't exist, create it
+	    if (department == null) {
+	        department = Department.builder()
+	                .name(request.getDepartment())
+	                .createdBy(request.getCreatedBy())
+	                .hospitalId(request.getHospitalId())
+	                .updatedBy(request.getUpdatedBy())
+	                .isActive(true)
+	                .build();
+	        department = departmentRepository.save(department);
+	    }
+
+	    List<String> successfulTests = new ArrayList<>();
+	    List<String> failedTests = new ArrayList<>();
+
+	    // Iterate through medical tests
+	    for (MedicalTestItem test : request.getMedicalTests()) {
+	        try {
+	            boolean exists = medicalTestConfigRepository.existsByHospitalIdAndMedicalTestNameAndDepartmentId(
+	                    request.getHospitalId(),
+	                    test.getMedicalTestName(),
+	                    department.getId()
+	            );
+
+	            if (exists) {
+	                failedTests.add(test.getMedicalTestName());
+	                continue;
+	            }
+
+	            MedicalTestConfig medicalTestConfig = MedicalTestConfig.builder()
+	                    .department(department)
+	                    .medicalTestName(test.getMedicalTestName())
+	                    .mrp(test.getMrp())
+	                    .gst(test.getGst())
+	                    .createdBy(request.getCreatedBy())
+	                    .updatedBy(request.getUpdatedBy())
+	                    .isActive(true)
+	                    .hospitalId(request.getHospitalId())
+	                    .build();
+
+	            medicalTestConfigRepository.save(medicalTestConfig);
+	            successfulTests.add(test.getMedicalTestName());
+	        } catch (Exception e) {
+	            failedTests.add(test.getMedicalTestName());
+	        }
+	    }
+
+	    // Create response message
+	    String message;
+	    if (failedTests.isEmpty()) {
+	        message = "All medical tests saved successfully.";
+	    } else if (successfulTests.isEmpty()) {
+	        message = "Failed to save any medical tests: " + String.join(", ", failedTests);
+	    } else {
+	        message = "Partially successful. Saved: " + String.join(", ", successfulTests)
+	                + ". Failed: " + String.join(", ", failedTests);
+	    }
+
+	    return ResponseEntity.ok(new Response(
+	            !successfulTests.isEmpty() ? 1 : 0,
+	            !successfulTests.isEmpty() ? "success" : "fail",
+	            message
+	    ));
+	}
+
 	@Override
 	public ResponseEntity<?> getAllMedicalTestNameByHospitalId(Integer hospitalId) {
 

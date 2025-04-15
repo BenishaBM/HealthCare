@@ -1,5 +1,7 @@
 package com.annular.healthCare.service;
 
+import java.time.LocalDate;
+
 import org.springframework.http.ResponseEntity;
 
 import com.annular.healthCare.webModel.MedicalTestConfigWebModel;
@@ -27,5 +29,7 @@ public interface MedicalTestConfigService {
 	ResponseEntity<?> addTimeSlotByMedicalTest(MedicalTestConfigWebModel medicalTestConfigWebModel);
 
 	ResponseEntity<?> deleteSlotByMedicalTestById(Integer id);
+
+	//ResponseEntity<?> getMedicalTestSlotById(Integer id, LocalDate date);
 
 }

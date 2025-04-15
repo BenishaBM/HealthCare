@@ -1,4 +1,4 @@
-package com.annular.healthCare.service.serviceImpl;
+package com.annular.healthCare.repository;
 
 import java.util.Optional;
 

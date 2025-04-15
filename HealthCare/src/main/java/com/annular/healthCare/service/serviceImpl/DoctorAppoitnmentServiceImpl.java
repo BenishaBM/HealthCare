@@ -24,6 +24,7 @@ import com.annular.healthCare.model.AppointmentMedicalTest;
 import com.annular.healthCare.model.AppointmentMedicine;
 import com.annular.healthCare.model.DoctorSlotSpiltTime;
 import com.annular.healthCare.model.MedicalTest;
+import com.annular.healthCare.model.MedicalTestSlotSpiltTime;
 import com.annular.healthCare.model.Medicines;
 import com.annular.healthCare.model.PatientAppointmentTable;
 import com.annular.healthCare.model.PatientDetails;
@@ -32,11 +33,13 @@ import com.annular.healthCare.repository.AppointmentMedicalTestRepository;
 import com.annular.healthCare.repository.AppointmentMedicineRepository;
 import com.annular.healthCare.repository.DoctorSlotSpiltTimeRepository;
 import com.annular.healthCare.repository.MedicalTestRepository;
+import com.annular.healthCare.repository.MedicalTestSlotSpiltTimeRepository;
 import com.annular.healthCare.repository.MedicinesRepository;
 import com.annular.healthCare.repository.PatientAppoitmentTablerepository;
 import com.annular.healthCare.repository.PatientDetailsRepository;
 import com.annular.healthCare.repository.PatientMappedHospitalIdRepository;
 import com.annular.healthCare.service.DoctorAppoitmentService;
+import com.annular.healthCare.webModel.AppointmentMedicalTestWebModel;
 import com.annular.healthCare.webModel.HospitalDataListWebModel;
 import com.annular.healthCare.webModel.MedicineScheduleWebModel;
 
@@ -57,6 +60,9 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	
 	@Autowired
 	MedicalTestRepository medicalTestRepository;
+	
+	@Autowired
+	MedicalTestSlotSpiltTimeRepository medicalTestSlotSpiltTimeRepository;
 	
 	@Autowired
 	private AppointmentMedicineRepository appointmentMedicineRepository;
@@ -190,11 +196,11 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 
 	        	
 
+	      // Save Medical Tests with start and end times
+	         if (userWebModel.getMedicalTests() != null) {
+	             for (AppointmentMedicalTestWebModel testModel : userWebModel.getMedicalTests()) {
+	                 Optional<MedicalTest> testOpt = medicalTestRepository.findById(testModel.getMedicalTestId());
 
-	         // Save Medical Tests
-	         if (userWebModel.getMedicalTestIds() != null) {
-	             for (Integer testId : userWebModel.getMedicalTestIds()) {
-	                 Optional<MedicalTest> testOpt = medicalTestRepository.findById(testId);
 	                 if (testOpt.isPresent()) {
 	                     AppointmentMedicalTest amt = AppointmentMedicalTest.builder()
 	                             .appointment(appointment)
@@ -203,11 +209,27 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                             .isActive(true)
 	                             .createdBy(userId)
 	                             .updatedBy(userId)
+	                             .medicalTestSlotSpiltTimeId(testModel.getMedicalTestSlotSpiltTimeId()) // <-- FIXED
 	                             .build();
+
 	                     appointmentMedicalTestRepository.save(amt);
+	                     
+
+	                     // Update SlotStatus to BOOKED
+	                     Optional<MedicalTestSlotSpiltTime> slotTimeOpt = medicalTestSlotSpiltTimeRepository.findById(testModel.getMedicalTestSlotSpiltTimeId());
+
+	                     if (slotTimeOpt.isPresent()) {
+	                         MedicalTestSlotSpiltTime slotTime = slotTimeOpt.get();
+	                         slotTime.setSlotStatus("BOOKED");
+	                         slotTime.setUpdatedBy(userId); // optional: update timestamp/user
+	                         slotTime.setUpdatedOn(new Date());
+
+	                         medicalTestSlotSpiltTimeRepository.save(slotTime);
+	                     }
 	                 }
 	             }
 	         }
+
 
 	         return ResponseEntity.ok(new Response(1, "success", "Appointment updated successfully."));
 
@@ -553,20 +575,25 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	 @Override
 	 public ResponseEntity<?> getAllPatientMedicalTestBypatientIdAndDate(Integer patientId, String appointmentDate) {
 	     try {
-	         List<PatientAppointmentTable> appointments =
-	                 patientAppointmentRepository.findByPatient_PatientDetailsIdAndAppointmentDate(patientId, appointmentDate);
+	         // Fetch appointments from the repository
+	         List<PatientAppointmentTable> appointments = 
+	             patientAppointmentRepository.findByPatient_PatientDetailsIdAndAppointmentDate(patientId, appointmentDate);
 
+	         // Set to keep track of unique keys for filtering duplicates
 	         Set<String> uniqueKeys = new HashSet<>();
 
+	         // Process and filter appointments
 	         List<Map<String, Object>> filteredData = appointments.stream()
 	                 .filter(appointment -> {
+	                     // Construct a unique key for each appointment to avoid duplicates
 	                     String key = appointment.getPatient().getPatientDetailsId() + "_" + appointment.getAppointmentDate();
-	                     return uniqueKeys.add(key);
+	                     return uniqueKeys.add(key);  // If the key is not already present, it gets added
 	                 })
 	                 .map(appointment -> {
+	                     // Prepare the map to hold the appointment details
 	                     Map<String, Object> map = new HashMap<>();
 
-	                     // Appointment fields
+	                     // Map appointment-related fields
 	                     map.put("doctorSlotId", appointment.getDoctorSlotId());
 	                     map.put("daySlotId", appointment.getDaySlotId());
 	                     map.put("timeSlotId", appointment.getTimeSlotId());
@@ -593,7 +620,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                     map.put("labStatus", appointment.getLabStatus());
 	                     map.put("appointmentId", appointment.getAppointmentId());
 
-	                     // Patient details
+	                     // Map patient details if available
 	                     PatientDetails patient = appointment.getPatient();
 	                     if (patient != null) {
 	                         map.put("patientDetailsId", patient.getPatientDetailsId());
@@ -606,34 +633,62 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                         map.put("address", patient.getAddress());
 	                     }
 
-	                     // Appointment Medical Test
+	                     // Map appointment medical tests if available
 	                     List<AppointmentMedicalTest> tests = appointment.getAppointmentMedicalTests();
 	                     if (tests != null && !tests.isEmpty()) {
-	                         List<Map<String, Object>> testList = tests.stream().map(test -> {
-	                             Map<String, Object> testMap = new HashMap<>();
-	                             testMap.put("appointmentMedicalTestId", test.getId());
-	                             testMap.put("isActive", test.getIsActive());
-	                             testMap.put("createdBy", test.getCreatedBy());
-	                             testMap.put("createdOn", test.getCreatedOn());
-	                             testMap.put("updatedBy", test.getUpdatedBy());
-	                             testMap.put("updatedOn", test.getUpdatedOn());
-	                             testMap.put("testStatus", test.getPatientStatus());
+	                         // Remove duplicates based on medicalTestId and medicalTestSlotSpiltTimeId
+	                         List<Map<String, Object>> testList = tests.stream()
+	                                 .map(test -> {
+	                                     Map<String, Object> testMap = new HashMap<>();
+	                                     testMap.put("appointmentMedicalTestId", test.getId());
+	                                     testMap.put("isActive", test.getIsActive());
+	                                     testMap.put("createdBy", test.getCreatedBy());
+	                                     testMap.put("createdOn", test.getCreatedOn());
+	                                     testMap.put("updatedBy", test.getUpdatedBy());
+	                                     testMap.put("updatedOn", test.getUpdatedOn());
+	                                     testMap.put("testStatus", test.getPatientStatus());
 
-	                             MedicalTest medicalTest = test.getMedicalTest();
-	                             if (medicalTest != null) {
-	                                 testMap.put("medicalTestId", medicalTest.getId());
-	                                 testMap.put("testName", medicalTest.getTestName());
-	                                 testMap.put("mrp", medicalTest.getMrp());
-	                                 testMap.put("department", medicalTest.getDepartment());
-	                                 testMap.put("isActive", medicalTest.getIsActive());
-	                             }
+	                                     // Map the medical test details
+	                                     MedicalTest medicalTest = test.getMedicalTest();
+	                                     if (medicalTest != null) {
+	                                         testMap.put("medicalTestId", medicalTest.getId());
+	                                         testMap.put("testName", medicalTest.getTestName());
+	                                         testMap.put("mrp", medicalTest.getMrp());
+	                                         testMap.put("department", medicalTest.getDepartment());
+	                                         testMap.put("isActive", medicalTest.getIsActive());
+	                                     }
 
-	                             return testMap;
-	                         }).collect(Collectors.toList());
+	                                     // Map the medical test slot details
+	                                     MedicalTestSlotSpiltTime slotTime = medicalTestSlotSpiltTimeRepository
+	                                             .findById(test.getMedicalTestSlotSpiltTimeId()).orElse(null);
+	                                     if (slotTime != null) {
+	                                         Map<String, Object> slotMap = new HashMap<>();
+	                                         slotMap.put("medicalTestSlotSpiltTimeId", slotTime.getMedicalTestSlotSpiltTimeId());
+	                                         slotMap.put("slotStartTime", slotTime.getSlotStartTime());
+	                                         slotMap.put("slotEndTime", slotTime.getSlotEndTime());
+	                                         slotMap.put("slotStatus", slotTime.getSlotStatus());
+	                                         slotMap.put("createdBy", slotTime.getCreatedBy());
+	                                         slotMap.put("createdOn", slotTime.getCreatedOn());
+	                                         slotMap.put("updatedBy", slotTime.getUpdatedBy());
+	                                         slotMap.put("updatedOn", slotTime.getUpdatedOn());
+	                                         slotMap.put("isActive", slotTime.getIsActive());
+	                                         slotMap.put("overriddenStatus", slotTime.getOvverridenStatus());
 
-	                         map.put("appointmentMedicalTest", testList); // 🟢 Typo corrected here
+	                                         if (slotTime.getMedicalTestSlotDate() != null) {
+	                                             slotMap.put("medicalTestSlotDateId", slotTime.getMedicalTestSlotDate().getMedicalTestSlotDateId());
+	                                         }
+
+	                                         testMap.put("medicalTestSlotSpiltTime", slotMap);
+	                                     }
+
+	                                     return testMap;
+	                                 })
+	                                 .distinct()  // Remove duplicates based on the entire testMap
+	                                 .collect(Collectors.toList());
+
+	                         map.put("appointmentMedicalTest", testList);
 	                     } else {
-	                         map.put("appointmentMedicalTest", new ArrayList<>()); // Optional: empty array fallback
+	                         map.put("appointmentMedicalTest", new ArrayList<>()); // Fallback for empty tests
 	                     }
 
 	                     return map;
@@ -647,6 +702,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                 .body(new Response(0, "error", "An error occurred while fetching medical test appointments."));
 	     }
 	 }
+
 	 @Override
 	 public ResponseEntity<?> deleteParticularSpiltSlot(Integer id) {
 	     try {
