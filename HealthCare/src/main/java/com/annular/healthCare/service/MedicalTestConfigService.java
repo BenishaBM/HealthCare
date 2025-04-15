@@ -30,6 +30,6 @@ public interface MedicalTestConfigService {
 
 	ResponseEntity<?> deleteSlotByMedicalTestById(Integer id);
 
-	//ResponseEntity<?> getMedicalTestSlotById(Integer id, LocalDate date);
+	ResponseEntity<?> getMedicalTestSlotById(Integer id, LocalDate date);
 
 }

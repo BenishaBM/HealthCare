@@ -183,15 +183,15 @@ public class MedicalTestConfigController {
 	    }
 	}
 	
-//	@GetMapping("getMedicalTestSlotById")
-//	public ResponseEntity<?> getMedicalTestSlotById(@RequestParam("id") Integer id, 
-//	                                           @RequestParam("date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
-//	    try {
-//	        return medicalTestConfigService.getMedicalTestSlotById(id, date);
-//	    } catch (Exception e) {
-//	        logger.error("getMedicalTestSlotById Method Exception: {}", e.getMessage(), e);
-//	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//	                .body(new Response(-1, "Fail", e.getMessage()));
-//	    }
-//	}
+	@GetMapping("getMedicalTestSlotById")
+	public ResponseEntity<?> getMedicalTestSlotById(@RequestParam("id") Integer id, 
+	                                           @RequestParam("date") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
+	    try {
+	        return medicalTestConfigService.getMedicalTestSlotById(id, date);
+	    } catch (Exception e) {
+	        logger.error("getMedicalTestSlotById Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 }

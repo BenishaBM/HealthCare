@@ -13,8 +13,10 @@ import java.time.format.DateTimeParseException;
 import java.time.format.ResolverStyle;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -48,6 +50,7 @@ import com.annular.healthCare.model.MedicalTestSlotSpiltTime;
 import com.annular.healthCare.model.MedicalTestSlotTime;
 import com.annular.healthCare.model.MedicalTestSlotTimeOveride;
 import com.annular.healthCare.model.PatientAppointmentTable;
+import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.DepartmentRepository;
 import com.annular.healthCare.repository.MedicalTestConfigRepository;
 import com.annular.healthCare.repository.MedicalTestDaySlotRepository;
@@ -1224,6 +1227,26 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 
 			    return ResponseEntity.ok(new Response(1, "success", "Slot deactivated successfully"));
 			}
+
+			@Override
+			public ResponseEntity<?> getMedicalTestSlotById(Integer id, LocalDate date) {
+			    try {
+			        if (id == null || requestDate == null) {
+			            return ResponseEntity.badRequest()
+			                    .body(Collections.singletonMap("message", "Invalid user ID or request date"));
+			        }
+
+			        Optional<Department> userData = departmentRepository.findById(userId);
+			        if (userData.isEmpty()) {
+			            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+			                    .body(Collections.singletonMap("message", "department not found"));
+			        }
+
+			        Department user = userData.get();
+			        Map<String, Object> response = new LinkedHashMap<>();
+			        response.put("userId", user.getId());
+			        response.put("name", user.getName());
+			
 
 
 
