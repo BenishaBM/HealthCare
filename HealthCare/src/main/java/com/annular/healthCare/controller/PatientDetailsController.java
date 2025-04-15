@@ -171,5 +171,18 @@ public class PatientDetailsController {
 			}
 		}
 		
+		@RequestMapping(path = "/patientSubChildRegister", method = RequestMethod.POST, consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+		public ResponseEntity<?> patientSubChildRegister(@ModelAttribute PatientDetailsWebModel userWebModel) {
+			try {
+				logger.info("patientSubChildRegister register controller start");
+				return patientDetailService.patientSubChildRegister(userWebModel);
+			} catch (Exception e) {
+				logger.error("patientSubChildRegister Method Exception {}" + e);
+				e.printStackTrace();
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+						.body(new Response(-1, "Fail", e.getMessage()));
+			}
+
+		}
 
 }

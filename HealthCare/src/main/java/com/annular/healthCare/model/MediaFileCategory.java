@@ -4,6 +4,7 @@ public enum MediaFileCategory {
 	
 	profilePic,
 	patientDocument,
-	scanDocument
+	scanDocument,
+	patientSubChildDocument
 
 }

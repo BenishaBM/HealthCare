@@ -38,6 +38,7 @@ import com.annular.healthCare.model.MediaFileCategory;
 import com.annular.healthCare.model.PatientAppointmentTable;
 import com.annular.healthCare.model.PatientDetails;
 import com.annular.healthCare.model.PatientMappedHospitalId;
+import com.annular.healthCare.model.PatientSubChildDetails;
 import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.DoctorSlotSpiltTimeRepository;
 import com.annular.healthCare.repository.DoctorSlotTimeRepository;
@@ -45,6 +46,7 @@ import com.annular.healthCare.repository.DoctorSpecialityRepository;
 import com.annular.healthCare.repository.PatientAppoitmentTablerepository;
 import com.annular.healthCare.repository.PatientDetailsRepository;
 import com.annular.healthCare.repository.PatientMappedHospitalIdRepository;
+import com.annular.healthCare.repository.PatientSubChildDetailsRepository;
 import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.MediaFileService;
 import com.annular.healthCare.service.PatientDetailsService;
@@ -82,6 +84,9 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	
 	@Autowired
 	DoctorSpecialityRepository doctorSpecialtyRepository;
+	
+	@Autowired
+	PatientSubChildDetailsRepository patientSubChildDetailsRepository;
 	
 	private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("hh:mm a");
 
@@ -1042,6 +1047,80 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
             }
         }
 
+        @Override
+        public ResponseEntity<?> patientSubChildRegister(PatientDetailsWebModel userWebModel) {
+            try {
+                if (userWebModel == null) {
+                    return ResponseEntity.badRequest().body(
+                        new Response(0, "Invalid request data", null));
+                }
+
+                // Check if sub-child already exists
+                Optional<PatientSubChildDetails> existingPatient = 
+                    patientSubChildDetailsRepository.findByPatientDetailsIdAndPatientName(
+                        userWebModel.getPatientDetailsId(), 
+                        userWebModel.getPatientName()
+                    );
+
+                if (existingPatient.isPresent()) {
+                    return ResponseEntity.ok(
+                        new Response(0, "Sub-child patient already exists", null));
+                }
+
+                // Build new entity
+                PatientSubChildDetails patientSubChild = PatientSubChildDetails.builder()
+                    .patientName(userWebModel.getPatientName())
+                    .dob(userWebModel.getDob())
+                    .gender(userWebModel.getGender())
+                    .bloodGroup(userWebModel.getBloodGroup())
+                    .relationshipType(userWebModel.getRelationshipType())
+                    .patientDetailsId(userWebModel.getPatientDetailsId())
+                    .address(userWebModel.getAddress())
+                    .currentAddress(userWebModel.getCurrentAddress())
+                    .emergencyContact(userWebModel.getEmergencyContact())
+                    .purposeOfVisit(userWebModel.getPurposeOfVisit())
+                    .doctorId(userWebModel.getDoctorId())
+                    .previousMedicalHistory(userWebModel.getPreviousMedicalHistory())
+                    .insuranceDetails(userWebModel.getInsuranceDetails())
+                    .insurerName(userWebModel.getInsurerName())
+                    .insuranceProvider(userWebModel.getInsuranceProvider())
+                    .policyNumber(userWebModel.getPolicyNumber())
+                    .disability(userWebModel.getDisability())
+                    .age(userWebModel.getAge())
+                    .userIsActive(true)
+                    .createdBy(userWebModel.getCreatedBy() != null ? userWebModel.getCreatedBy() : 1)
+                    .userCreatedOn(new Date())
+                    .build();
+
+                // Save patient entity
+                PatientSubChildDetails savedPatient = patientSubChildDetailsRepository.save(patientSubChild);
+
+                // Save any associated media files
+                savePatientMediaFiless(userWebModel, savedPatient);
+
+                return ResponseEntity.ok(new Response(1, "success", "Sub-child patient registered successfully"));
+
+            } catch (Exception e) {
+                logger.error("Error in patientSubChildRegister: {}", e.getMessage(), e);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response(0, "Error registering sub-child patient: " + e.getMessage(), null));
+            }
+        }
+
+        private void savePatientMediaFiless(PatientDetailsWebModel userWebModel, PatientSubChildDetails savedPatient) {
+            if (!Utility.isNullOrEmptyList(userWebModel.getFiles())) {
+                FileInputWebModel fileInput = FileInputWebModel.builder()
+                    .category(MediaFileCategory.patientSubChildDocument)
+                    .categoryRefId(savedPatient.getPatientSubChildDetailsId()) // Use getId() of sub-child, not patientDetailsId
+                    .files(userWebModel.getFiles())
+                    .build();
+
+                User createdByUser = userRepository.findById(userWebModel.getCreatedBy())
+                    .orElse(null);
+
+                mediaFilesService.saveMediaFiles(fileInput, createdByUser);
+            }
+        }
 
 }
 

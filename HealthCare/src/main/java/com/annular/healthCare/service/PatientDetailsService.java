@@ -28,4 +28,6 @@ public interface PatientDetailsService {
 
 	ResponseEntity<?> patientAppoitmentByOnline(PatientDetailsWebModel patientDetailsWebModel);
 
+	ResponseEntity<?> patientSubChildRegister(PatientDetailsWebModel userWebModel);
+
 }
