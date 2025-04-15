@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.annular.healthCare.model.MedicalTestSlotDate;
 import com.annular.healthCare.model.MedicalTestSlotSpiltTime;
 
 @Repository
@@ -28,4 +29,22 @@ public interface MedicalTestSlotSpiltTimeRepository extends JpaRepository<Medica
 
 
 	boolean existsBySlotStartTimeAndSlotEndTimeAndMedicalTestSlotDate_MedicalTestSlotDateId(String start, String end, Integer id);
+
+
+	//List<MedicalTestSlotSpiltTime> findByMedicalTestSlotDateIdAndIsActive(Integer medicalTestSlotDateId, boolean b);
+	
+	
+    // Updated to use proper relationship
+    List<MedicalTestSlotSpiltTime> findByMedicalTestSlotDate(MedicalTestSlotDate medicalTestSlotDate);
+    
+//    // Keep this method as a fallback if you've used it elsewhere
+//    List<MedicalTestSlotSpiltTime> findByMedicalTestSlotDateIdAndIsActive(
+//        Integer medicalTestSlotDateId, 
+//        Boolean isActive
+//    );
+    
+    List<MedicalTestSlotSpiltTime> findByMedicalTestSlotDate_MedicalTestSlotDateIdAndIsActive(
+            Integer medicalTestSlotDateId, 
+            Boolean isActive
+        );
 }

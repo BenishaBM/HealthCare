@@ -20,9 +20,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1227,27 +1229,179 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 
 			    return ResponseEntity.ok(new Response(1, "success", "Slot deactivated successfully"));
 			}
-
+			/**
+			 * Improved implementation for retrieving medical test slots by department
+			 */
 			@Override
 			public ResponseEntity<?> getMedicalTestSlotById(Integer id, LocalDate date) {
 			    try {
-			        if (id == null || requestDate == null) {
+			        if (id == null || date == null) {
 			            return ResponseEntity.badRequest()
-			                    .body(Collections.singletonMap("message", "Invalid user ID or request date"));
+			                    .body(Collections.singletonMap("message", "Invalid department ID or request date"));
 			        }
 
-			        Optional<Department> userData = departmentRepository.findById(userId);
-			        if (userData.isEmpty()) {
+			        Optional<Department> departmentData = departmentRepository.findById(id);
+			        if (departmentData.isEmpty()) {
 			            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-			                    .body(Collections.singletonMap("message", "department not found"));
+			                    .body(Collections.singletonMap("message", "Department not found"));
 			        }
 
-			        Department user = userData.get();
+			        Department department = departmentData.get();
 			        Map<String, Object> response = new LinkedHashMap<>();
-			        response.put("userId", user.getId());
-			        response.put("name", user.getName());
-			
+			        response.put("departmentId", department.getId());
+			        response.put("name", department.getName());
+
+			        List<Map<String, Object>> testSlotList = medicalTestDaySlotRepository
+			                .findByMedicalTestSlot_Department(department)
+			                .stream()
+			                .filter(slot -> isValidSlot(slot, date))
+			                .map(slot -> buildMedicalTestSlot(slot, date))
+			                .filter(Objects::nonNull)
+			                .distinct()
+			                .collect(Collectors.toList());
+
+			        response.put("medicalTestSlots", testSlotList);
+			        return ResponseEntity.ok(response);
+
+			    } catch (Exception e) {
+			        log.error("Error retrieving medical test slots for department {}: ", id, e);
+			        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+			                .body(Collections.singletonMap("message", "Error retrieving medical test slots"));
+			    }
+			}
+
+			/**
+			 * Converts Date object to LocalDate
+			 */
+			private LocalDate convertToLocalDates(Date dateToConvert) {
+			    if (dateToConvert == null) {
+			        return null;
+			    }
+			    return dateToConvert.toInstant()
+			            .atZone(ZoneId.systemDefault())
+			            .toLocalDate();
+			}
+
+			/**
+			 * Checks if the medical test slot is valid for the given date
+			 */
+			private boolean isValidSlot(MedicalTestDaySlot testDaySlot, LocalDate requestDate) {
+			    if (testDaySlot == null || requestDate == null) return false;
+
+			    LocalDate startDate = convertToLocalDates(testDaySlot.getStartSlotDate());
+			    LocalDate endDate = convertToLocalDates(testDaySlot.getEndSlotDate());
+
+			    return Boolean.TRUE.equals(testDaySlot.getIsActive())
+			            && !requestDate.isBefore(startDate)
+			            && !requestDate.isAfter(endDate);
+			}
+
+			/**
+			 * Builds medical test slot data structure with all related information
+			 */
+			private Map<String, Object> buildMedicalTestSlot(MedicalTestDaySlot daySlot, LocalDate requestDate) {
+			    List<Map<String, Object>> daySlotList = medicalTestDaySlotRepository
+			            .findByMedicalTestSlot(daySlot.getMedicalTestSlot())
+			            .stream()
+			            .filter(slot -> isValidDaySlot(slot, requestDate))
+			            .map(slot -> buildDaySlot(slot, requestDate))
+			            .collect(Collectors.toList());
+
+			    Map<String, Object> testSlotData = new LinkedHashMap<>();
+			    testSlotData.put("medicalTestSlotId", daySlot.getMedicalTestSlot().getMedicalTestSlotId());
+			    testSlotData.put("daySlots", daySlotList);
+			    return testSlotData;
+			}
+
+			/**
+			 * Checks if day slot is valid for the requested date
+			 */
+			private boolean isValidDaySlot(MedicalTestDaySlot daySlot, LocalDate requestDate) {
+			    if (daySlot == null || requestDate == null) return false;
+
+			    LocalDate startDate = convertToLocalDate(daySlot.getStartSlotDate());
+			    LocalDate endDate = convertToLocalDate(daySlot.getEndSlotDate());
+			    String requestDay = requestDate.getDayOfWeek().toString();
+
+			    return Boolean.TRUE.equals(daySlot.getIsActive())
+			            && !requestDate.isBefore(startDate)
+			            && !requestDate.isAfter(endDate)
+			            && requestDay.equalsIgnoreCase(daySlot.getDay());
+			}
+
+			/**
+			 * Builds day slot data structure with times and availability
+			 */
+			private Map<String, Object> buildDaySlot(MedicalTestDaySlot daySlot, LocalDate requestDate) {
+			    Map<String, Object> daySlotData = new LinkedHashMap<>();
+			    daySlotData.put("daySlotId", daySlot.getMedicalTestDaySlotId());
+			    daySlotData.put("day", daySlot.getDay());
+			    daySlotData.put("startSlotDate", daySlot.getStartSlotDate());
+			    daySlotData.put("endSlotDate", daySlot.getEndSlotDate());
+			    daySlotData.put("isActive", daySlot.getIsActive());
+
+			    // Use the proper relationship defined in MedicalTestDaySlot to get slot times
+			    List<Map<String, Object>> timeSlotList = medicalTestSlotTimeRepository
+			            .findByMedicalTestDaySlot(daySlot)
+			            .stream()
+			            .filter(slotTime -> Boolean.TRUE.equals(slotTime.getIsActive()))
+			            .map(slotTime -> buildSlotTime(slotTime, requestDate))
+			            .collect(Collectors.toList());
+
+			    daySlotData.put("slotTimes", timeSlotList);
+			    return daySlotData;
+			}
+
+			/**
+			 * Builds time slot data with split times information
+			 */
+			private Map<String, Object> buildSlotTime(MedicalTestSlotTime slotTime, LocalDate requestDate) {
+			    Map<String, Object> timeSlotData = new LinkedHashMap<>();
+			    timeSlotData.put("slotTimeId", slotTime.getMedicalTestSlotTimeId());
+			    timeSlotData.put("startTime", slotTime.getSlotStartTime());
+			    timeSlotData.put("endTime", slotTime.getSlotEndTime());
+			    timeSlotData.put("isActive", slotTime.getIsActive());
+			    if (slotTime.getSlotTime() != null) {
+			        timeSlotData.put("slotTime", slotTime.getSlotTime());
+			    }
+
+			    // Query for slot dates with proper parameters
+			    List<MedicalTestSlotDate> testSlotDates = medicalTestSlotDateRepository
+			            .findByMedicalTestSlotTimeIdAndMedicalTestDaySlotIdAndMedicalTestSlotIdAndDateAndIsActive(
+			                    slotTime.getMedicalTestSlotTimeId(),
+			                    slotTime.getMedicalTestDaySlot().getMedicalTestDaySlotId(),
+			                    slotTime.getMedicalTestDaySlot().getMedicalTestSlot().getMedicalTestSlotId(),
+			                    requestDate.toString(),
+			                    true
+			            );
+
+			    // Map split times for this time slot
+			    List<Map<String, Object>> splitTimeList = testSlotDates.stream()
+			            .flatMap(slotDate -> {
+			                // Use the updated repository method with proper path traversal
+			                List<MedicalTestSlotSpiltTime> splitTimes = medicalTestSlotSpiltTimeRepository
+			                        .findByMedicalTestSlotDate_MedicalTestSlotDateIdAndIsActive(
+			                            slotDate.getMedicalTestSlotDateId(), 
+			                            true
+			                        );
+
+			                return splitTimes.stream().map(split -> {
+			                    Map<String, Object> splitData = new LinkedHashMap<>();
+			                    splitData.put("slotSplitTimeId", split.getMedicalTestSlotSpiltTimeId());
+			                    splitData.put("slotStartTime", split.getSlotStartTime());
+			                    splitData.put("slotEndTime", split.getSlotEndTime());
+			                    splitData.put("slotStatus", split.getSlotStatus());
+			                    return splitData;
+			                });
+			            })
+			            .collect(Collectors.toList());
+
+			    timeSlotData.put("slotSplitTimes", splitTimeList);
+			    return timeSlotData;
+			}
 
 
+			}
 
-	}
+
+	

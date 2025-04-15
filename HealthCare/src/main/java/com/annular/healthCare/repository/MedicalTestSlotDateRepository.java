@@ -26,4 +26,17 @@ public interface MedicalTestSlotDateRepository extends JpaRepository<MedicalTest
 
 	Optional<MedicalTestSlotDate> findByDateAndMedicalTestSlotTimeIdAndIsActive(String dateString,
 			Integer medicalTestSlotTimeId, boolean b);
+
+
+	List<MedicalTestSlotDate> findByMedicalTestSlotTimeIdAndMedicalTestDaySlotIdAndMedicalTestSlotIdAndDateAndIsActive(
+			Integer medicalTestSlotTimeId, Integer medicalTestDaySlotId, Integer medicalTestSlotId, String string,
+			boolean b);
+	
+    List<MedicalTestSlotDate> findByMedicalTestSlotTimeIdAndMedicalTestDaySlotIdAndMedicalTestSlotIdAndDateAndIsActive(
+            Integer medicalTestSlotTimeId, 
+            Integer medicalTestDaySlotId,
+            Integer medicalTestSlotId,
+            String date,
+            Boolean isActive
+        );
 }
