@@ -40,7 +40,7 @@ public class PatientDetails {
 	private String patientName;
 	
 	@Column(name = "dob")
-	private Date dob;
+	private String dob;
 	
 	@Column(name = "gender")
 	private String gender;

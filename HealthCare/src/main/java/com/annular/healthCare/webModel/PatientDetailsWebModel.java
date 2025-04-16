@@ -24,7 +24,7 @@ public class PatientDetailsWebModel {
 
 	private Integer patientDetailsId;
 	private String patientName;
-	private Date dob;
+	private String dob;
 	private String gender;
 	private String bloodGroup;
 	private String mobileNumber;

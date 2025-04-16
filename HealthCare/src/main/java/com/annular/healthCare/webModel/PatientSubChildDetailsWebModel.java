@@ -19,7 +19,7 @@ public class PatientSubChildDetailsWebModel {
 	
     private Integer patientSubChildDetailsId;
     private String patientName;
-    private Date dob;
+    private String dob;
     private String gender;
     private String bloodGroup;
     private String address;
@@ -41,5 +41,6 @@ public class PatientSubChildDetailsWebModel {
     private String age;
     private Integer patientDetailsId;
     private String relationshipType;
+
 
 }

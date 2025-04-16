@@ -10,6 +10,9 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,7 +22,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Table(name = "patientSubChildDetails")
+@Table(name = "patientSubChildDetailsv")
 @Builder
 @Getter
 @Setter
@@ -37,7 +40,8 @@ public class PatientSubChildDetails {
 	private String patientName;
 	
 	@Column(name = "dob")
-	private Date dob;
+	private String dob;
+
 	
 	@Column(name = "gender")
 	private String gender;
