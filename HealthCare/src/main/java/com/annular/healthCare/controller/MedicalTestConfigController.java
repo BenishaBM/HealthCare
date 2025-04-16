@@ -31,6 +31,21 @@ public class MedicalTestConfigController {
 	@Autowired
 	MedicalTestConfigService medicalTestConfigService;
 	
+	
+	@PostMapping("saveDepartment")
+	public ResponseEntity<?> saveDepartment(@RequestBody MedicalTestConfigWebModel medicalTestConfigWebModel) {
+		try {
+			logger.info("saveDepartment controller start");
+			return medicalTestConfigService.saveDepartment(medicalTestConfigWebModel);
+		} catch (Exception e) {
+			logger.error("saveDepartment Method Exception {}" + e);
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(new Response(-1, "Fail", e.getMessage()));
+		}
+
+	}
+	
 	@PostMapping("saveMedicalTestName")
 	public ResponseEntity<?> saveMedicalTestName(@RequestBody MedicalTestConfigWebModel medicalTestConfigWebModel) {
 		try {

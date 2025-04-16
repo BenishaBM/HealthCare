@@ -100,77 +100,90 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 	
 	@Autowired
 	MedicalTestSlotTimeOverideRepository medicalTestSlotTimeOverideRepository;
+	
+	
+	@Override
+	public ResponseEntity<?> saveDepartment(MedicalTestConfigWebModel request) {
+		Optional<Department> existing = departmentRepository.findByName(request.getName());
+
+	    if (existing.isPresent()) {
+	        return ResponseEntity.ok(new Response(0, "fail", "Department already exists."));
+	    }
+
+	    Department department = Department.builder()
+	            .name(request.getName())
+	            .createdBy(request.getCreatedBy())
+	            .updatedBy(request.getUpdatedBy())
+	            .hospitalId(request.getHospitalId())
+	            .isActive(true)
+	            .build();
+
+	    departmentRepository.save(department);
+
+	    return ResponseEntity.ok(new Response(1, "success", "Department saved successfully."));
+	}
+
 
 	@Override
 	public ResponseEntity<?> saveMedicalTestName(MedicalTestConfigWebModel request) {
-	    // Check if department exists
-	    Department department = departmentRepository.findByName(request.getDepartment())
-	            .orElse(null);
 
-	    // If department doesn't exist, create it
-	    if (department == null) {
-	        department = Department.builder()
-	                .name(request.getDepartment())
-	                .createdBy(request.getCreatedBy())
-	                .hospitalId(request.getHospitalId())
-	                .updatedBy(request.getUpdatedBy())
-	                .isActive(true)
-	                .build();
-	        department = departmentRepository.save(department);
-	    }
+		    Department department = departmentRepository.findById(request.getDepartmentId()).orElse(null);
+		    if (department == null) {
+		        return ResponseEntity.badRequest().body(new Response(0, "fail", "Department not found."));
+		    }
 
-	    List<String> successfulTests = new ArrayList<>();
-	    List<String> failedTests = new ArrayList<>();
+		    List<String> successfulTests = new ArrayList<>();
+		    List<String> failedTests = new ArrayList<>();
 
-	    // Iterate through medical tests
-	    for (MedicalTestItem test : request.getMedicalTests()) {
-	        try {
-	            boolean exists = medicalTestConfigRepository.existsByHospitalIdAndMedicalTestNameAndDepartmentId(
-	                    request.getHospitalId(),
-	                    test.getMedicalTestName(),
-	                    department.getId()
-	            );
+		    for (MedicalTestItem test : request.getMedicalTests()) {
+		        try {
+		            boolean exists = medicalTestConfigRepository.existsByHospitalIdAndMedicalTestNameAndDepartmentId(
+		                    request.getHospitalId(),
+		                    test.getMedicalTestName(),
+		                    department.getId()
+		            );
 
-	            if (exists) {
-	                failedTests.add(test.getMedicalTestName());
-	                continue;
-	            }
+		            if (exists) {
+		                failedTests.add(test.getMedicalTestName());
+		                continue;
+		            }
 
-	            MedicalTestConfig medicalTestConfig = MedicalTestConfig.builder()
-	                    .department(department)
-	                    .medicalTestName(test.getMedicalTestName())
-	                    .mrp(test.getMrp())
-	                    .gst(test.getGst())
-	                    .createdBy(request.getCreatedBy())
-	                    .updatedBy(request.getUpdatedBy())
-	                    .isActive(true)
-	                    .hospitalId(request.getHospitalId())
-	                    .build();
+		            MedicalTestConfig medicalTestConfig = MedicalTestConfig.builder()
+		                    .department(department)
+		                    .medicalTestName(test.getMedicalTestName())
+		                    .mrp(test.getMrp())
+		                    .gst(test.getGst())
+		                    .createdBy(request.getCreatedBy())
+		                    .updatedBy(request.getUpdatedBy())
+		                    .isActive(true)
+		                    .hospitalId(request.getHospitalId())
+		                    .build();
 
-	            medicalTestConfigRepository.save(medicalTestConfig);
-	            successfulTests.add(test.getMedicalTestName());
-	        } catch (Exception e) {
-	            failedTests.add(test.getMedicalTestName());
-	        }
-	    }
+		            medicalTestConfigRepository.save(medicalTestConfig);
+		            successfulTests.add(test.getMedicalTestName());
+		        } catch (Exception e) {
+		            failedTests.add(test.getMedicalTestName());
+		        }
+		    }
 
-	    // Create response message
-	    String message;
-	    if (failedTests.isEmpty()) {
-	        message = "All medical tests saved successfully.";
-	    } else if (successfulTests.isEmpty()) {
-	        message = "Failed to save any medical tests: " + String.join(", ", failedTests);
-	    } else {
-	        message = "Partially successful. Saved: " + String.join(", ", successfulTests)
-	                + ". Failed: " + String.join(", ", failedTests);
-	    }
+		    String message;
+		    if (failedTests.isEmpty()) {
+		        message = "All medical tests saved successfully.";
+		    } else if (successfulTests.isEmpty()) {
+		        message = "Failed to save any medical tests: " + String.join(", ", failedTests);
+		    } else {
+		        message = "Partially successful. Saved: " + String.join(", ", successfulTests)
+		                + ". Failed: " + String.join(", ", failedTests);
+		    }
 
-	    return ResponseEntity.ok(new Response(
-	            !successfulTests.isEmpty() ? 1 : 0,
-	            !successfulTests.isEmpty() ? "success" : "fail",
-	            message
-	    ));
-	}
+		    return ResponseEntity.ok(new Response(
+		            !successfulTests.isEmpty() ? 1 : 0,
+		            !successfulTests.isEmpty() ? "success" : "fail",
+		            message
+		    ));
+		}
+
+	
 
 	@Override
 	public ResponseEntity<?> getAllMedicalTestNameByHospitalId(Integer hospitalId) {
@@ -1399,6 +1412,7 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 			    timeSlotData.put("slotSplitTimes", splitTimeList);
 			    return timeSlotData;
 			}
+
 
 
 			}

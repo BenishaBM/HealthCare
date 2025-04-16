@@ -32,4 +32,6 @@ public interface MedicalTestConfigService {
 
 	ResponseEntity<?> getMedicalTestSlotById(Integer id, LocalDate date);
 
+	ResponseEntity<?> saveDepartment(MedicalTestConfigWebModel medicalTestConfigWebModel);
+
 }
