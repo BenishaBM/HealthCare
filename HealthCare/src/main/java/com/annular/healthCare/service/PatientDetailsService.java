@@ -30,4 +30,6 @@ public interface PatientDetailsService {
 
 	ResponseEntity<?> patientSubChildRegister(PatientDetailsWebModel userWebModel);
 
+	ResponseEntity<?> getPatientRelationShipDetails(Integer patientDetailsId, String relationshipType);
+
 }

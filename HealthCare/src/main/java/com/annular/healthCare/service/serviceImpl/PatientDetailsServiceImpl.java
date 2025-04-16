@@ -1138,5 +1138,27 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
             }
         }
 
+        @Override
+        public ResponseEntity<?> getPatientRelationShipDetails(Integer patientDetailsId, String relationshipType) {
+            List<Object[]> resultList = patientSubChildDetailsRepository
+                .findIdAndNameByPatientDetailsIdAndRelationshipType(patientDetailsId, relationshipType);
+
+            List<Map<String, Object>> patients = new ArrayList<>();
+
+            for (Object[] row : resultList) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("id", row[0]);
+                map.put("name", row[1]);
+                patients.add(map);
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("count", patients.size());
+            response.put("patients", patients);
+
+            return ResponseEntity.ok(response);
+        }
+
+
 }
 
