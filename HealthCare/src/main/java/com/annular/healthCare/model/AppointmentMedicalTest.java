@@ -40,8 +40,8 @@ public class AppointmentMedicalTest {
     private PatientAppointmentTable appointment;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "medical_test_id", referencedColumnName = "id") // Assuming MedicalTest has 'id'
-    private MedicalTest medicalTest;
+    @JoinColumn(name = "medical_test_config_id", referencedColumnName = "id") // Assuming MedicalTest has 'id'
+    private MedicalTestConfig medicalTest;
 
     @Column(name = "is_active")
     private Boolean isActive;

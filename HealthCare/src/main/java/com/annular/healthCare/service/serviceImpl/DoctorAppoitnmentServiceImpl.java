@@ -24,6 +24,7 @@ import com.annular.healthCare.model.AppointmentMedicalTest;
 import com.annular.healthCare.model.AppointmentMedicine;
 import com.annular.healthCare.model.DoctorSlotSpiltTime;
 import com.annular.healthCare.model.MedicalTest;
+import com.annular.healthCare.model.MedicalTestConfig;
 import com.annular.healthCare.model.MedicalTestSlotSpiltTime;
 import com.annular.healthCare.model.Medicines;
 import com.annular.healthCare.model.PatientAppointmentTable;
@@ -32,6 +33,7 @@ import com.annular.healthCare.model.PatientMappedHospitalId;
 import com.annular.healthCare.repository.AppointmentMedicalTestRepository;
 import com.annular.healthCare.repository.AppointmentMedicineRepository;
 import com.annular.healthCare.repository.DoctorSlotSpiltTimeRepository;
+import com.annular.healthCare.repository.MedicalTestConfigRepository;
 import com.annular.healthCare.repository.MedicalTestRepository;
 import com.annular.healthCare.repository.MedicalTestSlotSpiltTimeRepository;
 import com.annular.healthCare.repository.MedicinesRepository;
@@ -60,6 +62,9 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	
 	@Autowired
 	MedicalTestRepository medicalTestRepository;
+	
+	@Autowired
+	MedicalTestConfigRepository medicalTestConfigRepository;
 	
 	@Autowired
 	MedicalTestSlotSpiltTimeRepository medicalTestSlotSpiltTimeRepository;
@@ -199,7 +204,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	      // Save Medical Tests with start and end times
 	         if (userWebModel.getMedicalTests() != null) {
 	             for (AppointmentMedicalTestWebModel testModel : userWebModel.getMedicalTests()) {
-	                 Optional<MedicalTest> testOpt = medicalTestRepository.findById(testModel.getMedicalTestId());
+	                 Optional<MedicalTestConfig> testOpt = medicalTestConfigRepository.findById(testModel.getMedicalTestId());
 
 	                 if (testOpt.isPresent()) {
 	                     AppointmentMedicalTest amt = AppointmentMedicalTest.builder()
@@ -649,13 +654,13 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                                     testMap.put("testStatus", test.getPatientStatus());
 
 	                                     // Map the medical test details
-	                                     MedicalTest medicalTest = test.getMedicalTest();
+	                                     Optional<MedicalTestConfig> medicalTest = medicalTestConfigRepository.findById(test.getId());
 	                                     if (medicalTest != null) {
-	                                         testMap.put("medicalTestId", medicalTest.getId());
-	                                         testMap.put("testName", medicalTest.getTestName());
-	                                         testMap.put("mrp", medicalTest.getMrp());
-	                                         testMap.put("department", medicalTest.getDepartment());
-	                                         testMap.put("isActive", medicalTest.getIsActive());
+	                                         testMap.put("medicalTestId", medicalTest.get().getId());
+	                                         testMap.put("testName", medicalTest.get().getMedicalTestName());
+	                                         testMap.put("mrp", medicalTest.get().getMrp());
+	                                         testMap.put("gst", medicalTest.get().getGst());
+	                                         testMap.put("isActive", medicalTest.get().getIsActive());
 	                                     }
 
 	                                     // Map the medical test slot details
