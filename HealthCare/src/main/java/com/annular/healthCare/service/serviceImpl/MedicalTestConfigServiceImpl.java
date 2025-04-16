@@ -1414,6 +1414,22 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 			}
 
 
+			@Override
+			public ResponseEntity<?> getAllDepartmentByhospitalId(Integer hospitalId) {
+			    List<Department> departments = departmentRepository.findByHospitalIdAndIsActiveTrue(hospitalId);
+
+			    List<Map<String, Object>> result = new ArrayList<>();
+
+			    for (Department dept : departments) {
+			        Map<String, Object> map = new HashMap<>();
+			        map.put("id", dept.getId());
+			        map.put("name", dept.getName());
+			        result.add(map);
+			    }
+
+			    return ResponseEntity.ok(result);
+			}
+
 
 			}
 

@@ -1,5 +1,6 @@
 package com.annular.healthCare.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,5 +13,7 @@ import com.annular.healthCare.model.MedicalTestConfig;
 public interface DepartmentRepository extends JpaRepository<Department,Integer>{
 
 	Optional<Department> findByName(String department);
+
+	List<Department> findByHospitalIdAndIsActiveTrue(Integer hospitalId);
 
 }

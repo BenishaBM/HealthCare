@@ -34,4 +34,6 @@ public interface MedicalTestConfigService {
 
 	ResponseEntity<?> saveDepartment(MedicalTestConfigWebModel medicalTestConfigWebModel);
 
+	ResponseEntity<?> getAllDepartmentByhospitalId(Integer hospitalId);
+
 }
