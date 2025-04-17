@@ -36,4 +36,6 @@ public interface MedicalTestConfigService {
 
 	ResponseEntity<?> getAllDepartmentByhospitalId(Integer hospitalId);
 
+	ResponseEntity<?> getAllDoctorList();
+
 }

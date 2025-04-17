@@ -39,11 +39,13 @@ import org.springframework.util.StringUtils;
 import com.annular.healthCare.Response;
 import com.annular.healthCare.model.Department;
 import com.annular.healthCare.model.DoctorDaySlot;
+import com.annular.healthCare.model.DoctorRole;
 import com.annular.healthCare.model.DoctorSlot;
 import com.annular.healthCare.model.DoctorSlotDate;
 import com.annular.healthCare.model.DoctorSlotSpiltTime;
 import com.annular.healthCare.model.DoctorSlotTime;
 import com.annular.healthCare.model.DoctorSlotTimeOverride;
+import com.annular.healthCare.model.DoctorSpecialty;
 import com.annular.healthCare.model.MedicalTestConfig;
 import com.annular.healthCare.model.MedicalTestDaySlot;
 import com.annular.healthCare.model.MedicalTestSlot;
@@ -54,6 +56,7 @@ import com.annular.healthCare.model.MedicalTestSlotTimeOveride;
 import com.annular.healthCare.model.PatientAppointmentTable;
 import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.DepartmentRepository;
+import com.annular.healthCare.repository.DoctorSpecialityRepository;
 import com.annular.healthCare.repository.MedicalTestConfigRepository;
 import com.annular.healthCare.repository.MedicalTestDaySlotRepository;
 import com.annular.healthCare.repository.MedicalTestSlotDateRepository;
@@ -61,6 +64,7 @@ import com.annular.healthCare.repository.MedicalTestSlotRepository;
 import com.annular.healthCare.repository.MedicalTestSlotSpiltTimeRepository;
 import com.annular.healthCare.repository.MedicalTestSlotTimeOverideRepository;
 import com.annular.healthCare.repository.MedicalTestSlotTimeRepository;
+import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.MedicalTestConfigService;
 import com.annular.healthCare.webModel.DaySlotWebModel;
 import com.annular.healthCare.webModel.DoctorDaySlotWebModel;
@@ -87,6 +91,9 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 	MedicalTestSlotRepository medicalTestSlotRepository;
 	
 	@Autowired
+	UserRepository userRepository;
+	
+	@Autowired
 	MedicalTestDaySlotRepository medicalTestDaySlotRepository;
 	
 	@Autowired
@@ -94,6 +101,9 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 	
 	@Autowired
 	MedicalTestSlotDateRepository medicalTestSlotDateRepository;
+	
+	@Autowired
+	DoctorSpecialityRepository doctorSpecialtyRepository;
 	
 	@Autowired
 	MedicalTestSlotSpiltTimeRepository medicalTestSlotSpiltTimeRepository;
@@ -1428,6 +1438,42 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 			    }
 
 			    return ResponseEntity.ok(result);
+			}
+
+			@Override
+			public ResponseEntity<?> getAllDoctorList() {
+			    List<User> doctors = userRepository.findByUserTypeAndUserIsActiveTrue("DOCTOR");
+			    List<Map<String, Object>> doctorList = new ArrayList<>();
+
+			    for (User user : doctors) {
+			        Map<String, Object> doctorMap = new HashMap<>();
+
+			        // Compose name
+			        String name = (user.getFirstName() != null ? user.getFirstName() : "") +
+			                      " " +
+			                      (user.getLastName() != null ? user.getLastName() : "");
+			        if (name.trim().isEmpty()) {
+			            name = user.getUserName();
+			        }
+
+			        // Get specialties from DoctorSpecialty table
+			        List<DoctorSpecialty> specialties = doctorSpecialtyRepository.findSpecialtiesByUserId(user.getUserId());
+			        List<String> specialtyNames = new ArrayList<>();
+			        for (DoctorSpecialty specialty : specialties) {
+			            if (specialty.getSpecialtyName() != null) {
+			                specialtyNames.add(specialty.getSpecialtyName());
+			            }
+			        }
+
+			        // Add data to map
+			        doctorMap.put("userId", user.getUserId());
+			        doctorMap.put("userName", name.trim());
+			        doctorMap.put("specialties", specialtyNames);
+
+			        doctorList.add(doctorMap);
+			    }
+
+			    return ResponseEntity.ok(doctorList);
 			}
 
 

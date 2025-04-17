@@ -223,4 +223,15 @@ public class MedicalTestConfigController {
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+	
+	@GetMapping("getAllDoctorList")
+	public ResponseEntity<?> getAllDoctorList() {
+	    try {
+	        return medicalTestConfigService.getAllDoctorList();
+	    } catch (Exception e) {
+	        logger.error("getAllDoctorList Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 }
