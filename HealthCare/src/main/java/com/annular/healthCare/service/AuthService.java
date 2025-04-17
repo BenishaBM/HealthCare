@@ -48,5 +48,7 @@ public interface AuthService {
 
 	ResponseEntity<?> savePatientIdAndHospitalIdByExistingUser(UserWebModel userWebModel);
 
+	ResponseEntity<?> verifyMobileNumberWithoutHospitalId(String mobileNumber);
+
 	
 }

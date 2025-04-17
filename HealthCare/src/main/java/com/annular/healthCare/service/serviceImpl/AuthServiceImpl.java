@@ -1562,6 +1562,31 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 
 	    return ResponseEntity.ok(response);
 	}
+	
+	
+	@Override
+	public ResponseEntity<?> verifyMobileNumberWithoutHospitalId(String mobileNumber) {
+	    Map<String, Object> response = new HashMap<>();
+
+	    // 1. Find patient by mobile number
+	    Optional<PatientDetails> patientOpt = patientDetailsRepository.findByMobileNumber(mobileNumber);
+
+	    if (patientOpt.isPresent()) {
+	        PatientDetails patient = patientOpt.get();
+
+	        response.put("statusCode", 1);
+	        response.put("status", "success");
+	        response.put("message", "Mobile number exists");
+	        response.put("patientId", patient.getPatientDetailsId());
+	    } else {
+	        response.put("statusCode", 0);
+	        response.put("status", "failure");
+	        response.put("message", "Mobile number not registered");
+	    }
+
+	    return ResponseEntity.ok(response);
+	}
+
 
 	@Override
 	public ResponseEntity<?> checkExistingUserOrNewUserByPatentientId(Integer patientId, Integer hospitalId) {
@@ -1662,5 +1687,6 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	        }
 	    }
 	}
+
 
 }
