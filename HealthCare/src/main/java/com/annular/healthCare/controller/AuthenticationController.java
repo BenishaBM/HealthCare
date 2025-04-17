@@ -323,6 +323,18 @@ public class AuthenticationController {
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+	@GetMapping("verifyMobileNumberWithoutHospitalId")
+	public ResponseEntity<?> verifyMobileNumberWithoutHospitalId(@RequestParam("mobileNumber") String mobileNumber) {
+	    try {
+	        // Call the service to perform the update
+	        return authService.verifyMobileNumberWithoutHospitalId(mobileNumber);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("verifyMobileNumberWithoutHospitalId Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 	@PostMapping("adminPatientLogin")
 	public ResponseEntity<?> adminPatientLogin(@RequestBody PatientDetailsWebModel userWebModel) {
 	    try {
