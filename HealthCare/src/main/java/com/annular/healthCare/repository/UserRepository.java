@@ -46,7 +46,9 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 	@Query("SELECT u FROM User u WHERE u.emailId = :emailId")
 	User findByEmailId(@Param("emailId") String emailId);
 
-	List<User> findByUserTypeAndUserIsActiveTrue(String string);
+	@Query("SELECT u FROM User u WHERE LOWER(u.userType) = LOWER(:userType) AND u.userIsActive = true")
+	List<User> findByUserTypeIgnoreCaseAndUserIsActiveTrue(@Param("userType") String userType);
+
 
 
 }

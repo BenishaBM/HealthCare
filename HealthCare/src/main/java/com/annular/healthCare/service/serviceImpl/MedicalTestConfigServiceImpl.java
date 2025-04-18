@@ -1442,7 +1442,8 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 
 			@Override
 			public ResponseEntity<?> getAllDoctorList() {
-			    List<User> doctors = userRepository.findByUserTypeAndUserIsActiveTrue("DOCTOR");
+				List<User> doctors = userRepository.findByUserTypeIgnoreCaseAndUserIsActiveTrue("DOCTOR");
+
 			    List<Map<String, Object>> doctorList = new ArrayList<>();
 
 			    for (User user : doctors) {
