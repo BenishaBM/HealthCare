@@ -30,6 +30,8 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Integer>{
 	List<MediaFile> getMediaFilesByCategoryAndRefId(MediaFileCategory category, Integer refId);
     
     
-	List<MediaFile> findByFileDomainReferenceIdAndCategory(Integer appointmentId, MediaFileCategory resutdocument);
+	//List<MediaFile> findByFileDomainReferenceIdAndCategory(Integer appointmentId, MediaFileCategory resutdocument);
+	List<MediaFile> findByFileDomainReferenceIdAndCategoryAndFileIsActiveTrue(Integer appointmentId,
+			MediaFileCategory resutdocument);
 
 }

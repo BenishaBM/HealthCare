@@ -1567,9 +1567,9 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 			    try {
 			        Integer appointmentId = medicalTestConfigWebModel.getId();
 
-			        // Fetch media files related to the appointment with category 'resultDocument'
+			        // Fetch only active media files related to the appointment with category 'resutDocument'
 			        List<MediaFile> resultFiles = mediaFilesRepository
-			                .findByFileDomainReferenceIdAndCategory(appointmentId, MediaFileCategory.resutDocument);
+			                .findByFileDomainReferenceIdAndCategoryAndFileIsActiveTrue(appointmentId, MediaFileCategory.resutDocument);
 
 			        ArrayList<FileInputWebModel> filesInputWebModelList = new ArrayList<>();
 
@@ -1579,16 +1579,11 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 			                fileInput.setFileName(mediaFile.getFileOriginalName());
 			                fileInput.setFileSize(mediaFile.getFileSize());
 			                fileInput.setFileType(mediaFile.getFileType());
-			               // fileInput.setDescription(mediaFile.getFileDescription()); // Assuming MediaFile has this field
-			                fileInput.setFileId(mediaFile.getFileId()); // Set if file IDs are tracked separately
-			                fileInput.setFileType(mediaFile.getFileType());
-			                fileInput.setFilePath(mediaFile.getFilePath()); // Optional field if available
-			                fileInput.setType(mediaFile.getFileType()); // Assuming 'type' maps to fileType or a separate field
+			                fileInput.setFileId(mediaFile.getFileId());
+			                fileInput.setFilePath(mediaFile.getFilePath());
+			                fileInput.setType(mediaFile.getFileType());
 			                fileInput.setUserId(mediaFile.getUser().getUserId());
-			                fileInput.setFileName(mediaFile.getFileOriginalName());
-			                fileInput.setFileSize(mediaFile.getFileSize());
-			                
-			                
+
 			                // Convert file to Base64 string
 			                String fileData = Base64FileUpload.encodeToBase64String(
 			                        imageLocation + "/healthCare", mediaFile.getFileName());
@@ -1610,7 +1605,6 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 			                .body(new Response(-1, "Failed to fetch result documents", null));
 			    }
 			}
-
 
 }
 	
