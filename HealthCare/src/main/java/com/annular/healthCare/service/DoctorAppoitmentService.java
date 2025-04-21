@@ -28,4 +28,6 @@ public interface DoctorAppoitmentService {
 
 	ResponseEntity<?> deleteParticularSpiltSlot(Integer id);
 
+	ResponseEntity<?> getAllPatientAppointment(String appointmentDate, Integer doctorId);
+
 }

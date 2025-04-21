@@ -743,6 +743,77 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                 .body(new Response(0, "Error", "An error occurred while deleting the slot"));
 	     }
 	 }
+	@Override
+	public ResponseEntity<?> getAllPatientAppointment(String appointmentDate, Integer doctorId) {
+		   try {
+	            List<PatientAppointmentTable> appointments = patientAppointmentRepository.findAppointments(appointmentDate, doctorId);
+	            
+	            if (appointments.isEmpty()) {
+	            	return ResponseEntity.ok(new Response(0, "No Appointments Found", null));
+	            }
+
+	            List<Map<String, Object>> appointmentDetails = new ArrayList<>();
+
+	            for (PatientAppointmentTable appointment : appointments) {
+	                Map<String, Object> details = new HashMap<>();
+	            // Appointment details
+	                // Appointment details
+	                details.put("appointmentId", appointment.getAppointmentId());
+	                details.put("appointmentDate", appointment.getAppointmentDate());
+	                details.put("appointmentType", appointment.getAppointmentType());
+	                details.put("appointmentStatus", appointment.getAppointmentStatus());
+	                details.put("slotStartTime", appointment.getSlotStartTime());
+	                details.put("slotEndTime", appointment.getSlotEndTime());
+	                details.put("slotTime", appointment.getSlotTime());
+	                details.put("isActive", appointment.getIsActive());
+	                details.put("createdBy", appointment.getCreatedBy());
+	                details.put("createdOn", appointment.getCreatedOn());
+	                details.put("updatedBy", appointment.getUpdatedBy());
+	                details.put("updatedOn", appointment.getUpdatedOn());
+	                details.put("patientNotes", appointment.getPatientNotes());
+	                details.put("doctorSlotId", appointment.getDoctorSlotId());
+	                details.put("daySlotId", appointment.getDaySlotId());
+	                details.put("timeSlotId", appointment.getTimeSlotId());
+	                details.put("age", appointment.getAge());
+	                details.put("dob", appointment.getDateOfBirth());
+	                details.put("relationshipType", appointment.getRelationShipType());
+	                details.put("patientName", appointment.getPatientName());
+	                details.put("token", appointment.getToken());
+
+	            // Doctor details
+	            details.put("doctorId", appointment.getDoctor().getUserId());
+	            details.put("doctorName", appointment.getDoctor().getUserName());
+
+	            // Fetching Patient Details
+	            Optional<PatientDetails> patientDetailsOpt = patientDetailsRepository.findById(appointment.getPatient().getPatientDetailsId());
+	            if (patientDetailsOpt.isPresent()) {
+	                PatientDetails patient = patientDetailsOpt.get();
+	                details.put("patientId", patient.getPatientDetailsId());
+	                details.put("patientName", patient.getPatientName());
+	                details.put("patientAge", patient.getAge());
+	                details.put("patientDOB", patient.getDob());
+	                details.put("gender", patient.getGender());
+	                details.put("bloodGroup", patient.getBloodGroup());
+	                details.put("mobileNumber", patient.getMobileNumber());
+	                details.put("emailId", patient.getEmailId());
+	                details.put("address", patient.getAddress());
+	                details.put("emergencyContact", patient.getEmergencyContact());
+	               
+	                details.put("purposeOfVisit", patient.getPurposeOfVisit());
+	                details.put("policyNumber", patient.getPolicyNumber());
+	                details.put("disability", patient.getDisability());
+	                details.put("previousMedicalHistory", patient.getPreviousMedicalHistory());
+	            }
+	                appointmentDetails.add(details);
+	            }
+
+	            return ResponseEntity.ok(new Response(1, "Appointments Retrieved", appointmentDetails));
+
+	        } catch (Exception e) {
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                    .body(new Response(-1, "Failed to retrieve appointments", e.getMessage()));
+	        }
+	}
 
 
 

@@ -44,6 +44,22 @@ public class DoctorAppointmentController {
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+	
+
+	@GetMapping("getAllPatientAppointment") // Corrected spelling in endpoint
+	public ResponseEntity<?> getAllPatientAppointment(
+	        @RequestParam("appointmentDate") String  appointmentDate,@RequestParam("doctorId")Integer doctorId) {
+	    try {
+	        logger.info("getAllPatientAppointment request for createdOn: {}, appointmentType: {}", appointmentDate);
+	        
+	       
+	        return doctorAppoitmentService.getAllPatientAppointment(appointmentDate, doctorId);
+	    } catch (Exception e) {
+	        logger.error("getAllPatientAppointment Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 
 	@PostMapping("saveDoctorAppoitment")
 	public ResponseEntity<?> doctorAppoitmentService(@RequestBody HospitalDataListWebModel userWebModel) {

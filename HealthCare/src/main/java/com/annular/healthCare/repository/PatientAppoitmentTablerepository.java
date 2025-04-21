@@ -73,6 +73,11 @@ public interface PatientAppoitmentTablerepository extends JpaRepository<PatientA
 	@Query("SELECT DISTINCT a FROM PatientAppointmentTable a LEFT JOIN FETCH a.appointmentMedicines m WHERE a.patient.patientDetailsId = :patientId AND a.appointmentDate = :appointmentDate")
 	List<PatientAppointmentTable> findAppointmentsWithMedicines(@Param("patientId") Integer patientId, @Param("appointmentDate") String appointmentDate);
 
+	@Query("SELECT p FROM PatientAppointmentTable p WHERE " +
+		       "(:doctorId IS NULL OR p.doctor.userId = :doctorId) AND " +
+		       "(:appointmentDate IS NULL OR FUNCTION('DATE', p.appointmentDate) = FUNCTION('DATE', :appointmentDate))")
+		List<PatientAppointmentTable> findAppointments(String appointmentDate, Integer doctorId);
+
 
 
 
