@@ -814,7 +814,158 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                    .body(new Response(-1, "Failed to retrieve appointments", e.getMessage()));
 	        }
 	}
+	@Override
+	public ResponseEntity<?> getAllPatientAppointmentDetails(Integer patientId, String appointmentDate) {
+	    try {
+	        // Fetch all appointments with medicines and tests eagerly loaded
+	        List<PatientAppointmentTable> appointments =
+	                patientAppointmentRepository.findByPatient_PatientDetailsIdAndAppointmentDate(patientId, appointmentDate);
 
+	        Set<String> uniqueKeys = new HashSet<>();
+
+	        List<Map<String, Object>> filteredData = appointments.stream()
+	            .filter(appointment -> uniqueKeys.add(appointment.getPatient().getPatientDetailsId() + "_" + appointment.getAppointmentDate()))
+	            .map(appointment -> {
+	                Map<String, Object> map = new HashMap<>();
+
+	                // Appointment details
+	                map.put("appointmentId", appointment.getAppointmentId());
+	                map.put("appointmentDate", appointment.getAppointmentDate());
+	                map.put("doctorSlotId", appointment.getDoctorSlotId());
+	                map.put("daySlotId", appointment.getDaySlotId());
+	                map.put("timeSlotId", appointment.getTimeSlotId());
+	                map.put("slotStartTime", appointment.getSlotStartTime());
+	                map.put("slotEndTime", appointment.getSlotEndTime());
+	                map.put("slotTime", appointment.getSlotTime());
+	                map.put("appointmentStatus", appointment.getAppointmentStatus());
+	                map.put("patientNotes", appointment.getPatientNotes());
+	                map.put("doctorSlotStartTime", appointment.getDoctorSlotStartTime());
+	                map.put("doctorSlotEndTime", appointment.getDoctorSlotEndTime());
+	                map.put("appointmentType", appointment.getAppointmentType());
+	                map.put("age", appointment.getAge());
+	                map.put("dateOfBirth", appointment.getDateOfBirth());
+	                map.put("patientName", appointment.getPatientName());
+	                map.put("relationshipType", appointment.getRelationShipType());
+	                map.put("token", appointment.getToken());
+	                map.put("pharmacyStatus", appointment.getPharmacyStatus());
+	                map.put("labStatus", appointment.getLabStatus());
+
+	                // Audit fields
+	                map.put("isActive", appointment.getIsActive());
+	                map.put("createdBy", appointment.getCreatedBy());
+	                map.put("createdOn", appointment.getCreatedOn());
+	                map.put("updatedBy", appointment.getUpdatedBy());
+	                map.put("updatedOn", appointment.getUpdatedOn());
+
+	                // Patient details
+	                PatientDetails patient = appointment.getPatient();
+	                if (patient != null) {
+	                    map.put("patientDetailsId", patient.getPatientDetailsId());
+	                    map.put("patientName", patient.getPatientName());
+	                    map.put("dob", patient.getDob());
+	                    map.put("gender", patient.getGender());
+	                    map.put("bloodGroup", patient.getBloodGroup());
+	                    map.put("mobileNumber", patient.getMobileNumber());
+	                    map.put("emailId", patient.getEmailId());
+	                    map.put("address", patient.getAddress());
+	                }
+
+	                // Appointment Medicines
+	                List<Map<String, Object>> medicineList = new ArrayList<>();
+	                if (appointment.getAppointmentMedicines() != null) {
+	                    for (AppointmentMedicine med : appointment.getAppointmentMedicines()) {
+	                        Map<String, Object> medMap = new HashMap<>();
+	                        medMap.put("appointmentMedicineId", med.getId());
+	                        medMap.put("medicineStatus", med.getPatientStatus());
+	                        medMap.put("days", med.getDays());
+	                        medMap.put("patientMedicineDays", med.getPatientMedicineDays());
+	                        medMap.put("morningBF", med.getMorningBF());
+	                        medMap.put("morningAF", med.getMorningAF());
+	                        medMap.put("afternoonBF", med.getAfternoonBF());
+	                        medMap.put("afternoonAF", med.getAfternoonAF());
+	                        medMap.put("nightBF", med.getNightBF());
+	                        medMap.put("nightAF", med.getNightAF());
+	                        medMap.put("every6Hours", med.getEvery6Hours());
+	                        medMap.put("every8Hours", med.getEvery8Hours());
+
+	                        // Audit fields
+	                        medMap.put("isActive", med.getIsActive());
+	                        medMap.put("createdBy", med.getCreatedBy());
+	                        medMap.put("createdOn", med.getCreatedOn());
+	                        medMap.put("updatedBy", med.getUpdatedBy());
+	                        medMap.put("updatedOn", med.getUpdatedOn());
+
+	                        // Medicine details
+	                        Medicines medicine = med.getMedicine();
+	                        if (medicine != null) {
+	                            medMap.put("medicineId", medicine.getId());
+	                            medMap.put("name", medicine.getName());
+	                            medMap.put("price", medicine.getPrice());
+	                            medMap.put("manufacturerName", medicine.getManufacturerName());
+	                            medMap.put("type", medicine.getType());
+	                            medMap.put("packSizeLabel", medicine.getPackSizeLabel());
+	                            medMap.put("shortComposition1", medicine.getShortComposition1());
+	                            medMap.put("shortComposition2", medicine.getShortComposition2());
+	                        }
+
+	                        medicineList.add(medMap);
+	                    }
+	                }
+	                map.put("appointmentMedicines", medicineList);
+
+	                // Appointment Tests
+	                List<Map<String, Object>> testList = new ArrayList<>();
+	                if (appointment.getAppointmentMedicalTests() != null) {
+	                    for (AppointmentMedicalTest test : appointment.getAppointmentMedicalTests()) {
+	                        Map<String, Object> testMap = new HashMap<>();
+	                        testMap.put("appointmentMedicalTestId", test.getId());
+	                        testMap.put("medicalTes", test.getMedicalTestBarCode());
+	                        testMap.put("testStatus", test.getPatientStatus());
+	                        testMap.put("isActive", test.getIsActive());
+	                        testMap.put("createdBy", test.getCreatedBy());
+	                        testMap.put("createdOn", test.getCreatedOn());
+	                        testMap.put("updatedBy", test.getUpdatedBy());
+	                        testMap.put("updatedOn", test.getUpdatedOn());
+
+	                        // Medical Test details
+	                        Optional<MedicalTestConfig> testConfig = medicalTestConfigRepository.findById(test.getMedicalTest().getId());
+	                        testConfig.ifPresent(config -> {
+	                            testMap.put("medicalTestId", config.getId());
+	                            testMap.put("testName", config.getMedicalTestName());
+	                            testMap.put("mrp", config.getMrp());
+	                            testMap.put("gst", config.getGst());
+	                            testMap.put("isActive", config.getIsActive());
+	                        });
+
+	                        // Medical Test Slot
+	                        medicalTestSlotSpiltTimeRepository.findById(test.getMedicalTestSlotSpiltTimeId()).ifPresent(slot -> {
+	                            testMap.put("medicalTestSlotSpiltTimeId", slot.getMedicalTestSlotSpiltTimeId());
+	                            testMap.put("slotStartTime", slot.getSlotStartTime());
+	                            testMap.put("slotEndTime", slot.getSlotEndTime());
+	                            testMap.put("slotStatus", slot.getSlotStatus());
+	                            testMap.put("createdBy", slot.getCreatedBy());
+	                            testMap.put("createdOn", slot.getCreatedOn());
+	                            testMap.put("updatedBy", slot.getUpdatedBy());
+	                            testMap.put("updatedOn", slot.getUpdatedOn());
+	                            testMap.put("isActive", slot.getIsActive());
+	                        });
+
+	                        testList.add(testMap);
+	                    }
+	                }
+	                map.put("appointmentMedicalTests", testList);
+
+	                return map;
+	            })
+	            .collect(Collectors.toList());
+
+	        return ResponseEntity.ok(new Response(1, "success", filteredData));
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "error", "An error occurred while fetching appointment details."));
+	    }
+	}
 
 
 

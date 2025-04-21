@@ -176,6 +176,20 @@ public class DoctorAppointmentController {
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+	@GetMapping("getAllPatientAppointmentDetails") // Corrected spelling in endpoint
+	public ResponseEntity<?> getAllPatientAppointmentDetails(
+	        @RequestParam("patientId") Integer  patientId,@RequestParam("appointmentDate")String currentDatae) {
+	    try {
+	        logger.info("getAllPatientAppointmentDetails request for createdOn: {}, appointmentType: {}", patientId);
+	        
+	       
+	        return doctorAppoitmentService.getAllPatientAppointmentDetails(patientId,currentDatae);
+	    } catch (Exception e) {
+	        logger.error("getAllPatientMedicalTestBypatientIdAndDate Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 	
 	@DeleteMapping("deleteParticularSpiltSlot")
 	public ResponseEntity<?> deleteParticularSpiltSlot(@RequestParam("id")Integer id) {

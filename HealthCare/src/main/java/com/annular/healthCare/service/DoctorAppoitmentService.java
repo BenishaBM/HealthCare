@@ -30,4 +30,6 @@ public interface DoctorAppoitmentService {
 
 	ResponseEntity<?> getAllPatientAppointment(String appointmentDate, Integer doctorId);
 
+	ResponseEntity<?> getAllPatientAppointmentDetails(Integer patientId, String currentDatae);
+
 }

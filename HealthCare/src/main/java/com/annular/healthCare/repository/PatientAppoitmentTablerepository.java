@@ -78,6 +78,8 @@ public interface PatientAppoitmentTablerepository extends JpaRepository<PatientA
 		       "(:appointmentDate IS NULL OR FUNCTION('DATE', p.appointmentDate) = FUNCTION('DATE', :appointmentDate))")
 		List<PatientAppointmentTable> findAppointments(String appointmentDate, Integer doctorId);
 
+	
+
 
 
 
