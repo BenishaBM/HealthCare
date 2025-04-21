@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.annular.healthCare.model.MediaFileCategory;
+import com.annular.healthCare.model.User;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -41,5 +42,9 @@ public class FileInputWebModel {
 		private String fileData;
 		
 		private Integer fileCategory;
+		
+		private String categorys;
+		
+
 
 }

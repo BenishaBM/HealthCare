@@ -38,4 +38,8 @@ public interface MedicalTestConfigService {
 
 	ResponseEntity<?> getAllDoctorList();
 
+	ResponseEntity<?> saveResultByAppoitmentId(MedicalTestConfigWebModel medicalTestConfigWebModel);
+
+	ResponseEntity<?> getResultByAppoitmentId(MedicalTestConfigWebModel medicalTestConfigWebModel);
+
 }

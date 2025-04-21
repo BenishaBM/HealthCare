@@ -234,4 +234,31 @@ public class MedicalTestConfigController {
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+	
+	@PostMapping("saveResultByAppoitmentId")
+	public ResponseEntity<?> saveResultByAppoitmentId(@RequestBody MedicalTestConfigWebModel medicalTestConfigWebModel) {
+	    try {
+	        // Call the service to perform the update
+	        return medicalTestConfigService.saveResultByAppoitmentId(medicalTestConfigWebModel);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("saveResultByAppoitmentId Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+	
+	
+	@GetMapping("getResultByAppoitmentId")
+	public ResponseEntity<?> getResultByAppoitmentId(@RequestBody MedicalTestConfigWebModel medicalTestConfigWebModel) {
+	    try {
+	        // Call the service to perform the update
+	        return medicalTestConfigService.getResultByAppoitmentId(medicalTestConfigWebModel);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("getResultByAppoitmentId Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 }

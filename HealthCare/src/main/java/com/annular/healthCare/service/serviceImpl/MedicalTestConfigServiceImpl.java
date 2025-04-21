@@ -22,6 +22,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.expression.ParseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +39,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.annular.healthCare.Response;
+import com.annular.healthCare.Util.Base64FileUpload;
+import com.annular.healthCare.Util.HealthCareConstant;
 import com.annular.healthCare.model.Department;
 import com.annular.healthCare.model.DoctorDaySlot;
 import com.annular.healthCare.model.DoctorRole;
@@ -46,6 +50,9 @@ import com.annular.healthCare.model.DoctorSlotSpiltTime;
 import com.annular.healthCare.model.DoctorSlotTime;
 import com.annular.healthCare.model.DoctorSlotTimeOverride;
 import com.annular.healthCare.model.DoctorSpecialty;
+import com.annular.healthCare.model.HospitalDataList;
+import com.annular.healthCare.model.MediaFile;
+import com.annular.healthCare.model.MediaFileCategory;
 import com.annular.healthCare.model.MedicalTestConfig;
 import com.annular.healthCare.model.MedicalTestDaySlot;
 import com.annular.healthCare.model.MedicalTestSlot;
@@ -57,6 +64,8 @@ import com.annular.healthCare.model.PatientAppointmentTable;
 import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.DepartmentRepository;
 import com.annular.healthCare.repository.DoctorSpecialityRepository;
+import com.annular.healthCare.repository.HospitalDataListRepository;
+import com.annular.healthCare.repository.MediaFileRepository;
 import com.annular.healthCare.repository.MedicalTestConfigRepository;
 import com.annular.healthCare.repository.MedicalTestDaySlotRepository;
 import com.annular.healthCare.repository.MedicalTestSlotDateRepository;
@@ -69,6 +78,7 @@ import com.annular.healthCare.service.MedicalTestConfigService;
 import com.annular.healthCare.webModel.DaySlotWebModel;
 import com.annular.healthCare.webModel.DoctorDaySlotWebModel;
 import com.annular.healthCare.webModel.DoctorSlotTimeWebModel;
+import com.annular.healthCare.webModel.FileInputWebModel;
 import com.annular.healthCare.webModel.MedicalTestConfigWebModel;
 import com.annular.healthCare.webModel.MedicalTestDaySlotWebModel;
 import com.annular.healthCare.webModel.MedicalTestDto;
@@ -87,8 +97,14 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 	@Autowired
 	DepartmentRepository departmentRepository;
 	
+	@Value("${annular.app.imageLocation}")
+	private String imageLocation;
+	
 	@Autowired
 	MedicalTestSlotRepository medicalTestSlotRepository;
+	
+	@Autowired
+	MediaFileRepository mediaFilesRepository;
 	
 	@Autowired
 	UserRepository userRepository;
@@ -111,6 +127,8 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 	@Autowired
 	MedicalTestSlotTimeOverideRepository medicalTestSlotTimeOverideRepository;
 	
+	@Autowired
+    HospitalDataListRepository hospitalDataListRepository;
 	
 	@Override
 	public ResponseEntity<?> saveDepartment(MedicalTestConfigWebModel request) {
@@ -1465,10 +1483,18 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 			                specialtyNames.add(specialty.getSpecialtyName());
 			            }
 			        }
+			        
+
+			        // Get hospital name from HospitalDetail table using hospitalId
+			        Optional<HospitalDataList> hospitalDetailOpt = hospitalDataListRepository.findById(user.getHospitalId());
+			        String hospitalName = hospitalDetailOpt.map(HospitalDataList::getHospitalName).orElse("Unknown Hospital");
+
 
 			        // Add data to map
 			        doctorMap.put("userId", user.getUserId());
+			        doctorMap.put("hospitalId", user.getHospitalId());
 			        doctorMap.put("userName", name.trim());
+			        doctorMap.put("hospitalName", hospitalName);
 			        doctorMap.put("specialties", specialtyNames);
 
 			        doctorList.add(doctorMap);
@@ -1478,7 +1504,113 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 			}
 
 
+			@Override
+			public ResponseEntity<?> saveResultByAppoitmentId(MedicalTestConfigWebModel medicalTestConfigWebModel) {
+			    Map<String, Object> response = new HashMap<>();
+			    try {
+			        ArrayList<FileInputWebModel> filesInputWebModel = medicalTestConfigWebModel.getFilesInputWebModel();
+			        ArrayList<MediaFile> uploadedDocuments = new ArrayList<>();
+			        Optional<User> userOptional = userRepository.findById(medicalTestConfigWebModel.getCreatedBy());
+			        if (!userOptional.isPresent()) {
+			            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+			                    .body(new Response(-1, "User not found", null));
+			        }
+
+			        User user = userOptional.get();
+
+			        if (filesInputWebModel != null && !filesInputWebModel.isEmpty()) {
+			            for (FileInputWebModel fileInput : filesInputWebModel) {
+			                if (fileInput.getFileData() != null) {
+			                    MediaFile mediaFiles = new MediaFile();
+
+			                    String fileName = UUID.randomUUID().toString();
+
+			                    mediaFiles.setFileName(fileName);
+			                    mediaFiles.setFileOriginalName(fileInput.getFileName());
+			                    mediaFiles.setFileSize(fileInput.getFileSize());
+			                    mediaFiles.setFileType(fileInput.getFileType());
+			                    mediaFiles.setFileDomainId(HealthCareConstant.resultDocument);
+			                    mediaFiles.setUser(user);
+
+			                    // Assuming restaurant object is already defined and represents the appointment
+			                    mediaFiles.setFileDomainReferenceId(medicalTestConfigWebModel.getId());
+			                    mediaFiles.setFileIsActive(true);
+			                    mediaFiles.setCategory(MediaFileCategory.resutDocument);
+                                
+			                    mediaFiles.setFileCreatedBy(medicalTestConfigWebModel.getCreatedBy());
+
+			                    mediaFiles = mediaFilesRepository.save(mediaFiles);
+			                    uploadedDocuments.add(mediaFiles);
+
+			                    // Save the file to disk
+			                    Base64FileUpload.saveFile(imageLocation + "/healthCare", fileInput.getFileData(), fileName);
+			                }
+			            }
+			        }
+
+			      
+			        response.put("uploadedDocuments", uploadedDocuments);
+			        return ResponseEntity.ok(new Response(1, "Files saved successfully", response));
+
+			    } catch (Exception e) {
+			        log.error("Error at saveResultByAppoitmentId() -> {}", e.getMessage());
+			        e.printStackTrace();
+			        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+			                .body(new Response(-1, "Error occurred while saving results", null));
+			    }
 			}
 
 
+			@Override
+			public ResponseEntity<?> getResultByAppoitmentId(MedicalTestConfigWebModel medicalTestConfigWebModel) {
+			    Map<String, Object> response = new HashMap<>();
+			    try {
+			        Integer appointmentId = medicalTestConfigWebModel.getId();
+
+			        // Fetch media files related to the appointment with category 'resultDocument'
+			        List<MediaFile> resultFiles = mediaFilesRepository
+			                .findByFileDomainReferenceIdAndCategory(appointmentId, MediaFileCategory.resutDocument);
+
+			        ArrayList<FileInputWebModel> filesInputWebModelList = new ArrayList<>();
+
+			        if (resultFiles != null && !resultFiles.isEmpty()) {
+			            for (MediaFile mediaFile : resultFiles) {
+			                FileInputWebModel fileInput = new FileInputWebModel();
+			                fileInput.setFileName(mediaFile.getFileOriginalName());
+			                fileInput.setFileSize(mediaFile.getFileSize());
+			                fileInput.setFileType(mediaFile.getFileType());
+			               // fileInput.setDescription(mediaFile.getFileDescription()); // Assuming MediaFile has this field
+			                fileInput.setFileId(mediaFile.getFileId()); // Set if file IDs are tracked separately
+			                fileInput.setFileType(mediaFile.getFileType());
+			                fileInput.setFilePath(mediaFile.getFilePath()); // Optional field if available
+			                fileInput.setType(mediaFile.getFileType()); // Assuming 'type' maps to fileType or a separate field
+			                fileInput.setUserId(mediaFile.getUser().getUserId());
+			                fileInput.setFileName(mediaFile.getFileOriginalName());
+			                fileInput.setFileSize(mediaFile.getFileSize());
+			                
+			                
+			                // Convert file to Base64 string
+			                String fileData = Base64FileUpload.encodeToBase64String(
+			                        imageLocation + "/healthCare", mediaFile.getFileName());
+			                fileInput.setFileData(fileData);
+
+			                filesInputWebModelList.add(fileInput);
+			            }
+			        }
+
+			        response.put("appointmentId", appointmentId);
+			        response.put("resultDocuments", filesInputWebModelList);
+
+			        return ResponseEntity.ok(new Response(1, "Result documents fetched successfully", response));
+
+			    } catch (Exception e) {
+			        log.error("Error at getResultByAppoitmentId() -> {}", e.getMessage());
+			        e.printStackTrace();
+			        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+			                .body(new Response(-1, "Failed to fetch result documents", null));
+			    }
+			}
+
+
+}
 	
