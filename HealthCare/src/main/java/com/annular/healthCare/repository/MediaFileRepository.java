@@ -28,5 +28,8 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Integer>{
     
     @Query("Select m from MediaFile m where m.category=:category and m.categoryRefId=:refId and m.fileIsActive=true")
 	List<MediaFile> getMediaFilesByCategoryAndRefId(MediaFileCategory category, Integer refId);
+    
+    
+	List<MediaFile> findByFileDomainReferenceIdAndCategory(Integer appointmentId, MediaFileCategory resutdocument);
 
 }
