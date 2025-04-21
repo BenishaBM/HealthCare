@@ -249,7 +249,7 @@ public class MedicalTestConfigController {
 	}
 	
 	
-	@GetMapping("getResultByAppoitmentId")
+	@PostMapping("getResultByAppoitmentId")
 	public ResponseEntity<?> getResultByAppoitmentId(@RequestBody MedicalTestConfigWebModel medicalTestConfigWebModel) {
 	    try {
 	        // Call the service to perform the update
