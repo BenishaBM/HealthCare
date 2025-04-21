@@ -91,4 +91,6 @@ public class MediaFile {
 
     @Column(name = "file_path")
     private String filePath;
+
+
 }
