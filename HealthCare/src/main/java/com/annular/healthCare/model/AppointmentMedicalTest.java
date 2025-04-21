@@ -65,6 +65,9 @@ public class AppointmentMedicalTest {
 	
    @Column(name = "medicalTestSlotSpiltTimeId")
    private Integer medicalTestSlotSpiltTimeId;
+   
+   @Column(name = "medicalTestBarCode")
+   private String medicalTestBarCode;
 	
 	
 }

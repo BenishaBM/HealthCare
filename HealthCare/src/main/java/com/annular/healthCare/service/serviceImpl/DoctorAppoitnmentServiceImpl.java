@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -216,8 +217,20 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                             .updatedBy(userId)
 	                             .medicalTestSlotSpiltTimeId(testModel.getMedicalTestSlotSpiltTimeId()) // <-- FIXED
 	                             .build();
+	                     
 
-	                     appointmentMedicalTestRepository.save(amt);
+	                    // appointmentMedicalTestRepository.save(amt);
+
+	                     // Step 1: Save to get ID
+	                     AppointmentMedicalTest savedAmt = appointmentMedicalTestRepository.save(amt);
+
+	                     // Step 2: Generate Barcode
+	                     String random8Digit = String.format("%08d", new Random().nextInt(100_000_000));
+	                     String barcode = "MT" + savedAmt.getId() + random8Digit;
+
+	                     // Step 3: Update the entity with the barcode
+	                     savedAmt.setMedicalTestBarCode(barcode);
+	                     appointmentMedicalTestRepository.save(savedAmt);
 	                     
 
 	                     // Update SlotStatus to BOOKED
@@ -444,7 +457,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                             medMap.put("updatedBy", med.getUpdatedBy());
 	                             medMap.put("updatedOn", med.getUpdatedOn());
 	                             medMap.put("medicineStatus", med.getPatientStatus());
-
+                          
 	                             medMap.put("morningBF", med.getMorningBF());
 	                             medMap.put("morningAF", med.getMorningAF());
 	                             medMap.put("afternoonBF", med.getAfternoonBF());
@@ -646,7 +659,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                                 .map(test -> {
 	                                     Map<String, Object> testMap = new HashMap<>();
 	                                     testMap.put("appointmentMedicalTestId", test.getId());
-	                                     testMap.put("medicalTestId", test.getMedicalTest().getId());
+	                                     testMap.put("medicalTes",test.getMedicalTestBarCode());
 	                                     testMap.put("isActive", test.getIsActive());
 	                                     testMap.put("createdBy", test.getCreatedBy());
 	                                     testMap.put("createdOn", test.getCreatedOn());
