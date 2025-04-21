@@ -646,6 +646,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                                 .map(test -> {
 	                                     Map<String, Object> testMap = new HashMap<>();
 	                                     testMap.put("appointmentMedicalTestId", test.getId());
+	                                     testMap.put("medicalTestId", test.getMedicalTest().getId());
 	                                     testMap.put("isActive", test.getIsActive());
 	                                     testMap.put("createdBy", test.getCreatedBy());
 	                                     testMap.put("createdOn", test.getCreatedOn());
@@ -654,7 +655,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                                     testMap.put("testStatus", test.getPatientStatus());
 
 	                                     // Map the medical test details
-	                                     Optional<MedicalTestConfig> medicalTest = medicalTestConfigRepository.findById(test.getId());
+	                                     Optional<MedicalTestConfig> medicalTest = medicalTestConfigRepository.findById(test.getMedicalTest().getId());
 	                                     if (medicalTest != null) {
 	                                         testMap.put("medicalTestId", medicalTest.get().getId());
 	                                         testMap.put("testName", medicalTest.get().getMedicalTestName());
