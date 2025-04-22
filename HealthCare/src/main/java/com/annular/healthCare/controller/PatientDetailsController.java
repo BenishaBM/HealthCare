@@ -197,4 +197,16 @@ public class PatientDetailsController {
 			}
 		}
 		
+		@GetMapping("getPatientMappedDetailsById")
+		public ResponseEntity<?> getPatientMappedDetailsById(@RequestParam("patientId") Integer patientDetailsId,@RequestParam("hospitalId")Integer hospitalId) {
+			try {
+				logger.info("getPatientMappedDetailsById request for userType: {}", patientDetailsId,hospitalId);
+				return patientDetailService.getPatientMappedDetailsById(patientDetailsId,hospitalId);
+			} catch (Exception e) {
+				logger.error("getPatientMappedDetailsById Method Exception: {}", e.getMessage(), e);
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+						.body(new Response(-1, "Fail", e.getMessage()));
+			}
+		}
+		
 }

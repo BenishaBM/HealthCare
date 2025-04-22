@@ -23,5 +23,10 @@ public interface PatientMappedHospitalIdRepository extends JpaRepository<Patient
 		       "WHERE p.patientId = :patientId AND p.hospitalId = :hospitalId AND p.userIsActive = true")
 		boolean existsByPatientIdAndHospitalId(@Param("patientId") Integer patientId, @Param("hospitalId") Integer hospitalId);
 
+	@Query("SELECT p FROM PatientMappedHospitalId p WHERE p.patientId = :patientId AND p.hospitalId = :hospitalId")
+	Optional<PatientMappedHospitalId> findMappedData(@Param("patientId") Integer patientId, @Param("hospitalId") Integer hospitalId);
+
+
+
 
 }

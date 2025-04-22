@@ -1159,6 +1159,60 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
             return ResponseEntity.ok(response);
         }
 
+        @Override
+        public ResponseEntity<?> getPatientMappedDetailsById(Integer patientDetailsId, Integer hospitalId) {
+            Optional<PatientMappedHospitalId> mappedOpt = patientMappedHospitalIdRepository
+                    .findMappedData(patientDetailsId, hospitalId);
+
+            System.out.println("mappedOpt------------->");
+            
+            if (mappedOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Mapping not found");
+            }
+
+            PatientMappedHospitalId mapping = mappedOpt.get();
+
+            // If both flags are false or null, return 403
+            if (Boolean.FALSE.equals(mapping.getMedicalHistoryStatus()) &&
+                Boolean.FALSE.equals(mapping.getPersonalDataStatus())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No data shared");
+            }
+
+            Optional<PatientDetails> patientOpt = patientDetailsRepository.findById(patientDetailsId);
+
+            if (patientOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Patient not found");
+            }
+
+            PatientDetails patient = patientOpt.get();
+            Map<String, Object> response = new HashMap<>();
+
+            // Add personal data if allowed
+            if (Boolean.TRUE.equals(mapping.getPersonalDataStatus())) {
+                response.put("patientName", patient.getPatientName());
+                response.put("dob", patient.getDob());
+                response.put("gender", patient.getGender());
+                response.put("bloodGroup", patient.getBloodGroup());
+                response.put("mobileNumber", patient.getMobileNumber());
+                response.put("emailId", patient.getEmailId());
+                response.put("address", patient.getAddress());
+                response.put("emergencyContact", patient.getEmergencyContact());
+            }
+
+            // Add medical history if allowed
+            if (Boolean.TRUE.equals(mapping.getMedicalHistoryStatus())) {
+                response.put("previousMedicalHistory", patient.getPreviousMedicalHistory());
+                response.put("insuranceDetails", patient.getInsuranceDetails());
+                response.put("insurerName", patient.getInsurerName());
+                response.put("insuranceProvider", patient.getInsuranceProvider());
+                response.put("policyNumber", patient.getPolicyNumber());
+                response.put("disability", patient.getDisability());
+            }
+
+            return ResponseEntity.ok(response);
+        }
+
+
 
 }
 

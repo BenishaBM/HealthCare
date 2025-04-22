@@ -32,4 +32,6 @@ public interface PatientDetailsService {
 
 	ResponseEntity<?> getPatientRelationShipDetails(Integer patientDetailsId, String relationshipType);
 
+	ResponseEntity<?> getPatientMappedDetailsById(Integer patientDetailsId, Integer hospitalId);
+
 }
