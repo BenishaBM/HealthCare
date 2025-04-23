@@ -34,4 +34,6 @@ public interface DoctorAppoitmentService {
 
 	ResponseEntity<?> saveDoctorFees(HospitalDataListWebModel userWebModel);
 
+	ResponseEntity<?> updateFeesStatus(HospitalDataListWebModel userWebModel);
+
 }

@@ -995,6 +995,40 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                .body("Error while saving doctor fees: " + e.getMessage());
 	    }
 	}
+	@Override
+	public ResponseEntity<?> updateFeesStatus(HospitalDataListWebModel userWebModel) {
+	    try {
+	        Integer appointmentId = userWebModel.getAppointmentId();
+
+	        Optional<PatientAppointmentTable> optionalAppointment = patientAppointmentRepository.findById(appointmentId);
+
+	        if (optionalAppointment.isPresent()) {
+	            PatientAppointmentTable appointment = optionalAppointment.get();
+
+	            // Update only if value is passed (not null)
+	            if (userWebModel.getDoctorFeesStatus() != null) {
+	                appointment.setDoctorFeesStatus(userWebModel.getDoctorFeesStatus());
+	            }
+	            if (userWebModel.getMedicineStatus() != null) {
+	                appointment.setPharmacyStatus(userWebModel.getMedicineStatus()); // assuming mapping
+	            }
+	            if (userWebModel.getMedicalTestStatus() != null) {
+	                appointment.setLabStatus(userWebModel.getMedicalTestStatus()); // assuming mapping
+	            }
+
+	            appointment.setUpdatedOn(new Date());
+	            patientAppointmentRepository.save(appointment);
+
+	            return ResponseEntity.ok(new Response(1, "Appointment status updated successfully.", appointment.getDoctorFees()));
+	        } else {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Appointment not found.");
+	        }
+
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body("Error while updating status: " + e.getMessage());
+	    }
+	}
 
 
 

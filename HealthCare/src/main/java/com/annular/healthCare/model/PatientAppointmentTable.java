@@ -121,6 +121,12 @@ public class PatientAppointmentTable {
     
     @Column(name = "doctorsFeesStatus")
     private String doctorFeesStatus;
+    
+    @Column(name = "medicineStatus")
+    private String medicineStatus;
+    
+    @Column(name = "medicalTestStatus")
+    private String medicalTestStatus;
 
     
     
