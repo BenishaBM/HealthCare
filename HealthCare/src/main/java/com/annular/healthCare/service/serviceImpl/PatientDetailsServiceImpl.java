@@ -304,7 +304,6 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	                .patientName(userWebModel.getPatientName())
 	                .relationShipType(userWebModel.getRelationshipType())
 	                .patient(patient)
-	                .doctorFees(userWebModel.getDoctorFees())
 	                .doctorSlotId(userWebModel.getDoctorSlotId())
 	                .token(String.valueOf(newToken)) // Assigning token sequentially
 	                .daySlotId(userWebModel.getDaySlotId())

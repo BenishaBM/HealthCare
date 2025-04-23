@@ -169,6 +169,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 
 	         // Set appointment status
 	         appointment.setAppointmentStatus("COMPLETED");
+	         appointment.setDoctorFees(userWebModel.getDoctorFees());
 	         appointment.setDoctorPrescription(userWebModel.getDoctorPrescription());
 	         patientAppointmentRepository.save(appointment);
 
