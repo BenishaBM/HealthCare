@@ -81,6 +81,8 @@ public class HospitalDataListWebModel {
     private List<Integer> specialityIds;
     private Integer patientId;
     private Integer patientMedicineDays;
+    private Integer doctorFees;
+    private String doctorFeesStatus;
     // Medicine Schedule
     private List<MedicineScheduleWebModel> schedules;
     

@@ -966,6 +966,35 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                .body(new Response(0, "error", "An error occurred while fetching appointment details."));
 	    }
 	}
+	@Override
+	public ResponseEntity<?> saveDoctorFees(HospitalDataListWebModel userWebModel) {
+	    try {
+	        Integer appointmentId = userWebModel.getAppointmentId();
+	        Integer doctorFees = userWebModel.getDoctorFees();
+
+	        // Fetch the appointment by ID
+	        Optional<PatientAppointmentTable> optionalAppointment = patientAppointmentRepository.findById(appointmentId);
+
+	        if (optionalAppointment.isPresent()) {
+	            PatientAppointmentTable appointment = optionalAppointment.get();
+
+	            // Update fees and status
+	            appointment.setDoctorFees(doctorFees);
+
+	            appointment.setUpdatedOn(new Date());
+
+	            // Save back to DB
+	            patientAppointmentRepository.save(appointment);
+
+	            return ResponseEntity.ok(new Response(1,"Doctor fees and status updated successfully.",appointment.getDoctorFees()));
+	        } else {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Appointment not found.");
+	        }
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body("Error while saving doctor fees: " + e.getMessage());
+	    }
+	}
 
 
 

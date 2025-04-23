@@ -115,6 +115,12 @@ public class PatientAppointmentTable {
     
     @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<AppointmentMedicine> appointmentMedicines;
+    
+    @Column(name = "doctorFees")
+    private Integer doctorFees;
+    
+    @Column(name = "doctorsFeesStatus")
+    private String doctorFeesStatus;
 
     
     
