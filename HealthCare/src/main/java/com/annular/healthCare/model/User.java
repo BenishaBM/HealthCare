@@ -99,4 +99,7 @@ public class User {
     // One user can have multiple doctor roles
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<DoctorRole> doctorRoles;
+    
+    @Column(name = "doctorFees")
+    private Integer doctorFees;
 }
