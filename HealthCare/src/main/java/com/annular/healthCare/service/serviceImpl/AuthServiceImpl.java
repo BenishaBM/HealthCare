@@ -694,6 +694,11 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 				existingUser.setUserUpdatedBy(userWebModel.getUserUpdatedBy());
 			if (userWebModel.getYearOfExperiences() != null)
 				existingUser.setYearOfExperiences(userWebModel.getYearOfExperiences());
+			
+			if (userWebModel.getDoctorFees() != null)
+				existingUser.setDoctorFees(userWebModel.getDoctorFees());
+		
+			
 
 			// Update timestamp
 			existingUser.setUserUpdatedOn(new Date());
