@@ -97,5 +97,5 @@ public class AppointmentMedicine {
     private Integer patientMedicineDays;
     
     @Column(name = "amount")
-    private Integer amount;
+    private float amount;
 }

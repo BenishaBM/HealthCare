@@ -70,7 +70,7 @@ public class AppointmentMedicalTest {
    private String medicalTestBarCode;
    
    @Column(name = "amount")
-   private String amount;
+   private float amount;
 	
 	
 }

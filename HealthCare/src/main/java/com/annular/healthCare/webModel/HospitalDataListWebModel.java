@@ -85,7 +85,7 @@ public class HospitalDataListWebModel {
     private String doctorFeesStatus;
     private String medicineStatus;
     private String medicalTestStatus;
-    private Integer amount;
+    private float amount;
     // Medicine Schedule
     private List<MedicineScheduleWebModel> schedules;
     
@@ -95,7 +95,7 @@ public class HospitalDataListWebModel {
         private Integer medicineId;
         private Boolean patientStatus;
         private Integer patientMedicineDays;
-        private Integer amount;
+        private float amount;
         
     }
 

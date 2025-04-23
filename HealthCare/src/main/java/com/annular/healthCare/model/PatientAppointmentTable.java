@@ -128,6 +128,11 @@ public class PatientAppointmentTable {
     @Column(name = "medicalTestStatus")
     private String medicalTestStatus;
 
+    @Column(name = "totalMedicineAmount")
+    private float totalMedicineAmount;
+    
+    @Column(name = "totalMedicalTestAmount")
+    private float totalMedicalTestAmount;
     
     
 }

@@ -160,102 +160,106 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	         }
 
 	         Optional<PatientAppointmentTable> optionalAppointment = patientAppointmentRepository.findById(userWebModel.getAppointmentId());
-
 	         if (optionalAppointment.isEmpty()) {
 	             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Response(0, "error", "Appointment not found."));
 	         }
 
 	         PatientAppointmentTable appointment = optionalAppointment.get();
 
-	         // Set appointment status
+	         // Update appointment details
 	         appointment.setAppointmentStatus("COMPLETED");
 	         appointment.setDoctorFees(userWebModel.getDoctorFees());
 	         appointment.setDoctorPrescription(userWebModel.getDoctorPrescription());
-	         patientAppointmentRepository.save(appointment);
 
 	         Integer userId = userWebModel.getUserId(); // Who is saving this
+	         
+	         float totalMedicalTestAmount = 0f;
+
+	         // Save Medicines
 	         if (userWebModel.getSchedules() != null) {
-	        	    for (MedicineScheduleWebModel medSchedule : userWebModel.getSchedules()) {
-	        	        Optional<Medicines> medicineOpt = medicineRepository.findById(medSchedule.getMedicineId());
-	        	        if (medicineOpt.isPresent()) {
-	        	            AppointmentMedicine am = AppointmentMedicine.builder()
-	        	                .appointment(appointment)
-	        	                .medicine(medicineOpt.get())
-	        	                .isActive(true)
-	        	                .createdBy(userId)
-	        	                .updatedBy(userId)
-	        	                .patientStatus(false)
-	        	                .morningBF(medSchedule.getMorningBF())
-	        	                .morningAF(medSchedule.getMorningAF())
-	        	                .afternoonBF(medSchedule.getAfternoonBF())
-	        	                .afternoonAF(medSchedule.getAfternoonAF())
-	        	                .nightBF(medSchedule.getNightBF())
-	        	                .nightAF(medSchedule.getNightAF())
-	        	                .every6Hours(medSchedule.getEvery6Hours())
-	        	                .every8Hours(medSchedule.getEvery8Hours())
-	        	                .days(medSchedule.getDays())
-	        	                .build();
+	             for (MedicineScheduleWebModel medSchedule : userWebModel.getSchedules()) {
+	                 Optional<Medicines> medicineOpt = medicineRepository.findById(medSchedule.getMedicineId());
+	                 if (medicineOpt.isPresent()) {
+	                     AppointmentMedicine am = AppointmentMedicine.builder()
+	                         .appointment(appointment)
+	                         .medicine(medicineOpt.get())
+	                         .isActive(true)
+	                         .createdBy(userId)
+	                         .updatedBy(userId)
+	                         .patientStatus(false)
+	                         .morningBF(medSchedule.getMorningBF())
+	                         .morningAF(medSchedule.getMorningAF())
+	                         .afternoonBF(medSchedule.getAfternoonBF())
+	                         .afternoonAF(medSchedule.getAfternoonAF())
+	                         .nightBF(medSchedule.getNightBF())
+	                         .nightAF(medSchedule.getNightAF())
+	                         .every6Hours(medSchedule.getEvery6Hours())
+	                         .every8Hours(medSchedule.getEvery8Hours())
+	                         .days(medSchedule.getDays())
+	                         .build();
 
-	        	            appointmentMedicineRepository.save(am);
-	        	        }
-	        	    }
-	        	}
+	                     appointmentMedicineRepository.save(am);
 
-	        	
+	                    
+	                 }
+	             }
+	         }
 
-	      // Save Medical Tests with start and end times
+	         // Save Medical Tests and update slot statuses
 	         if (userWebModel.getMedicalTests() != null) {
 	             for (AppointmentMedicalTestWebModel testModel : userWebModel.getMedicalTests()) {
 	                 Optional<MedicalTestConfig> testOpt = medicalTestConfigRepository.findById(testModel.getMedicalTestId());
 
 	                 if (testOpt.isPresent()) {
 	                     AppointmentMedicalTest amt = AppointmentMedicalTest.builder()
-	                             .appointment(appointment)
-	                             .medicalTest(testOpt.get())
-	                             .patientStatus(false)
-	                             .isActive(true)
-	                             .createdBy(userId)
-	                             .updatedBy(userId)
-	                             .medicalTestSlotSpiltTimeId(testModel.getMedicalTestSlotSpiltTimeId()) // <-- FIXED
-	                             .build();
-	                     
+	                         .appointment(appointment)
+	                         .medicalTest(testOpt.get())
+	                         .patientStatus(false)
+	                         .isActive(true)
+	                         .createdBy(userId)
+	                         .updatedBy(userId)
+	                         .medicalTestSlotSpiltTimeId(testModel.getMedicalTestSlotSpiltTimeId())
+	                         .build();
 
-	                    // appointmentMedicalTestRepository.save(amt);
-
-	                     // Step 1: Save to get ID
+	                     // Save test to get ID
 	                     AppointmentMedicalTest savedAmt = appointmentMedicalTestRepository.save(amt);
 
-	                     // Step 2: Generate Barcode
+	                     // Generate and update barcode
 	                     String random8Digit = String.format("%08d", new Random().nextInt(100_000_000));
 	                     String barcode = "MT" + savedAmt.getId() + random8Digit;
-
-	                     // Step 3: Update the entity with the barcode
 	                     savedAmt.setMedicalTestBarCode(barcode);
 	                     appointmentMedicalTestRepository.save(savedAmt);
-	                     
 
-	                     // Update SlotStatus to BOOKED
+	                     // Update Slot Status
 	                     Optional<MedicalTestSlotSpiltTime> slotTimeOpt = medicalTestSlotSpiltTimeRepository.findById(testModel.getMedicalTestSlotSpiltTimeId());
-
 	                     if (slotTimeOpt.isPresent()) {
 	                         MedicalTestSlotSpiltTime slotTime = slotTimeOpt.get();
 	                         slotTime.setSlotStatus("BOOKED");
-	                         slotTime.setUpdatedBy(userId); // optional: update timestamp/user
+	                         slotTime.setUpdatedBy(userId);
 	                         slotTime.setUpdatedOn(new Date());
-
 	                         medicalTestSlotSpiltTimeRepository.save(slotTime);
+	                     }
+
+	                     // Add MRP to totalMedicalTestAmount
+	                     Optional<MedicalTest> medicalTestOpt = medicalTestRepository.findById(testOpt.get().getId());
+	                     if (medicalTestOpt.isPresent() && medicalTestOpt.get().getMrp() != null) {
+	                         totalMedicalTestAmount += medicalTestOpt.get().getMrp();
 	                     }
 	                 }
 	             }
 	         }
 
 
-	         return ResponseEntity.ok(new Response(1, "success", "Appointment updated successfully."));
+	         appointment.setTotalMedicalTestAmount(totalMedicalTestAmount);
 
+	         // Save appointment after setting amounts
+	         patientAppointmentRepository.save(appointment);
+
+	         return ResponseEntity.ok(new Response(1, "success", "Appointment updated successfully."));
 	     } catch (Exception e) {
 	         e.printStackTrace();
 	         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                 .body(new Response(0, "error", "An error occurred while updating the appointment."));
+	             .body(new Response(0, "error", "An error occurred while updating the appointment."));
 	     }
 	 }
 
@@ -431,6 +435,8 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                     map.put("pharmacyStatus", appointment.getPharmacyStatus());
 	                     map.put("labStatus", appointment.getLabStatus());
 	                     map.put("appointmentId", appointment.getAppointmentId());
+	                     map.put("totalMedicineAmount", appointment.getTotalMedicalTestAmount());
+	                     map.put("totalMedicalTestAmount", appointment.getTotalMedicalTestAmount());
 
 	                     // PatientDetails
 	                     PatientDetails patient = appointment.getPatient();
@@ -512,12 +518,15 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	         if (!appointmentOpt.isPresent()) {
 	             return ResponseEntity.badRequest().body("Invalid appointment ID");
 	         }
+
 	         PatientAppointmentTable appointment = appointmentOpt.get();
 
 	         List<HospitalDataListWebModel.MedicineDetail> medicineDetails = userWebModel.getMedicineDetails();
 	         if (medicineDetails == null || medicineDetails.isEmpty()) {
 	             return ResponseEntity.badRequest().body("No medicine details provided.");
 	         }
+
+	         float totalAmount = 0; // initialize total amount
 
 	         for (HospitalDataListWebModel.MedicineDetail detail : medicineDetails) {
 	             Integer medicineId = detail.getMedicineId();
@@ -526,18 +535,27 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                 appointmentMedicineRepository.findByAppointmentAppointmentIdAndMedicineId(appointmentId, medicineId);
 
 	             for (AppointmentMedicine existing : existingMedicines) {
-	            	 System.out.println("detail.getPatientStatus()"+detail.getPatientStatus());
+	                 System.out.println("detail.getPatientStatus(): " + detail.getPatientStatus());
 	                 existing.setPatientStatus(detail.getPatientStatus());
 	                 existing.setPatientMedicineDays(detail.getPatientMedicineDays());
 	                 existing.setUpdatedBy(appointment.getCreatedBy()); // or session user
-	                 existing.setAmount(detail.getAmount());
+
+	                 // Use wrapper Float to safely handle null
+	                 Float amount = detail.getAmount();
+	                 existing.setAmount(amount != null ? amount : 0f); // default to 0f if null
+	                 totalAmount += (amount != null) ? amount : 0;
+
 	                 existing.setUpdatedOn(new Date());
 	                 appointmentMedicineRepository.save(existing);
 	             }
 	         }
 
+	         // Set the calculated total medicine amount
+	         appointment.setTotalMedicineAmount(totalAmount);
+
 	         // Update pharmacy status to COMPLETED
 	         appointment.setPharmacyStatus("COMPLETED");
+
 	         patientAppointmentRepository.save(appointment);
 
 	         return ResponseEntity.ok(new Response(1, "success", "Medicines updated successfully"));
@@ -546,6 +564,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	         return ResponseEntity.internalServerError().body(new Response(0, "error", "An error occurred: " + e.getMessage()));
 	     }
 	 }
+
 	 @Override
 	 public ResponseEntity<?> getAllPatientMedicalTestByHospitalIdAndDate(Integer hospitalId, String currentDate) {
 	     try {
@@ -640,6 +659,8 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                     map.put("pharmacyStatus", appointment.getPharmacyStatus());
 	                     map.put("labStatus", appointment.getLabStatus());
 	                     map.put("appointmentId", appointment.getAppointmentId());
+	                     map.put("totalMedicalTestAmount", appointment.getTotalMedicalTestAmount());
+	                     map.put("totalMedicineTestAmount", appointment.getTotalMedicineAmount());
 
 	                     // Map patient details if available
 	                     PatientDetails patient = appointment.getPatient();
@@ -852,6 +873,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                map.put("token", appointment.getToken());
 	                map.put("pharmacyStatus", appointment.getPharmacyStatus());
 	                map.put("labStatus", appointment.getLabStatus());
+	                map.put("totalMedicineAmount", appointment.getTotalMedicineAmount());
 
 	                // Audit fields
 	                map.put("isActive", appointment.getIsActive());
