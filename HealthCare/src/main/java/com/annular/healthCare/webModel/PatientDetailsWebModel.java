@@ -58,6 +58,7 @@ public class PatientDetailsWebModel {
 	private Integer daySlotId;
 	private Integer timeSlotId;
 	private String appointmentDate;
+	private Integer doctorFees;
 
 	private String slotStartTime;
 	private String slotEndTime;

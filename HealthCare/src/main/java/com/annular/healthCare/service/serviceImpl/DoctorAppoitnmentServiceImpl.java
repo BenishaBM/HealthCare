@@ -465,6 +465,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                             medMap.put("nightBF", med.getNightBF());
 	                             medMap.put("nightAF", med.getNightAF());
 	                             medMap.put("every6Hours", med.getEvery6Hours());
+	                             medMap.put("amount", med.getAmount());
 	                             medMap.put("every8Hours", med.getEvery8Hours());
 	                             medMap.put("days", med.getDays());
 	                             medMap.put("patientMedicineDays", med.getPatientMedicineDays());
@@ -528,6 +529,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                 existing.setPatientStatus(detail.getPatientStatus());
 	                 existing.setPatientMedicineDays(detail.getPatientMedicineDays());
 	                 existing.setUpdatedBy(appointment.getCreatedBy()); // or session user
+	                 existing.setAmount(detail.getAmount());
 	                 existing.setUpdatedOn(new Date());
 	                 appointmentMedicineRepository.save(existing);
 	             }
@@ -887,7 +889,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                        medMap.put("nightAF", med.getNightAF());
 	                        medMap.put("every6Hours", med.getEvery6Hours());
 	                        medMap.put("every8Hours", med.getEvery8Hours());
-
+                            medMap.put("amount", med.getAmount());
 	                        // Audit fields
 	                        medMap.put("isActive", med.getIsActive());
 	                        medMap.put("createdBy", med.getCreatedBy());

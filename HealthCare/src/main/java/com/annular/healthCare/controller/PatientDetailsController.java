@@ -209,4 +209,17 @@ public class PatientDetailsController {
 			}
 		}
 		
+		@GetMapping("getDoctorfeesById")
+		public ResponseEntity<?> getDoctorfeesById(@RequestParam("userId") Integer userId) {
+			try {
+				logger.info("getDoctorfeesById request for userType: {}", userId);
+				return patientDetailService.getDoctorfeesById(userId);
+			} catch (Exception e) {
+				logger.error("getDoctorfeesById Method Exception: {}", e.getMessage(), e);
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+						.body(new Response(-1, "Fail", e.getMessage()));
+			}
+		}
+		
+		
 }

@@ -68,6 +68,9 @@ public class AppointmentMedicalTest {
    
    @Column(name = "medicalTestBarCode")
    private String medicalTestBarCode;
+   
+   @Column(name = "amount")
+   private String amount;
 	
 	
 }

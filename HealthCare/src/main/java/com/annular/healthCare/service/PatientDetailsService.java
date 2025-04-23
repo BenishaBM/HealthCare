@@ -34,4 +34,6 @@ public interface PatientDetailsService {
 
 	ResponseEntity<?> getPatientMappedDetailsById(Integer patientDetailsId, Integer hospitalId);
 
+	ResponseEntity<?> getDoctorfeesById(Integer userId);
+
 }

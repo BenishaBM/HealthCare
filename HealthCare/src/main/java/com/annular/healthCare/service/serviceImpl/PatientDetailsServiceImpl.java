@@ -304,7 +304,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	                .patientName(userWebModel.getPatientName())
 	                .relationShipType(userWebModel.getRelationshipType())
 	                .patient(patient)
-	                .doctorFees(doctor.getDoctorFees())
+	                .doctorFees(userWebModel.getDoctorFees())
 	                .doctorSlotId(userWebModel.getDoctorSlotId())
 	                .token(String.valueOf(newToken)) // Assigning token sequentially
 	                .daySlotId(userWebModel.getDaySlotId())
@@ -1213,7 +1213,18 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
             return ResponseEntity.ok(response);
         }
 
+        @Override
+        public ResponseEntity<?> getDoctorfeesById(Integer userId) {
+            Optional<User> optionalUser = userRepository.findByUserId(userId);
 
+            if (optionalUser.isPresent()) {
+                Integer doctorFees = optionalUser.get().getDoctorFees();
+                return ResponseEntity.ok(doctorFees);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("User not found with ID: " + userId);
+            }
+        }
 
 }
 
