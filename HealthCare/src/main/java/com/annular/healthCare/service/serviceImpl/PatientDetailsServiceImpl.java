@@ -1218,12 +1218,16 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 
             if (optionalUser.isPresent()) {
                 Integer doctorFees = optionalUser.get().getDoctorFees();
-                return ResponseEntity.ok(doctorFees);
+                Map<String, Object> response = new HashMap<>();
+                response.put("userId", userId);
+                response.put("doctorFees", doctorFees);
+                return ResponseEntity.ok(response);
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("User not found with ID: " + userId);
+                        .body(Collections.singletonMap("error", "User not found with ID: " + userId));
             }
         }
+
 
 }
 
