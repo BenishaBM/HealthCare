@@ -427,7 +427,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                     map.put("pharmacyStatus", appointment.getPharmacyStatus());
 	                     map.put("labStatus", appointment.getLabStatus());
 	                     map.put("appointmentId", appointment.getAppointmentId());
-	                     map.put("totalMedicineAmount", appointment.getTotalMedicalTestAmount());
+	                     map.put("totalMedicineAmount", appointment.getTotalMedicineAmount());
 	                     map.put("totalMedicalTestAmount", appointment.getTotalMedicalTestAmount());
 
 	                     // PatientDetails
