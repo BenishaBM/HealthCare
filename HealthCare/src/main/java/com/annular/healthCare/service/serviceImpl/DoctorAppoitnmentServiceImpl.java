@@ -431,6 +431,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                     map.put("appointmentId", appointment.getAppointmentId());
 	                     map.put("totalMedicineAmount", appointment.getTotalMedicineAmount());
 	                     map.put("totalMedicalTestAmount", appointment.getTotalMedicalTestAmount());
+	                     
 
 	                     // PatientDetails
 	                     PatientDetails patient = appointment.getPatient();
@@ -471,6 +472,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                             medMap.put("days", med.getDays());
 	                             medMap.put("patientMedicineDays", med.getPatientMedicineDays());
 	                             medMap.put("customizeDays", med.getCustomizeDays());
+	                             medMap.put("totalTabletCount", med.getTotalTabletCount());
 
 	                             Medicines medicine = med.getMedicine();
 	                             if (medicine != null) {
@@ -909,6 +911,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                        medMap.put("every6Hours", med.getEvery6Hours());
 	                        medMap.put("every8Hours", med.getEvery8Hours());
                             medMap.put("amount", med.getAmount());
+                            medMap.put("totalTabletCount", med.getTotalTabletCount());
 	                        // Audit fields
 	                        medMap.put("isActive", med.getIsActive());
 	                        medMap.put("createdBy", med.getCreatedBy());
