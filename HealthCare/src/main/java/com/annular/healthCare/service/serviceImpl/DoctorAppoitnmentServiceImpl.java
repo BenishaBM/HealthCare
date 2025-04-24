@@ -191,11 +191,13 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                         .morningAF(medSchedule.getMorningAF())
 	                         .afternoonBF(medSchedule.getAfternoonBF())
 	                         .afternoonAF(medSchedule.getAfternoonAF())
+	                         .totalTabletCount(medSchedule.getTotalTabletCount())
 	                         .nightBF(medSchedule.getNightBF())
 	                         .nightAF(medSchedule.getNightAF())
 	                         .every6Hours(medSchedule.getEvery6Hours())
 	                         .every8Hours(medSchedule.getEvery8Hours())
 	                         .days(medSchedule.getDays())
+	                         .customizeDays(medSchedule.getDays())
 	                         .build();
 
 	                     appointmentMedicineRepository.save(am);
@@ -468,6 +470,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                             medMap.put("every8Hours", med.getEvery8Hours());
 	                             medMap.put("days", med.getDays());
 	                             medMap.put("patientMedicineDays", med.getPatientMedicineDays());
+	                             medMap.put("customizeDays", med.getCustomizeDays());
 
 	                             Medicines medicine = med.getMedicine();
 	                             if (medicine != null) {
@@ -529,7 +532,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	             for (AppointmentMedicine existing : existingMedicines) {
 	                 System.out.println("detail.getPatientStatus(): " + detail.getPatientStatus());
 	                 existing.setPatientStatus(detail.getPatientStatus());
-	                 existing.setPatientMedicineDays(detail.getPatientMedicineDays());
+	                 existing.setCustomizeDays(detail.getPatientMedicineDays());
 	                 existing.setUpdatedBy(appointment.getCreatedBy()); // or session user
 
 	                 // Use wrapper Float to safely handle null
@@ -912,6 +915,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                        medMap.put("createdOn", med.getCreatedOn());
 	                        medMap.put("updatedBy", med.getUpdatedBy());
 	                        medMap.put("updatedOn", med.getUpdatedOn());
+	                        medMap.put("customizeDays", med.getCustomizeDays());
 
 	                        // Medicine details
 	                        Medicines medicine = med.getMedicine();

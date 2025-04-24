@@ -33,5 +33,6 @@ public class MedicineScheduleWebModel {
     private Boolean every6Hours;
     private Boolean every8Hours;
     private Integer days;
+    private Integer totalTabletCount;
 
 }

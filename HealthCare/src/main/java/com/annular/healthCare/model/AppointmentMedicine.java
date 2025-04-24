@@ -101,4 +101,7 @@ public class AppointmentMedicine {
     
     @Column(name = "customizeDays")
     private Integer customizeDays;
+    
+    @Column(name = "totalTabletCount")
+    private Integer totalTabletCount;
 }
