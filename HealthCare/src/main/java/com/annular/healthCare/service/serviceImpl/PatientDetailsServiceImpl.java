@@ -29,6 +29,7 @@ import org.springframework.web.client.RestTemplate;
 import com.annular.healthCare.Response;
 import com.annular.healthCare.Util.Base64FileUpload;
 import com.annular.healthCare.Util.Utility;
+import com.annular.healthCare.model.AddressData;
 import com.annular.healthCare.model.DoctorRole;
 import com.annular.healthCare.model.DoctorSlotSpiltTime;
 import com.annular.healthCare.model.DoctorSlotTime;
@@ -40,6 +41,7 @@ import com.annular.healthCare.model.PatientDetails;
 import com.annular.healthCare.model.PatientMappedHospitalId;
 import com.annular.healthCare.model.PatientSubChildDetails;
 import com.annular.healthCare.model.User;
+import com.annular.healthCare.repository.AddressDataRepository;
 import com.annular.healthCare.repository.DoctorSlotSpiltTimeRepository;
 import com.annular.healthCare.repository.DoctorSlotTimeRepository;
 import com.annular.healthCare.repository.DoctorSpecialityRepository;
@@ -88,6 +90,9 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
 	
 	@Autowired
 	PatientSubChildDetailsRepository patientSubChildDetailsRepository;
+	
+	@Autowired
+	AddressDataRepository addressDataRepository;
 	
 	private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("hh:mm a");
 
@@ -1225,6 +1230,28 @@ public class PatientDetailsServiceImpl implements PatientDetailsService{
             } else {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Collections.singletonMap("error", "User not found with ID: " + userId));
+            }
+        }
+        @Override
+        public ResponseEntity<?> getAllAddressData() {
+            try {
+                List<AddressData> activeAddresses = addressDataRepository.findByUserIsActiveTrue();
+
+                List<Map<String, Object>> result = new ArrayList<>();
+
+                for (AddressData address : activeAddresses) {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("addressDataId", address.getAddressDataId());
+                    map.put("addressName", address.getAddressName());
+                    result.add(map);
+                }
+
+                return ResponseEntity.ok(result);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(new Response(0, "error", "Failed to fetch address data."));
             }
         }
 

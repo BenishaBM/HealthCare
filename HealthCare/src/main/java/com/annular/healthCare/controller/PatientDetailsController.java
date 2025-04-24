@@ -221,5 +221,16 @@ public class PatientDetailsController {
 			}
 		}
 		
+		@GetMapping("getAllAddressData")
+		public ResponseEntity<?> getAllAddressData() {
+			try {
+				logger.info("getAllAddressData request for userType: {}");
+				return patientDetailService.getAllAddressData();
+			} catch (Exception e) {
+				logger.error("getAllAddressData Method Exception: {}", e.getMessage(), e);
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+						.body(new Response(-1, "Fail", e.getMessage()));
+			}
+		}
 		
 }

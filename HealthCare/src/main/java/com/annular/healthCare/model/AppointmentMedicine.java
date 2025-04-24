@@ -98,4 +98,7 @@ public class AppointmentMedicine {
     
     @Column(name = "amount")
     private float amount;
+    
+    @Column(name = "customizeDays")
+    private Integer customizeDays;
 }

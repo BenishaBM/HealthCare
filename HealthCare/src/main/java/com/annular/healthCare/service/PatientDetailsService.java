@@ -36,4 +36,6 @@ public interface PatientDetailsService {
 
 	ResponseEntity<?> getDoctorfeesById(Integer userId);
 
+	ResponseEntity<?> getAllAddressData();
+
 }
