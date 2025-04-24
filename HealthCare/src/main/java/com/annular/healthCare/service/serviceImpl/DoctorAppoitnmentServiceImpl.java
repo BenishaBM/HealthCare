@@ -1,5 +1,6 @@
 package com.annular.healthCare.service.serviceImpl;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -172,17 +173,16 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	         appointment.setDoctorPrescription(userWebModel.getDoctorPrescription());
 
 	         Integer userId = userWebModel.getUserId(); // Who is saving this
-	         
+
 	         float totalMedicalTestAmount = 0f;
 
 	         // Save Medicines
 	         if (userWebModel.getSchedules() != null) {
 	             for (MedicineScheduleWebModel medSchedule : userWebModel.getSchedules()) {
-	                 Optional<Medicines> medicineOpt = medicineRepository.findById(medSchedule.getMedicineId());
-	                 if (medicineOpt.isPresent()) {
+	                 medicineRepository.findById(medSchedule.getMedicineId()).ifPresent(medicine -> {
 	                     AppointmentMedicine am = AppointmentMedicine.builder()
 	                         .appointment(appointment)
-	                         .medicine(medicineOpt.get())
+	                         .medicine(medicine)
 	                         .isActive(true)
 	                         .createdBy(userId)
 	                         .updatedBy(userId)
@@ -199,9 +199,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                         .build();
 
 	                     appointmentMedicineRepository.save(am);
-
-	                    
-	                 }
+	                 });
 	             }
 	         }
 
@@ -211,9 +209,11 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                 Optional<MedicalTestConfig> testOpt = medicalTestConfigRepository.findById(testModel.getMedicalTestId());
 
 	                 if (testOpt.isPresent()) {
+	                     MedicalTestConfig testConfig = testOpt.get();
+
 	                     AppointmentMedicalTest amt = AppointmentMedicalTest.builder()
 	                         .appointment(appointment)
-	                         .medicalTest(testOpt.get())
+	                         .medicalTest(testConfig)
 	                         .patientStatus(false)
 	                         .isActive(true)
 	                         .createdBy(userId)
@@ -225,34 +225,25 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                     AppointmentMedicalTest savedAmt = appointmentMedicalTestRepository.save(amt);
 
 	                     // Generate and update barcode
-	                     String random8Digit = String.format("%08d", new Random().nextInt(100_000_000));
-	                     String barcode = "MT" + savedAmt.getId() + random8Digit;
+	                     String barcode = "MT" + savedAmt.getId() + String.format("%08d", new Random().nextInt(100_000_000));
 	                     savedAmt.setMedicalTestBarCode(barcode);
 	                     appointmentMedicalTestRepository.save(savedAmt);
 
 	                     // Update Slot Status
-	                     Optional<MedicalTestSlotSpiltTime> slotTimeOpt = medicalTestSlotSpiltTimeRepository.findById(testModel.getMedicalTestSlotSpiltTimeId());
-	                     if (slotTimeOpt.isPresent()) {
-	                         MedicalTestSlotSpiltTime slotTime = slotTimeOpt.get();
+	                     medicalTestSlotSpiltTimeRepository.findById(testModel.getMedicalTestSlotSpiltTimeId()).ifPresent(slotTime -> {
 	                         slotTime.setSlotStatus("BOOKED");
 	                         slotTime.setUpdatedBy(userId);
 	                         slotTime.setUpdatedOn(new Date());
 	                         medicalTestSlotSpiltTimeRepository.save(slotTime);
-	                     }
+	                     });
 
-	                     // Add MRP to totalMedicalTestAmount
-	                     Optional<MedicalTest> medicalTestOpt = medicalTestRepository.findById(testOpt.get().getId());
-	                     if (medicalTestOpt.isPresent() && medicalTestOpt.get().getMrp() != null) {
-	                         totalMedicalTestAmount += medicalTestOpt.get().getMrp();
-	                     }
+	                     // Add MRP to total
+	                     totalMedicalTestAmount += testConfig.getMrp();
 	                 }
 	             }
 	         }
 
-
 	         appointment.setTotalMedicalTestAmount(totalMedicalTestAmount);
-
-	         // Save appointment after setting amounts
 	         patientAppointmentRepository.save(appointment);
 
 	         return ResponseEntity.ok(new Response(1, "success", "Appointment updated successfully."));
@@ -262,6 +253,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	             .body(new Response(0, "error", "An error occurred while updating the appointment."));
 	     }
 	 }
+
 
 	 @Override
 	 public ResponseEntity<?> getAllMedicineDetailsByHospitalId(Integer hospitalId) {
