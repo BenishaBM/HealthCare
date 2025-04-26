@@ -42,8 +42,8 @@ public class WebSecurityConfig {
     @Autowired
     private AuthEntryPointJwt unauthorizedHandler;
     
-    @Autowired
-    private OtpAuthenticationProvider otpAuthenticationProvider;
+//    @Autowired
+//    private OtpAuthenticationProvider otpAuthenticationProvider;
 
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
@@ -80,7 +80,7 @@ public class WebSecurityConfig {
                 .and()
                 .authorizeRequests(
                         (authorize) -> authorize
-                                .antMatchers("/auth/login","/auth/refreshToken","/user/login","/user/refreshToken","/patientDetails/register","/user/getByHopitalName","/user/getHospitalDataByUserTypeAndHospitalId","/auth/getDoctorSlotById","/auth/adminPatientLogin","/auth/verifyMobileNumber","/auth/verifyMobileNumberWithoutHospitalId","/medicalTest/getAllDoctorList","/user/getByDoctorSpeciallity","/patientDetails/getAllAddressData")
+                                .antMatchers("/auth/login","/auth/refreshToken","/user/login","/user/refreshToken","/patientDetails/register","/user/getByHopitalName","/user/getHospitalDataByUserTypeAndHospitalId","/auth/getDoctorSlotById","/auth/adminPatientLogin","/auth/verifyMobileNumber","/auth/verifyMobileNumberWithoutHospitalId","/medicalTest/getAllDoctorList","/user/getByDoctorSpeciallity","/patientDetails/getAllAddressData","/auth/register")
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated()
@@ -98,10 +98,10 @@ public class WebSecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-    @Bean
-    public AuthenticationManager authManager(HttpSecurity http) throws Exception {
-        return http.getSharedObject(AuthenticationManagerBuilder.class)
-                .authenticationProvider(otpAuthenticationProvider)
-                .build();
-    }
+//    @Bean
+//    public AuthenticationManager authManager(HttpSecurity http) throws Exception {
+//        return http.getSharedObject(AuthenticationManagerBuilder.class)
+//                .authenticationProvider(otpAuthenticationProvider)
+//                .build();
+//    }
 }
