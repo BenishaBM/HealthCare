@@ -42,8 +42,8 @@ public class WebSecurityConfig {
     @Autowired
     private AuthEntryPointJwt unauthorizedHandler;
     
-//    @Autowired
-//    private OtpAuthenticationProvider otpAuthenticationProvider;
+    @Autowired
+    private OtpAuthenticationProvider otpAuthenticationProvider;
 
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
@@ -98,10 +98,10 @@ public class WebSecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-//    @Bean
-//    public AuthenticationManager authManager(HttpSecurity http) throws Exception {
-//        return http.getSharedObject(AuthenticationManagerBuilder.class)
-//                .authenticationProvider(otpAuthenticationProvider)
-//                .build();
-//    }
+    @Bean
+    public AuthenticationManager authManager(HttpSecurity http) throws Exception {
+        return http.getSharedObject(AuthenticationManagerBuilder.class)
+                .authenticationProvider(otpAuthenticationProvider)
+                .build();
+    }
 }
