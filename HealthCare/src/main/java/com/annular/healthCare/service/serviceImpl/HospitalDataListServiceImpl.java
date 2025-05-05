@@ -138,6 +138,8 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	                .phoneNumber(userWebModel.getPhoneNumber())
 	                .userIsActive(true) // Default to active
 	                .currentAddress(userWebModel.getCurrentAddress())
+	                .addressLine1(userWebModel.getAddressLine1())
+	                .addressLine2(userWebModel.getAddressLine2())
 	                .createdBy(userWebModel.getCreatedBy())
 	                .hospitalName(userWebModel.getHospitalName()) // Set the hospital name here
 	                .build();
@@ -454,6 +456,14 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 			if (userWebModel.getCurrentAddress() != null) {
 				existingHospitalData.setCurrentAddress(userWebModel.getCurrentAddress());
 			}
+			if (userWebModel.getAddressLine1() != null) {
+				existingHospitalData.setAddressLine1(userWebModel.getAddressLine1());
+			}
+          
+			if (userWebModel.getAddressLine2() != null) {
+				existingHospitalData.setAddressLine2(userWebModel.getAddressLine2());
+			}
+
 
 			// Assuming the updater's ID is passed in 'createdBy' (could be renamed to
 			// 'updatedBy')

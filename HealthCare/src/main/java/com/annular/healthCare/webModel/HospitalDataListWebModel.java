@@ -85,6 +85,8 @@ public class HospitalDataListWebModel {
     private String doctorFeesStatus;
     private String medicineStatus;
     private String medicalTestStatus;
+	private String addressLine1;
+	private String addressLine2;
     private float amount;
     private Integer customizeDays;
     // Medicine Schedule

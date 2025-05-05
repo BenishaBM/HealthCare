@@ -54,6 +54,12 @@ public class HospitalDataList {
 
 	@Column(name = "created_by")
 	private Integer createdBy;
+	
+	@Column(name = "addressLine1")
+	private String addressLine1;
+	
+	@Column(name = "addressLine2")
+	private String addressLine2;
 
 	@CreationTimestamp
 	@Column(name = "user_created_on")
