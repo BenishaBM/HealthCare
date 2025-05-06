@@ -1082,17 +1082,19 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 //	    }
 //	}
 //
-//	private int extractDurationInMinutes(String newSlotTime) {
-//	    try {
-//	        return Integer.parseInt(newSlotTime.trim().split(" ")[0]);
-//	    } catch (Exception e) {
-//	        return 0;
-//	    }
-//	}
+	private int extractDurationInMinutes(String newSlotTime) {
+	    try {
+	        return Integer.parseInt(newSlotTime.trim().split(" ")[0]);
+	    } catch (Exception e) {
+	        return 0;
+	    }
+	}
 	@Transactional
 	public ResponseEntity<?> saveDoctorSlotTimeOverride(DoctorSlotTimeOverrideWebModel webModel) {
-	   // private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	    try {
+	        // Get logger instance
+	        Logger logger = LoggerFactory.getLogger(this.getClass());
+	        
 	        if (webModel == null || webModel.getDoctorSlotTimeId() == null ||
 	                webModel.getOverrideDate() == null || StringUtils.isEmpty(webModel.getNewSlotTime())) {
 	            return ResponseEntity.badRequest().body(new Response(0, "error", "Missing required fields"));
@@ -1160,52 +1162,58 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 
 	            // Update only future split times
 	            for (DoctorSlotSpiltTime splitTime : existingSplitTimes) {
-	                LocalTime slotStart = LocalTime.parse(splitTime.getSlotStartTime(), formatter);
-	                LocalTime slotEnd = LocalTime.parse(splitTime.getSlotEndTime(), formatter);
-	                
-	                // Log times for debugging
-	                logger.info("Checking slot: " + splitTime.getSlotStartTime() + " - " + splitTime.getSlotEndTime());
-	                logger.info("Current IST time: " + nowIST);
+	                try {
+	                    LocalTime slotStart = LocalTime.parse(splitTime.getSlotStartTime(), formatter);
+	                    LocalTime slotEnd = LocalTime.parse(splitTime.getSlotEndTime(), formatter);
+	                    
+	                    // Log times for debugging
+	                    logger.info("Checking slot: " + splitTime.getSlotStartTime() + " - " + splitTime.getSlotEndTime());
+	                    logger.info("Current IST time: " + nowIST);
 
-	                // Only override slots that haven't started yet
-	                boolean isFutureSlot = overrideLocalDate.isAfter(today) || 
-	                                      (overrideLocalDate.isEqual(today) && slotStart.isAfter(nowIST));
-	                
-	                // Check if slot has already started but not ended
-	                boolean slotInProgress = overrideLocalDate.isEqual(today) && 
-	                                        slotStart.isBefore(nowIST) && 
-	                                        slotEnd.isAfter(nowIST);
-	                
-	                // Skip slots that are currently in progress
-	                if (slotInProgress) {
-	                    logger.info("Skipping slot override for in-progress slot: " + splitTime.getSlotStartTime() + 
-	                               " - " + splitTime.getSlotEndTime());
-	                    skippedInProgressSlots++;
+	                    // Only override slots that haven't started yet
+	                    boolean isFutureSlot = overrideLocalDate.isAfter(today) || 
+	                                          (overrideLocalDate.isEqual(today) && slotStart.isAfter(nowIST));
+	                    
+	                    // Check if slot has already started but not ended
+	                    boolean slotInProgress = overrideLocalDate.isEqual(today) && 
+	                                            slotStart.isBefore(nowIST) && 
+	                                            slotEnd.isAfter(nowIST);
+	                    
+	                    // Skip slots that are currently in progress
+	                    if (slotInProgress) {
+	                        logger.info("Skipping slot override for in-progress slot: " + splitTime.getSlotStartTime() + 
+	                                   " - " + splitTime.getSlotEndTime());
+	                        skippedInProgressSlots++;
+	                        continue;
+	                    }
+	                    
+	                    if (isFutureSlot) {
+	                        // Deactivate current
+	                        splitTime.setIsActive(false);
+	                        doctorSlotSplitTimeRepository.save(splitTime);
+
+	                        // Calculate new start/end with override offset
+	                        LocalTime newStart = slotStart.plusMinutes(durationMinutes);
+	                        LocalTime newEnd = slotEnd.plusMinutes(durationMinutes);
+
+	                        DoctorSlotSpiltTime newSplit = DoctorSlotSpiltTime.builder()
+	                                .slotStartTime(newStart.format(formatter))
+	                                .slotEndTime(newEnd.format(formatter))
+	                                .slotStatus("OVERRIDDEN")
+	                                .doctorSlotDateId(doctorSlotDateId)
+	                                .isActive(true)
+	                                .createdBy(webModel.getUpdatedBy())
+	                                .createdOn(new Date())
+	                                .build();
+
+	                        doctorSlotSplitTimeRepository.save(newSplit);
+	                        overriddenSlots++;
+	                        logger.info("Overridden slot: " + slotStart.format(formatter) + " -> " + newStart.format(formatter));
+	                    }
+	                } catch (DateTimeParseException e) {
+	                    logger.error("Error parsing slot time: " + e.getMessage(), e);
+	                    // Continue with next slot instead of failing entire operation
 	                    continue;
-	                }
-	                
-	                if (isFutureSlot) {
-	                    // Deactivate current
-	                    splitTime.setIsActive(false);
-	                    doctorSlotSplitTimeRepository.save(splitTime);
-
-	                    // Calculate new start/end with override offset
-	                    LocalTime newStart = slotStart.plusMinutes(durationMinutes);
-	                    LocalTime newEnd = slotEnd.plusMinutes(durationMinutes);
-
-	                    DoctorSlotSpiltTime newSplit = DoctorSlotSpiltTime.builder()
-	                            .slotStartTime(newStart.format(formatter))
-	                            .slotEndTime(newEnd.format(formatter))
-	                            .slotStatus("OVERRIDDEN")
-	                            .doctorSlotDateId(doctorSlotDateId)
-	                            .isActive(true)
-	                            .createdBy(webModel.getUpdatedBy())
-	                            .createdOn(new Date())
-	                            .build();
-
-	                    doctorSlotSplitTimeRepository.save(newSplit);
-	                    overriddenSlots++;
-	                    logger.info("Overridden slot: " + slotStart.format(formatter) + " -> " + newStart.format(formatter));
 	                }
 	            }
 	        }
@@ -1218,37 +1226,43 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	        List<PatientAppointmentTable> appointmentsToUpdate = new ArrayList<>();
 
 	        for (PatientAppointmentTable appointment : appointments) {
-	            LocalTime apptStart = LocalTime.parse(appointment.getSlotStartTime(), formatter);
-	            LocalTime apptEnd = LocalTime.parse(appointment.getSlotEndTime(), formatter);
-	            
-	            logger.info("Checking appointment: " + appointment.getSlotStartTime() + " - " + appointment.getSlotEndTime());
-	            
-	            // Only update future appointments
-	            boolean isFutureAppointment = overrideLocalDate.isAfter(today) || 
-	                                         (overrideLocalDate.isEqual(today) && apptStart.isAfter(nowIST));
-	            
-	            // Check if appointment is currently in progress
-	            boolean appointmentInProgress = overrideLocalDate.isEqual(today) && 
-	                                          apptStart.isBefore(nowIST) && 
-	                                          apptEnd.isAfter(nowIST);
-	            
-	            // Skip appointments that are currently in progress
-	            if (appointmentInProgress) {
-	                logger.info("Skipping appointment override for in-progress appointment: " + 
-	                           appointment.getSlotStartTime() + " - " + appointment.getSlotEndTime());
-	                skippedInProgressAppointments++;
-	                continue;
-	            }
-	            
-	            if (isFutureAppointment) {
-	                LocalTime newStart = apptStart.plusMinutes(durationMinutes);
-	                LocalTime newEnd = apptEnd.plusMinutes(durationMinutes);
+	            try {
+	                LocalTime apptStart = LocalTime.parse(appointment.getSlotStartTime(), formatter);
+	                LocalTime apptEnd = LocalTime.parse(appointment.getSlotEndTime(), formatter);
 	                
-	                appointment.setSlotStartTime(newStart.format(formatter));
-	                appointment.setSlotEndTime(newEnd.format(formatter));
-	                appointmentsToUpdate.add(appointment);
-	                updatedAppointments++;
-	                logger.info("Overridden appointment: " + apptStart.format(formatter) + " -> " + newStart.format(formatter));
+	                logger.info("Checking appointment: " + appointment.getSlotStartTime() + " - " + appointment.getSlotEndTime());
+	                
+	                // Only update future appointments
+	                boolean isFutureAppointment = overrideLocalDate.isAfter(today) || 
+	                                             (overrideLocalDate.isEqual(today) && apptStart.isAfter(nowIST));
+	                
+	                // Check if appointment is currently in progress
+	                boolean appointmentInProgress = overrideLocalDate.isEqual(today) && 
+	                                              apptStart.isBefore(nowIST) && 
+	                                              apptEnd.isAfter(nowIST);
+	                
+	                // Skip appointments that are currently in progress
+	                if (appointmentInProgress) {
+	                    logger.info("Skipping appointment override for in-progress appointment: " + 
+	                               appointment.getSlotStartTime() + " - " + appointment.getSlotEndTime());
+	                    skippedInProgressAppointments++;
+	                    continue;
+	                }
+	                
+	                if (isFutureAppointment) {
+	                    LocalTime newStart = apptStart.plusMinutes(durationMinutes);
+	                    LocalTime newEnd = apptEnd.plusMinutes(durationMinutes);
+	                    
+	                    appointment.setSlotStartTime(newStart.format(formatter));
+	                    appointment.setSlotEndTime(newEnd.format(formatter));
+	                    appointmentsToUpdate.add(appointment);
+	                    updatedAppointments++;
+	                    logger.info("Overridden appointment: " + apptStart.format(formatter) + " -> " + newStart.format(formatter));
+	                }
+	            } catch (DateTimeParseException e) {
+	                logger.error("Error parsing appointment time: " + e.getMessage(), e);
+	                // Continue with next appointment instead of failing entire operation
+	                continue;
 	            }
 	        }
 
@@ -1262,21 +1276,15 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	                        " in-progress slots and " + skippedInProgressAppointments + " in-progress appointments. (Using IST timezone)"));
 
 	    } catch (DateTimeParseException e) {
+	        Logger logger = LoggerFactory.getLogger(this.getClass());
 	        logger.error("Date/time parsing error: " + e.getMessage(), e);
 	        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 	                .body(new Response(0, "error", "Invalid time format: " + e.getMessage()));
 	    } catch (Exception e) {
+	        Logger logger = LoggerFactory.getLogger(this.getClass());
 	        logger.error("Error in slot override: " + e.getMessage(), e);
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 	                .body(new Response(0, "error", "Error while saving override: " + e.getMessage()));
-	    }
-	}
-
-	private int extractDurationInMinutes(String newSlotTime) {
-	    try {
-	        return Integer.parseInt(newSlotTime.trim().split(" ")[0]);
-	    } catch (Exception e) {
-	        return 0;
 	    }
 	}
 }
