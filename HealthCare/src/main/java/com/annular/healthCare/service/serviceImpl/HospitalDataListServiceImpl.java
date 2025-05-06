@@ -1140,7 +1140,11 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	                .isActive(true)
 	                .build();
 	        doctorSlotTimeOverrideRepository.save(override);
-	        logger.info("Override saved: {}", override);
+	        logger.info("Override saved: id={}, overrideDate={}, newSlotTime={}", 
+	        	    override.getOverrideId(), 
+	        	    override.getOverrideDate(), 
+	        	    override.getNewSlotTime());
+
 
 	        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 	        String dateString = sdf.format(webModel.getOverrideDate());
