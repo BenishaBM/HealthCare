@@ -66,6 +66,7 @@ import com.annular.healthCare.repository.PatientMappedHospitalIdRepository;
 import com.annular.healthCare.repository.RefreshTokenRepository;
 import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.AuthService;
+import com.annular.healthCare.service.SmsService;
 import com.annular.healthCare.webModel.DoctorDaySlotWebModel;
 import com.annular.healthCare.webModel.DoctorLeaveListWebModel;
 import com.annular.healthCare.webModel.DoctorSlotTimeWebModel;
@@ -130,6 +131,10 @@ public class AuthServiceImpl implements AuthService {
 	DoctorSlotSpiltTimeRepository doctorSlotSplitTimeRepository;
 	
 	@Autowired
+	private SmsService smsService;
+
+	
+	@Autowired
 	DoctorSlotDateRepository doctorSlotDateRepository;
 
 	@Value("${annular.app.imageLocation}")
@@ -172,6 +177,11 @@ public class AuthServiceImpl implements AuthService {
 	        // Process doctor-specific data if user is a doctor
 	        if (userWebModel.getUserType().equalsIgnoreCase("DOCTOR")) {
 	            processDoctorData(savedUser, userWebModel);
+	        }
+
+	        if (userWebModel.getPhoneNumber() != null) {
+	            String smsMessage = "Hi " + userWebModel.getFirstName() + ", you have been successfully registered!";
+	            smsService.sendSms(userWebModel.getPhoneNumber(), smsMessage);
 	        }
 
 	        return ResponseEntity.ok(new Response(1, "success", "User registered successfully"));
