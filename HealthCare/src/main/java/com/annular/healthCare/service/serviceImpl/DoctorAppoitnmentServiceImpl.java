@@ -26,6 +26,8 @@ import com.annular.healthCare.Response;
 import com.annular.healthCare.model.AppointmentMedicalTest;
 import com.annular.healthCare.model.AppointmentMedicine;
 import com.annular.healthCare.model.DoctorSlotSpiltTime;
+import com.annular.healthCare.model.MediaFile;
+import com.annular.healthCare.model.MediaFileCategory;
 import com.annular.healthCare.model.MedicalTest;
 import com.annular.healthCare.model.MedicalTestConfig;
 import com.annular.healthCare.model.MedicalTestSlotSpiltTime;
@@ -36,6 +38,7 @@ import com.annular.healthCare.model.PatientMappedHospitalId;
 import com.annular.healthCare.repository.AppointmentMedicalTestRepository;
 import com.annular.healthCare.repository.AppointmentMedicineRepository;
 import com.annular.healthCare.repository.DoctorSlotSpiltTimeRepository;
+import com.annular.healthCare.repository.MediaFileRepository;
 import com.annular.healthCare.repository.MedicalTestConfigRepository;
 import com.annular.healthCare.repository.MedicalTestRepository;
 import com.annular.healthCare.repository.MedicalTestSlotSpiltTimeRepository;
@@ -81,6 +84,8 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	@Autowired
 	private AppointmentMedicalTestRepository appointmentMedicalTestRepository;
 
+	@Autowired
+	MediaFileRepository mediaFilesRepository;
 
 	 @Override
 	    public ResponseEntity<?> getAllPatientAppointmentByFilter(String appointmentDate, String appointmentType, Integer doctorId) {
@@ -670,6 +675,10 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                     map.put("appointmentId", appointment.getAppointmentId());
 	                     map.put("totalMedicalTestAmount", appointment.getTotalMedicalTestAmount());
 	                     map.put("totalMedicineTestAmount", appointment.getTotalMedicineAmount());
+	                     
+	                     // Step 2: Fetch the result status for this appointment
+	                     boolean resultStatus = getResultStatusForAppointment(appointment.getAppointmentId());
+	                     map.put("resultStatus", resultStatus);
 
 	                     // Map patient details if available
 	                     PatientDetails patient = appointment.getPatient();
@@ -754,6 +763,15 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                 .body(new Response(0, "error", "An error occurred while fetching medical test appointments."));
 	     }
 	 }
+	 private boolean getResultStatusForAppointment(Integer appointmentId) {
+		    // Fetch only active media files related to the appointment with category 'resultDocument'
+		    List<MediaFile> resultFiles = mediaFilesRepository
+		        .findByFileDomainReferenceIdAndCategoryAndFileIsActiveTrue(appointmentId, MediaFileCategory.resutDocument);
+
+		    // If there are result files, return true (1), otherwise return false (0)
+		    return !resultFiles.isEmpty();  // If result files exist, status is true
+		}
+
 
 	 @Override
 	 public ResponseEntity<?> deleteParticularSpiltSlot(Integer id) {
