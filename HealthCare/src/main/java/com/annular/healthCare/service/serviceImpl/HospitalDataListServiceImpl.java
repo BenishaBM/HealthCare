@@ -1112,6 +1112,15 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	                .withZoneSameInstant(istZone)
 	                .toLocalDate();
 	        
+	        DateTimeFormatter formatterr = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+	     // Convert the Date to LocalDate in IST
+	     String dateString = webModel.getOverrideDate().toInstant()
+	             .atZone(ZoneId.of("UTC"))
+	             .withZoneSameInstant(ZoneId.of("Asia/Kolkata"))
+	             .toLocalDate()
+	             .format(formatterr);
+	        
 	        // For debugging - print both dates to see the conversion
 	        logger.info("Original date in UTC: {}", webModel.getOverrideDate().toInstant().atZone(utcZone).toLocalDate());
 	        logger.info("Converted date in IST: {}", overrideDate);
@@ -1162,9 +1171,13 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	        	    override.getNewSlotTime());
 
 //
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        String dateString = sdf.format(overrideDate);
-	     
+//	        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+//	        String dateString = sdf.format(webModel.getOverrideDate());
+	     // Then use this converted date for your database query
+//	        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+//	        // Convert LocalDate back to Date for formatting
+//	        Date convertedDate = Date.from(overrideDate.atStartOfDay(istZone).toInstant());
+//	        String dateString = sdf.format(convertedDate);
 
 	        Optional<DoctorSlotDate> doctorSlotDateOpt = doctorSlotDateRepository
 	                .findByDateAndDoctorSlotTimeIdAndIsActive(dateString, slot.getDoctorSlotTimeId(), true);
