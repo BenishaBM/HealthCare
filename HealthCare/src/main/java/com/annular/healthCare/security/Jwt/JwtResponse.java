@@ -1,5 +1,9 @@
 package com.annular.healthCare.security.Jwt;
 
+import java.util.List;
+
+import com.annular.healthCare.webModel.FileInputWebModel;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,5 +30,6 @@ public class JwtResponse {
     private String emailId;
     private Integer hospitalId;
     private String hospitalName;
+    private List<FileInputWebModel> hospitalLogo;
    
 }

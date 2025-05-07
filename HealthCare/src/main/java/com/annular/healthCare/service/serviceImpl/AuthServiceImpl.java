@@ -42,11 +42,13 @@ import com.annular.healthCare.model.DoctorSlotSpiltTime;
 import com.annular.healthCare.model.DoctorSlotTime;
 import com.annular.healthCare.model.HospitalAdmin;
 import com.annular.healthCare.model.HospitalDataList;
+import com.annular.healthCare.model.LabMasterData;
 import com.annular.healthCare.model.MediaFile;
 import com.annular.healthCare.model.MediaFileCategory;
 import com.annular.healthCare.model.PatientDetails;
 import com.annular.healthCare.model.PatientMappedHospitalId;
 import com.annular.healthCare.model.RefreshToken;
+import com.annular.healthCare.model.SupportStaffMasterData;
 import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.DoctorDaySlotRepository;
 import com.annular.healthCare.repository.DoctorLeaveListRepository;
@@ -59,11 +61,13 @@ import com.annular.healthCare.repository.DoctorSlotTimeRepository;
 import com.annular.healthCare.repository.DoctorSpecialityRepository;
 import com.annular.healthCare.repository.HospitalAdminRepository;
 import com.annular.healthCare.repository.HospitalDataListRepository;
+import com.annular.healthCare.repository.LabMasterDataRepository;
 import com.annular.healthCare.repository.MediaFileRepository;
 import com.annular.healthCare.repository.PatientAppoitmentTablerepository;
 import com.annular.healthCare.repository.PatientDetailsRepository;
 import com.annular.healthCare.repository.PatientMappedHospitalIdRepository;
 import com.annular.healthCare.repository.RefreshTokenRepository;
+import com.annular.healthCare.repository.SupportStaffMasterDataRepository;
 import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.AuthService;
 import com.annular.healthCare.service.SmsService;
@@ -102,6 +106,13 @@ public class AuthServiceImpl implements AuthService {
 
 	@Autowired
 	DoctorSlotRepository doctorSlotRepository;
+	
+	@Autowired
+	LabMasterDataRepository labMasterDataRepository;
+	
+	@Autowired
+	private SupportStaffMasterDataRepository supportStaffMasterDataRepository;
+
 
 	@Autowired
 	DoctorDaySlotRepository doctorDaySlotRepository;
@@ -179,10 +190,10 @@ public class AuthServiceImpl implements AuthService {
 	            processDoctorData(savedUser, userWebModel);
 	        }
 
-	        if (userWebModel.getPhoneNumber() != null) {
-	            String smsMessage = "Hi " + userWebModel.getFirstName() + ", you have been successfully registered!";
-	            smsService.sendSms(userWebModel.getPhoneNumber(), smsMessage);
-	        }
+//	        if (userWebModel.getPhoneNumber() != null) {
+//	            String smsMessage = "Hi " + userWebModel.getFirstName() + ", you have been successfully registered!";
+//	            smsService.sendSms(userWebModel.getPhoneNumber(), smsMessage);
+//	        }
 
 	        return ResponseEntity.ok(new Response(1, "success", "User registered successfully"));
 	    } catch (Exception e) {
@@ -203,6 +214,8 @@ public class AuthServiceImpl implements AuthService {
 	            .password(passwordEncoder.encode(userWebModel.getPassword()))
 	            .yearOfExperiences(userWebModel.getYearOfExperiences())
 	            .userType(userWebModel.getUserType())
+	            .supportStaffId(userWebModel.getSupportStaffId())
+	            .labMasterDataId(userWebModel.getLabMasterDataId())
 	            .phoneNumber(userWebModel.getPhoneNumber())
 	            .doctorFees(userWebModel.getDoctorfees())
 	            .userIsActive(true) // Default active
@@ -890,7 +903,39 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	        data.put("yearOfExperience", user.getYearOfExperiences());
 	        Integer hospitalId = user.getHospitalId();
 	        data.put("hospitalId", hospitalId);
+	        Integer supportStaffId = user.getSupportStaffId(); // assuming this exists in the User entity
+	        data.put("supportStaffId", supportStaffId);
 
+	        if (supportStaffId != null) {
+	            try {
+	                Optional<SupportStaffMasterData> staffDataOpt = supportStaffMasterDataRepository.findById(supportStaffId);
+	                String staffName = staffDataOpt.map(SupportStaffMasterData::getName).orElse("N/A");
+	                data.put("supportStaffName", staffName);
+	            } catch (Exception e) {
+	                logger.error("Error retrieving support staff name for supportStaffId {}: {}", supportStaffId, e.getMessage());
+	                data.put("supportStaffName", "Error retrieving");
+	            }
+	        } else {
+	            data.put("supportStaffName", "N/A");
+	        }
+	        Integer labMasterDataId= user.getLabMasterDataId(); // assuming this exists in the User entity
+	        data.put("labMasterDataId", labMasterDataId);
+
+	        if (labMasterDataId != null) {
+	            try {
+	                Optional<LabMasterData> staffDataOpt = labMasterDataRepository.findById(labMasterDataId);
+	                String labStaffName = staffDataOpt.map(LabMasterData::getName).orElse("N/A");
+	                data.put("LabMasterDataName", labStaffName);
+	            } catch (Exception e) {
+	                logger.error("Error retrieving LabMasterDataname for labMasterDataId {}: {}", labMasterDataId, e.getMessage());
+	                data.put("LabMasterDataName", "Error retrieving");
+	            }
+	        } else {
+	            data.put("LabMasterDataName", "N/A");
+	        }
+
+
+	        
 	        if (hospitalId != null) {
 	            try {
 	                Optional<HospitalDataList> hospitalData = hospitalDataListRepository.findByHospitalId(hospitalId);
