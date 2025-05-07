@@ -825,7 +825,7 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 	                    slotDateMap.put("id", slotDate.getMedicalTestSlotDateId());
 
 	                    List<MedicalTestSlotSpiltTime> splitTimes = medicalTestSlotSpiltTimeRepository
-	                            .findByMedicalTestSlotDate_MedicalTestSlotDateId(slotDate.getMedicalTestSlotDateId());
+	                            .findByMedicalTestSlotDate_MedicalTestSlotDateIdAndIsActiveTrue(slotDate.getMedicalTestSlotDateId());
 
 	                    List<Map<String, Object>> splitTimeList = new ArrayList<>();
 	                    for (MedicalTestSlotSpiltTime splitTime : splitTimes) {
@@ -833,6 +833,7 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 	                        splitMap.put("slotStartTime", splitTime.getSlotStartTime());
 	                        splitMap.put("slotEndTime", splitTime.getSlotEndTime());
 	                        splitMap.put("slotStatus", splitTime.getSlotStatus());
+	                        splitMap.put("overiddenStatus", splitTime.getOvverridenStatus());
 	                        splitMap.put("isActive", splitTime.getIsActive());
 	                        splitMap.put("id", splitTime.getMedicalTestSlotSpiltTimeId());
 	                        splitTimeList.add(splitMap);
