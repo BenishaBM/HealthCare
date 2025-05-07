@@ -1102,14 +1102,19 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            return ResponseEntity.badRequest().body(new Response(0, "error", "Missing required fields"));
 	        }
 	        
+	        // If your client is sending the date in UTC format:
 	        ZoneId utcZone = ZoneId.of("UTC");
-	        ZoneId istZone = ZoneId.of("Asia/Kolkata"); // IST timezone
-
-	        // Convert the override date from UTC to IST
+	        ZoneId istZone = ZoneId.of("Asia/Kolkata");
+	        
+	        // Method 1: If the date from client is already in UTC and needs conversion to IST
 	        LocalDate overrideDate = webModel.getOverrideDate().toInstant()
-	                        .atZone(utcZone)  // Interpret the original date as UTC
-	                        .withZoneSameInstant(istZone)  // Convert to equivalent instant in IST
-	                        .toLocalDate(); 
+	                .atZone(utcZone)
+	                .withZoneSameInstant(istZone)
+	                .toLocalDate();
+	        
+	        // For debugging - print both dates to see the conversion
+	        logger.info("Original date in UTC: {}", webModel.getOverrideDate().toInstant().atZone(utcZone).toLocalDate());
+	        logger.info("Converted date in IST: {}", overrideDate);
 
 //	        LocalDate overrideDate = webModel.getOverrideDate().toInstant()
 //	                .atZone(ZoneId.systemDefault()).toLocalDate();
