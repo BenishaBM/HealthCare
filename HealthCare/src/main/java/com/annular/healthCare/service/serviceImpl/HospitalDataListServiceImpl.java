@@ -1101,9 +1101,18 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            logger.warn("Invalid input: {}", webModel);
 	            return ResponseEntity.badRequest().body(new Response(0, "error", "Missing required fields"));
 	        }
+	        
+	        ZoneId utcZone = ZoneId.of("UTC");
+	        ZoneId istZone = ZoneId.of("Asia/Kolkata"); // IST timezone
 
+	        // Convert the override date from UTC to IST
 	        LocalDate overrideDate = webModel.getOverrideDate().toInstant()
-	                .atZone(ZoneId.systemDefault()).toLocalDate();
+	                        .atZone(utcZone)  // Interpret the original date as UTC
+	                        .withZoneSameInstant(istZone)  // Convert to equivalent instant in IST
+	                        .toLocalDate(); 
+
+//	        LocalDate overrideDate = webModel.getOverrideDate().toInstant()
+//	                .atZone(ZoneId.systemDefault()).toLocalDate();
 	       // LocalDate today = LocalDate.now();
 	        LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata")); // Use IST instead of system default
 	        
