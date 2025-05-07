@@ -892,8 +892,15 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 		        medicalTestSlotTimeOverideRepository.save(override);
 
 		        // Find DoctorSlotDate
-		        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-		        String dateString = sdf.format(webModel.getOverrideDate());
+//		        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+//		        String dateString = sdf.format(webModel.getOverrideDate());
+		        DateTimeFormatter formatterr = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+			     // Convert the Date to LocalDate in IST
+			     String dateString = webModel.getOverrideDate().toInstant()
+			             .atZone(ZoneId.of("UTC"))
+			             .withZoneSameInstant(ZoneId.of("Asia/Kolkata"))
+			             .toLocalDate()
+			             .format(formatterr);
 		        Optional<MedicalTestSlotDate> doctorSlotDateOpt = medicalTestSlotDateRepository
 		                .findByDateAndMedicalTestSlotTimeIdAndIsActive(dateString, slot.getMedicalTestSlotTimeId(), true);
 
