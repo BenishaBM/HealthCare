@@ -2,12 +2,14 @@ package com.annular.healthCare.controller;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,16 +27,21 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.annular.healthCare.service.AuthService;
+import com.annular.healthCare.webModel.FileInputWebModel;
 import com.annular.healthCare.webModel.HospitalDataListWebModel;
 import com.annular.healthCare.webModel.PatientDetailsWebModel;
 import com.annular.healthCare.webModel.UserWebModel;
 import com.annular.healthCare.Response;
 import com.annular.healthCare.UserStatusConfig;
+import com.annular.healthCare.Util.Base64FileUpload;
+import com.annular.healthCare.Util.HealthCareConstant;
 import com.annular.healthCare.model.HospitalDataList;
+import com.annular.healthCare.model.MediaFile;
 import com.annular.healthCare.model.PatientDetails;
 import com.annular.healthCare.model.RefreshToken;
 import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.HospitalDataListRepository;
+import com.annular.healthCare.repository.MediaFileRepository;
 import com.annular.healthCare.repository.PatientDetailsRepository;
 import com.annular.healthCare.repository.PatientMappedHospitalIdRepository;
 import com.annular.healthCare.repository.RefreshTokenRepository;
@@ -73,6 +80,12 @@ public class AuthenticationController {
 	@Autowired
 	UserRepository userRepository;
 	
+	@Value("${annular.app.imageLocation}")
+	private String imageLocation;
+	
+	@Autowired
+	MediaFileRepository mediaFileRepository;
+	
 	@Autowired
 	PatientMappedHospitalIdRepository patientMappedHospitalIdRepository;
 
@@ -92,51 +105,81 @@ public class AuthenticationController {
 
 	@PostMapping("login")
 	public ResponseEntity<?> login(@RequestBody UserWebModel userWebModel) {
-		try {
-			Optional<User> checkUser = userRepository.findByEmailIds(userWebModel.getEmailId());
+	    try {
+	        Optional<User> checkUser = userRepository.findByEmailIds(userWebModel.getEmailId());
 
-			if (checkUser.isPresent()) {
-				User user = checkUser.get();
+	        if (checkUser.isPresent()) {
+	            User user = checkUser.get();
 
-				// Authenticate user with email and password
-				Authentication authentication = authenticationManager.authenticate(
-						new UsernamePasswordAuthenticationToken(userWebModel.getEmailId(), userWebModel.getPassword()));
+	            // Authenticate user with email and password
+	            Authentication authentication = authenticationManager.authenticate(
+	                    new UsernamePasswordAuthenticationToken(userWebModel.getEmailId(), userWebModel.getPassword()));
 
-				SecurityContextHolder.getContext().setAuthentication(authentication);
+	            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-				// Generate refresh token
-				RefreshToken refreshToken = authService.createRefreshToken(user);
-				
-				   // Retrieve hospital name
+	            // Generate refresh token
+	            RefreshToken refreshToken = authService.createRefreshToken(user);
+
+	            // Retrieve hospital name and logo
 	            String hospitalName = "";
+	            ArrayList<FileInputWebModel> filesInputWebModel = new ArrayList<>();
+
 	            if (user.getHospitalId() != null) {
-	                Optional<HospitalDataList> hospitalData = hospitalDataListRepository.findById(user.getHospitalId());
-	                hospitalName = hospitalData.map(HospitalDataList::getHospitalName).orElse("");
+	                Optional<HospitalDataList> hospitalDataOpt = hospitalDataListRepository.findById(user.getHospitalId());
+	                if (hospitalDataOpt.isPresent()) {
+	                    HospitalDataList hospitalData = hospitalDataOpt.get();
+	                    hospitalName = hospitalData.getHospitalName();
+
+	                    // Retrieve hospital logo
+	                    List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
+	                            HealthCareConstant.hospitalLogo, hospitalData.getHospitalDataId());
+
+	                    for (MediaFile mediaFile : files) {
+	                        FileInputWebModel filesInput = new FileInputWebModel();
+	                        filesInput.setFileName(mediaFile.getFileOriginalName());
+	                        filesInput.setFileId(mediaFile.getFileId());
+	                        filesInput.setFileSize(mediaFile.getFileSize());
+	                        filesInput.setFileType(mediaFile.getFileType());
+
+	                        String fileData = Base64FileUpload.encodeToBase64String(
+	                                imageLocation + "/hospitalLogo", mediaFile.getFileName());
+	                        filesInput.setFileData(fileData);
+
+	                        filesInputWebModel.add(filesInput);
+	                    }
+	                }
 	            }
 
+	            // Generate JWT token
+	            String jwt = jwtUtils.generateJwtToken(authentication);
+	            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-				// Generate JWT token
-				String jwt = jwtUtils.generateJwtToken(authentication);
-				UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+	            logger.info("Login successful for user: {}", user.getEmailId());
 
-				logger.info("Login successful for user: {}", user.getEmailId());
-
-				// Return response with JWT and refresh token
-				return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getId(), 1, // Assuming this is a status or
-																						// role value
-						refreshToken.getToken(), userDetails.getUserType(), userDetails.getUserEmailId(), user.getHospitalId(),hospitalName));
-			} else {
-				return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Invalid email or password"));
-			}
-		} catch (BadCredentialsException e) {
-			logger.error("Login failed: Invalid credentials");
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-					.body(new Response(-1, "Fail", "Invalid email or password"));
-		} catch (Exception e) {
-			logger.error("Error at login() -> {}", e.getMessage(), e);
-			return ResponseEntity.internalServerError()
-					.body(new Response(-1, "Fail", "An error occurred during login"));
-		}
+	            // Return response with JWT, refresh token, and logo
+	            return ResponseEntity.ok(new JwtResponse(
+	                    jwt,
+	                    userDetails.getId(),
+	                    1,
+	                    refreshToken.getToken(),
+	                    userDetails.getUserType(),
+	                    userDetails.getUserEmailId(),
+	                    user.getHospitalId(),
+	                    hospitalName,
+	                    filesInputWebModel
+	            ));
+	        } else {
+	            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Invalid email or password"));
+	        }
+	    } catch (BadCredentialsException e) {
+	        logger.error("Login failed: Invalid credentials");
+	        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+	                .body(new Response(-1, "Fail", "Invalid email or password"));
+	    } catch (Exception e) {
+	        logger.error("Error at login() -> {}", e.getMessage(), e);
+	        return ResponseEntity.internalServerError()
+	                .body(new Response(-1, "Fail", "An error occurred during login"));
+	    }
 	}
 
 	@PostMapping("refreshToken")
@@ -153,7 +196,7 @@ public class AuthenticationController {
 			refreshTokenRepository.save(refreshToken);
 			return ResponseEntity.ok(new JwtResponse(jwt, userData.get().getUserId(),
 
-					1, token.getData().toString(), userData.get().getUserType(), userData.get().getEmailId(), userData.get().getHospitalId(),""));
+					1, token.getData().toString(), userData.get().getUserType(), userData.get().getEmailId(), userData.get().getHospitalId(),"",null));
 		}
 		return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Refresh Token Failed"));
 	}
@@ -375,7 +418,7 @@ public class AuthenticationController {
 	                "PATIENT", 
 	                user.getEmailId(), 
 	                1,
-	                hospitalName
+	                hospitalName, null
 	            ));
 	        } else {
 	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
