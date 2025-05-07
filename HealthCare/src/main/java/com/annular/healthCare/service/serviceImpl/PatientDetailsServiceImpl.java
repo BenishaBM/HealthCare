@@ -118,135 +118,168 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 	@Transactional
 	@Override
 	public ResponseEntity<?> register(PatientDetailsWebModel userWebModel) {
-		try {
-			logger.info("Registering patient: {}", userWebModel.getPatientName());
+	    try {
+	        logger.info("Registering patient: {}", userWebModel.getPatientName());
 
-			// Validate required fields
-			if (userWebModel.getPatientName() == null || userWebModel.getMobileNumber() == null) {
-				return ResponseEntity.badRequest()
-						.body(new Response(0, "Fail", "Patient name and mobile number are required"));
-			}
+	        // Validate required fields
+	        if (userWebModel.getPatientName() == null || userWebModel.getMobileNumber() == null) {
+	            return ResponseEntity.badRequest()
+	                    .body(new Response(0, "Fail", "Patient name and mobile number are required"));
+	        }
 
-			// Check if email already exists in the database
-			Optional<PatientDetails> existingUsers = patientDetailsRepository.findByEmailId(userWebModel.getEmailId());
-			if (existingUsers.isPresent()) {
-				return ResponseEntity.badRequest().body(new Response(0, "Fail", "Email already exists"));
-			}
+	        // Check if email already exists in the database
+	        Optional<PatientDetails> existingUsers = patientDetailsRepository.findByEmailId(userWebModel.getEmailId());
+	        if (existingUsers.isPresent()) {
+	            return ResponseEntity.badRequest().body(new Response(0, "Fail", "Email already exists"));
+	        }
 
-			// Check if the patient already exists
-			Optional<PatientDetails> existingUser = patientDetailsRepository
-					.findByMobileNumberAndHospitalId(userWebModel.getMobileNumber());
-			if (existingUser.isPresent()) {
-				return ResponseEntity.badRequest()
-						.body(new Response(0, "Fail", "Mobile number is already registered for this hospital."));
-			}
+	        // Check if the patient already exists
+	        Optional<PatientDetails> existingUser = patientDetailsRepository
+	                .findByMobileNumberAndHospitalId(userWebModel.getMobileNumber());
+	        if (existingUser.isPresent()) {
+	            return ResponseEntity.badRequest()
+	                    .body(new Response(0, "Fail", "Mobile number is already registered for this hospital."));
+	        }
 
-			// Check if slot is available before booking an appointment
-			if (userWebModel.getDoctorId() != null && userWebModel.getAppointmentDate() != null
-					&& userWebModel.getDoctorSlotId() != null && userWebModel.getDaySlotId() != null
-					&& userWebModel.getSlotStartTime() != null && userWebModel.getSlotEndTime() != null) { // Fixed
-																											// duplicate
-																											// check
+	        // Check if slot is available before booking an appointment
+	        if (userWebModel.getDoctorId() != null && userWebModel.getAppointmentDate() != null
+	                && userWebModel.getDoctorSlotId() != null && userWebModel.getDaySlotId() != null
+	                && userWebModel.getSlotStartTime() != null && userWebModel.getSlotEndTime() != null) {
 
-				boolean isSlotBooked = checkIfSlotIsBooked(userWebModel.getDoctorSlotId(), userWebModel.getDaySlotId(),
-						userWebModel.getSlotStartTime(), // Pass correct start time
-						userWebModel.getSlotEndTime() // Pass correct end time
-				);
-
-				if (isSlotBooked) {
-					logger.warn("Slot is already booked for doctorId: {}, date: {}, time: {} - {}",
-							userWebModel.getDoctorId(), userWebModel.getAppointmentDate(),
-							userWebModel.getSlotStartTime(), userWebModel.getSlotEndTime());
-					return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(0, "Fail",
-							"The selected slot on " + userWebModel.getAppointmentDate() + " is already booked."));
-				}
-			}
-
-			// Create patient details
-			PatientDetails savedPatient = createPatientDetails(userWebModel);
-			if (savedPatient == null) {
-				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-						.body(new Response(0, "Fail", "Failed to create patient details"));
-			}
-
-			// Book appointment if appointment details are provided
-			PatientAppointmentTable appointment = bookAppointment(userWebModel, savedPatient); // Fixed return type
-			if (appointment == null) { // No need to check for isEmpty() since it's not a list
-				return ResponseEntity.badRequest().body(new Response(0, "Fail", "slot Already booked"));
-			}
-			if (userWebModel.getDoctorSlotSpiltTimeId() != null) {
-				Optional<DoctorSlotSpiltTime> optionalSlot = doctorSlotSplitTimeRepository
-						.findById(userWebModel.getDoctorSlotSpiltTimeId());
-				if (optionalSlot.isPresent()) {
-					DoctorSlotSpiltTime slot = optionalSlot.get();
-					slot.setSlotStatus("Booked");
-					slot.setUpdatedBy(userWebModel.getCreatedBy());
-					slot.setUpdatedOn(new Date());
-					doctorSlotSplitTimeRepository.save(slot);
-					logger.info("Marked doctorSlotSplitTimeId {} as Booked", userWebModel.getDoctorSlotSpiltTimeId());
-				} else {
-					logger.warn("doctorSlotSplitTimeId {} not found for updating status",
-							userWebModel.getDoctorSlotSpiltTimeId());
-				}
-			}
-
-			// Save media files if any
-			savePatientMediaFiles(userWebModel, savedPatient);
-			// Save patient-hospital mapping
-
-			try {
-			    String phoneNumber = userWebModel.getMobileNumber();
-			    String smsMessage = "You have successfully registered with Aegle Healthcare. Your health is important to us! Stay in touch.";
-			    logger.info("Sending registration SMS to: {}", phoneNumber);
-			    smsService.sendSms(phoneNumber, smsMessage);
-			    logger.info("SMS sent successfully to: {}", phoneNumber);
-			} catch (Exception e) {
-			    logger.error("SMS sending failed: {}", e.getMessage(), e);
-			    // Do not throw or block response, just log the failure
-			}
-
-	        // Send SMS for appointment confirmation
-	        try {
-	            String phoneNumber = userWebModel.getMobileNumber();
-	            String appointmentDate = String.valueOf(userWebModel.getAppointmentDate());
-	            String startTime = userWebModel.getSlotStartTime();
-	            String endTime = userWebModel.getSlotEndTime();
-
-	            String doctorName = ""; // Default
-	            String hospitalName = ""; // Default
-
-	            // Fetch doctor name
-	            if (userWebModel.getDoctorId() != null) {
-	                Optional<User> doctor = userRepository.findById(userWebModel.getDoctorId());
-	                doctorName = doctor.map(User::getUserName).orElse("Your doctor");
-	            }
-
-	            // Fetch hospital name
-	            if (userWebModel.getHospitalId() != null) {
-	                Optional<HospitalDataList> hospital = hospitalDataListRepository.findById(userWebModel.getHospitalId());
-	                hospitalName = hospital.map(HospitalDataList::getHospitalName).orElse("Your hospital");
-	            }
-
-	            String smsMessage = String.format(
-	                "Your appointment is confirmed on %s (%s - %s) with Dr. %s at %s. Thank you!",
-	                appointmentDate, startTime, endTime, doctorName, hospitalName
+	            boolean isSlotBooked = checkIfSlotIsBooked(userWebModel.getDoctorSlotId(), userWebModel.getDaySlotId(),
+	                    userWebModel.getSlotStartTime(),
+	                    userWebModel.getSlotEndTime()
 	            );
 
-	            logger.info("Sending appointment SMS to: {}", phoneNumber);
-	            smsService.sendSms(phoneNumber, smsMessage);
-	            logger.info("SMS sent successfully to: {}", phoneNumber);
-	        } catch (Exception e) {
-	            logger.error("SMS sending failed: {}", e.getMessage(), e);
+	            if (isSlotBooked) {
+	                logger.warn("Slot is already booked for doctorId: {}, date: {}, time: {} - {}",
+	                        userWebModel.getDoctorId(), userWebModel.getAppointmentDate(),
+	                        userWebModel.getSlotStartTime(), userWebModel.getSlotEndTime());
+	                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(0, "Fail",
+	                        "The selected slot on " + userWebModel.getAppointmentDate() + " is already booked."));
+	            }
 	        }
-			
-			return ResponseEntity.ok(new Response(1, "Success", "Patient registered successfully"));
-		} catch (Exception e) {
-			logger.error("Registration failed: {}", e.getMessage(), e);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new Response(0, "Fail", "Something went wrong during registration"));
-		}
-	}
 
+	        // Create patient details
+	        PatientDetails savedPatient = createPatientDetails(userWebModel);
+	        if (savedPatient == null) {
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                    .body(new Response(0, "Fail", "Failed to create patient details"));
+	        }
+
+	        // Book appointment if appointment details are provided
+	        PatientAppointmentTable appointment = bookAppointment(userWebModel, savedPatient);
+	        if (appointment == null) {
+	            return ResponseEntity.badRequest().body(new Response(0, "Fail", "slot Already booked"));
+	        }
+	        
+	        if (userWebModel.getDoctorSlotSpiltTimeId() != null) {
+	            Optional<DoctorSlotSpiltTime> optionalSlot = doctorSlotSplitTimeRepository
+	                    .findById(userWebModel.getDoctorSlotSpiltTimeId());
+	            if (optionalSlot.isPresent()) {
+	                DoctorSlotSpiltTime slot = optionalSlot.get();
+	                slot.setSlotStatus("Booked");
+	                slot.setUpdatedBy(userWebModel.getCreatedBy());
+	                slot.setUpdatedOn(new Date());
+	                doctorSlotSplitTimeRepository.save(slot);
+	                logger.info("Marked doctorSlotSplitTimeId {} as Booked", userWebModel.getDoctorSlotSpiltTimeId());
+	            } else {
+	                logger.warn("doctorSlotSplitTimeId {} not found for updating status",
+	                        userWebModel.getDoctorSlotSpiltTimeId());
+	            }
+	        }
+
+	        // Save media files if any
+	        savePatientMediaFiles(userWebModel, savedPatient);
+
+	        // Send registration SMS first
+	        try {
+	            String phoneNumber = userWebModel.getMobileNumber();
+	            String smsMessage = "You have successfully registered with Aegle Healthcare. Your health is important to us! Stay in touch.";
+	            logger.info("Sending registration SMS to: {}", phoneNumber);
+	            smsService.sendSms(phoneNumber, smsMessage);
+	            logger.info("Registration SMS sent successfully to: {}", phoneNumber);
+	        } catch (Exception e) {
+	            logger.error("Registration SMS sending failed: {}", e.getMessage(), e);
+	        }
+
+	        // Send appointment SMS separately - with explicit variable declarations to avoid NPE
+	        if (appointment != null) {
+	            // Wrap in try-catch to prevent any exceptions from breaking the flow
+	            try {
+	                // Get all necessary data with safeguards
+	                String phoneNumber = userWebModel.getMobileNumber();
+	                String appointmentDate = userWebModel.getAppointmentDate() != null ? 
+	                    String.valueOf(userWebModel.getAppointmentDate()) : "scheduled date";
+	                String startTime = userWebModel.getSlotStartTime() != null ? 
+	                    userWebModel.getSlotStartTime() : "scheduled time";
+	                String endTime = userWebModel.getSlotEndTime() != null ? 
+	                    userWebModel.getSlotEndTime() : "end time";
+	                
+	                // Declare variables outside of Optional chains
+	                String doctorName = "Your doctor";
+	                String hospitalName = "our hospital";
+	                
+	                // Get doctor name safely
+	                if (userWebModel.getDoctorId() != null) {
+	                    Optional<User> doctorOpt = userRepository.findById(userWebModel.getDoctorId());
+	                    if (doctorOpt.isPresent()) {
+	                        User doctor = doctorOpt.get();
+	                        if (doctor.getUserName() != null && !doctor.getUserName().isEmpty()) {
+	                            doctorName = doctor.getUserName();
+	                        }
+	                    }
+	                }
+	                
+	                // Get hospital name safely
+	                if (userWebModel.getHospitalId() != null) {
+	                    Optional<HospitalDataList> hospitalOpt = hospitalDataListRepository.findById(userWebModel.getHospitalId());
+	                    if (hospitalOpt.isPresent()) {
+	                        HospitalDataList hospital = hospitalOpt.get();
+	                        if (hospital.getHospitalName() != null && !hospital.getHospitalName().isEmpty()) {
+	                            hospitalName = hospital.getHospitalName();
+	                        }
+	                    }
+	                }
+	                
+	                // Build the message
+	                StringBuilder smsBuilder = new StringBuilder();
+	                smsBuilder.append("Your appointment is confirmed on ");
+	                smsBuilder.append(appointmentDate);
+	                smsBuilder.append(" (");
+	                smsBuilder.append(startTime);
+	                smsBuilder.append(" - ");
+	                smsBuilder.append(endTime);
+	                smsBuilder.append(") with Dr. ");
+	                smsBuilder.append(doctorName);
+	                smsBuilder.append(" at ");
+	                smsBuilder.append(hospitalName);
+	                smsBuilder.append(". Thank you!");
+	                
+	                String smsMessage = smsBuilder.toString();
+	                
+	                // Send the SMS
+	                logger.info("About to send appointment SMS to: " + phoneNumber);
+	                logger.info("SMS content: " + smsMessage);
+	                
+	                // Directly call SMS service
+	                smsService.sendSms(phoneNumber, smsMessage);
+	                logger.info("Appointment SMS sent successfully");
+	                
+	            } catch (Exception e) {
+	                logger.error("Failed to send appointment SMS: " + e.getMessage());
+	                e.printStackTrace(); // Add stack trace for debugging
+	                // Continue execution - don't let SMS failure stop the process
+	            }
+	        }
+	        
+	        return ResponseEntity.ok(new Response(1, "Success", "Patient registered successfully"));
+	    } catch (Exception e) {
+	        logger.error("Registration failed: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "Fail", "Something went wrong during registration"));
+	    }
+	}
 	public boolean checkIfSlotIsBooked(Integer doctorSlotId, Integer daySlotId, String slotStartTime,
 			String slotEndTime) {
 		try {
@@ -1066,6 +1099,15 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 							userWebModel.getDoctorSlotSpiltTimeId());
 				}
 			}
+			  // Send appointment SMS confirmation (but don't let SMS failure affect the response)
+	        boolean smsSent = sendAppointmentConfirmationSMS(userWebModel, appointment);
+	        
+	        String responseMessage = "Online registered successfully";
+	        if (!smsSent) {
+	            // Adding a note about SMS in logs only, not changing the success status
+	            logger.warn("Appointment booked successfully but SMS notification failed");
+	            // We still return 200 OK as the core functionality (booking) succeeded
+	        }
 
 			return ResponseEntity.ok(new Response(1, "Success", "Online registered successfully"));
 
@@ -1074,6 +1116,86 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 					.body(new Response(0, "Fail", "Something went wrong during registration"));
 		}
+	}
+	
+	/**
+	 * Send SMS confirmation for the booked appointment
+	 * @param userWebModel The patient details model
+	 * @param appointment The booked appointment (can be null)
+	 * @return boolean indicating whether the SMS was sent successfully
+	 */
+	private boolean sendAppointmentConfirmationSMS(PatientDetailsWebModel userWebModel, PatientAppointmentTable appointment) {
+	    // Send appointment SMS separately - with explicit variable declarations to avoid NPE
+	    if (appointment != null) {
+	        // Wrap in try-catch to prevent any exceptions from breaking the flow
+	        try {
+	            // Get all necessary data with safeguards
+	            String phoneNumber = userWebModel.getMobileNumber();
+	            String appointmentDate = userWebModel.getAppointmentDate() != null ? 
+	                String.valueOf(userWebModel.getAppointmentDate()) : "scheduled date";
+	            String startTime = userWebModel.getSlotStartTime() != null ? 
+	                userWebModel.getSlotStartTime() : "scheduled time";
+	            String endTime = userWebModel.getSlotEndTime() != null ? 
+	                userWebModel.getSlotEndTime() : "end time";
+	            
+	            // Declare variables outside of Optional chains
+	            String doctorName = "Your doctor";
+	            String hospitalName = "our hospital";
+	            
+	            // Get doctor name safely
+	            if (userWebModel.getDoctorId() != null) {
+	                Optional<User> doctorOpt = userRepository.findById(userWebModel.getDoctorId());
+	                if (doctorOpt.isPresent()) {
+	                    User doctor = doctorOpt.get();
+	                    if (doctor.getUserName() != null && !doctor.getUserName().isEmpty()) {
+	                        doctorName = doctor.getUserName();
+	                    }
+	                }
+	            }
+	            
+	            // Get hospital name safely
+	            if (userWebModel.getHospitalId() != null) {
+	                Optional<HospitalDataList> hospitalOpt = hospitalDataListRepository.findById(userWebModel.getHospitalId());
+	                if (hospitalOpt.isPresent()) {
+	                    HospitalDataList hospital = hospitalOpt.get();
+	                    if (hospital.getHospitalName() != null && !hospital.getHospitalName().isEmpty()) {
+	                        hospitalName = hospital.getHospitalName();
+	                    }
+	                }
+	            }
+	            
+	            // Build the message
+	            StringBuilder smsBuilder = new StringBuilder();
+	            smsBuilder.append("Your appointment is confirmed on ");
+	            smsBuilder.append(appointmentDate);
+	            smsBuilder.append(" (");
+	            smsBuilder.append(startTime);
+	            smsBuilder.append(" - ");
+	            smsBuilder.append(endTime);
+	            smsBuilder.append(") with Dr. ");
+	            smsBuilder.append(doctorName);
+	            smsBuilder.append(" at ");
+	            smsBuilder.append(hospitalName);
+	            smsBuilder.append(". Thank you!");
+	            String smsMessage = smsBuilder.toString();
+	            
+	            // Send the SMS
+	            logger.info("About to send appointment SMS to: " + phoneNumber);
+	            logger.info("SMS content: " + smsMessage);
+	            
+	            // Directly call SMS service
+	            smsService.sendSms(phoneNumber, smsMessage);
+	            logger.info("Appointment SMS sent successfully");
+	            return true;
+	        } catch (Exception e) {
+	            logger.error("Failed to send appointment SMS: " + e.getMessage());
+	            e.printStackTrace(); // Add stack trace for debugging
+	            // Continue execution - don't let SMS failure stop the process
+	            return false;
+	        }
+	    }
+	    // If appointment is null, no SMS was sent
+	    return false;
 	}
 
 	@Override

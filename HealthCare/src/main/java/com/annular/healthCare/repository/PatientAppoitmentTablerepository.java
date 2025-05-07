@@ -81,6 +81,13 @@ public interface PatientAppoitmentTablerepository extends JpaRepository<PatientA
 	@Query("SELECT a FROM PatientAppointmentTable a WHERE a.slotStartTime = :targetTime")
 	List<PatientAppointmentTable> findAppointmentsByTimeSlot(String targetTime);
 
+	@Query("SELECT a FROM PatientAppointmentTable a WHERE a.appointmentDate = :appointmentDate AND a.slotStartTime = :startTime AND a.appointmentStatus = 'SCHEDULED'")
+	List<PatientAppointmentTable> findUpcomingAppointments(
+	    @Param("appointmentDate") String appointmentDate,
+	    @Param("startTime") String startTime);
+
+	List<PatientAppointmentTable> findByFollowUpDate(String todayDate);
+
 	
 
 

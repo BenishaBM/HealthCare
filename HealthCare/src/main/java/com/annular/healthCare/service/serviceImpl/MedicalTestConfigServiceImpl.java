@@ -216,59 +216,85 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 	@Override
 	public ResponseEntity<?> getAllMedicalTestNameByHospitalId(Integer hospitalId) {
 
-		    try {
-		        List<MedicalTestConfig> testConfigs = medicalTestConfigRepository.findByHospitalIdAndIsActiveTrue(hospitalId);
-		        if (testConfigs.isEmpty()) {
-		            return ResponseEntity.ok(new Response(0, "fail", "No medical tests found for the given hospital ID."));
-		        }
-		        
-		        // Group tests by department
-		        Map<Integer, Map<String, Object>> departmentMap = new HashMap<>();
-		        
-		        for (MedicalTestConfig config : testConfigs) {
-		            if (config.getDepartment() == null) {
-		                continue; // Skip tests without department
-		            }
-		            
-		            Integer departmentId = config.getDepartment().getId();
-		            
-		            // If we haven't seen this department yet, create a new entry
-		            if (!departmentMap.containsKey(departmentId)) {
-		                Map<String, Object> newDeptMap = new HashMap<>();
-		                newDeptMap.put("id", departmentId);
-		                newDeptMap.put("name", config.getDepartment().getName());
-		                newDeptMap.put("tests", new ArrayList<Map<String, Object>>());
-		                departmentMap.put(departmentId, newDeptMap);
-		            }
-		            
-		            // Add this test to the department's test list
-		            if (config.getMedicalTestName() != null) {
-		                Map<String, Object> testMap = new HashMap<>();
-		                testMap.put("id", config.getId());
-		                testMap.put("name", config.getMedicalTestName());
-		                testMap.put("mrp", config.getMrp());
-		                testMap.put("gst", config.getGst());
-		                
-		                @SuppressWarnings("unchecked")
-		                List<Map<String, Object>> tests = (List<Map<String, Object>>) departmentMap.get(departmentId).get("tests");
-		                tests.add(testMap);
-		            }
-		        }
-		        // Sort the tests within each department by createdOn in descending order
-		        for (Map<String, Object> deptMap : departmentMap.values()) {
-		            List<Map<String, Object>> tests = (List<Map<String, Object>>) deptMap.get("tests");
-		            tests.sort((test1, test2) -> ((Date) test2.get("createdOn")).compareTo((Date) test1.get("createdOn")));
-		        }
+	    try {
+	        List<MedicalTestConfig> testConfigs = medicalTestConfigRepository.findByHospitalIdAndIsActiveTrue(hospitalId);
+	        if (testConfigs.isEmpty()) {
+	            return ResponseEntity.ok(new Response(0, "fail", "No medical tests found for the given hospital ID."));
+	        }
 
-		        // Convert to a list for the response
-		        List<Map<String, Object>> responseList = new ArrayList<>(departmentMap.values());
-		        
-		        return ResponseEntity.ok(new Response(1, "success", responseList));
-		    } catch (Exception e) {
-		        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-		                .body(new Response(0, "error", "Something went wrong: " + e.getMessage()));
-		    }
-		}
+	        // Group tests by department
+	        Map<Integer, Map<String, Object>> departmentMap = new HashMap<>();
+
+	        for (MedicalTestConfig config : testConfigs) {
+	            if (config.getDepartment() == null) {
+	                continue; // Skip tests without department
+	            }
+
+	            Integer departmentId = config.getDepartment().getId();
+
+	            // If we haven't seen this department yet, create a new entry
+	            if (!departmentMap.containsKey(departmentId)) {
+	                Map<String, Object> newDeptMap = new HashMap<>();
+	                newDeptMap.put("id", departmentId);
+	                newDeptMap.put("name", config.getDepartment().getName());
+	                newDeptMap.put("createdOn", config.getCreatedOn());
+	                newDeptMap.put("tests", new ArrayList<Map<String, Object>>());
+	                departmentMap.put(departmentId, newDeptMap);
+	            }
+
+	            // Add this test to the department's test list
+	            if (config.getMedicalTestName() != null) {
+	                Map<String, Object> testMap = new HashMap<>();
+	                testMap.put("id", config.getId());
+	                testMap.put("name", config.getMedicalTestName());
+	                testMap.put("mrp", config.getMrp());
+	                testMap.put("gst", config.getGst());
+	                testMap.put("createdOn", config.getCreatedOn());
+
+	                @SuppressWarnings("unchecked")
+	                List<Map<String, Object>> tests = (List<Map<String, Object>>) departmentMap.get(departmentId).get("tests");
+	                tests.add(testMap);
+	            }
+	        }
+
+	        // Sort tests inside each department by 'createdOn' in descending order
+	        for (Map<String, Object> deptMap : departmentMap.values()) {
+	            List<Map<String, Object>> tests = (List<Map<String, Object>>) deptMap.get("tests");
+
+	            tests.sort((test1, test2) -> {
+	                Date createdOn1 = (Date) test1.get("createdOn");
+	                Date createdOn2 = (Date) test2.get("createdOn");
+
+	                if (createdOn1 == null && createdOn2 == null) return 0;
+	                if (createdOn1 == null) return 1;
+	                if (createdOn2 == null) return -1;
+
+	                return createdOn2.compareTo(createdOn1); // descending
+	            });
+	        }
+
+	        // Convert to a list for the response
+	        List<Map<String, Object>> responseList = new ArrayList<>(departmentMap.values());
+
+	        // Sort departments by 'createdOn' in descending order
+	        responseList.sort((dept1, dept2) -> {
+	            Date createdOn1 = (Date) dept1.get("createdOn");
+	            Date createdOn2 = (Date) dept2.get("createdOn");
+
+	            if (createdOn1 == null && createdOn2 == null) return 0;
+	            if (createdOn1 == null) return 1;
+	            if (createdOn2 == null) return -1;
+
+	            return createdOn2.compareTo(createdOn1); // descending
+	        });
+
+	        return ResponseEntity.ok(new Response(1, "success", responseList));
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "error", "Something went wrong: " + e.getMessage()));
+	    }
+	}
+
 
 	@Override
 	public ResponseEntity<?> getMedicalTestNameById(Integer departmentId) {
