@@ -1162,13 +1162,9 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	        	    override.getNewSlotTime());
 
 //
-//	        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-//	        String dateString = sdf.format(webModel.getOverrideDate());
-	     // Then use this converted date for your database query
-	        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-	        // Convert LocalDate back to Date for formatting
-	        Date convertedDate = Date.from(overrideDate.atStartOfDay(istZone).toInstant());
-	        String dateString = sdf.format(convertedDate);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String dateString = sdf.format(overrideDate);
+	     
 
 	        Optional<DoctorSlotDate> doctorSlotDateOpt = doctorSlotDateRepository
 	                .findByDateAndDoctorSlotTimeIdAndIsActive(dateString, slot.getDoctorSlotTimeId(), true);
