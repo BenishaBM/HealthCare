@@ -89,6 +89,9 @@ public class HospitalDataListWebModel {
 	private String addressLine2;
     private float amount;
     private Integer customizeDays;
+	private Integer supportStaffId;
+	private Integer labMasterDataId;
+	private String followUpDate;
     // Medicine Schedule
     private List<MedicineScheduleWebModel> schedules;
     

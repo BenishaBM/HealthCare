@@ -9,6 +9,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -255,6 +256,8 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	        if (hospitalDataList.isEmpty()) {
 	            return ResponseEntity.ok(new Response(1, "No hospital data found for the given userType and hospitalId", new ArrayList<>()));
 	        }
+	        hospitalDataList.sort(Comparator.comparing(User::getUserCreatedOn).reversed());
+
 
 	        // Extract the hospital data
 	        List<HashMap<String, Object>> dataList = new ArrayList<>();
@@ -318,6 +321,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 			// Attempt to retrieve the hospital data by hospitalId
 			Optional<HospitalDataList> hospitalDataOptional = userRepository.findByHospitalDataId(hospitalDataId);
 
+			
 			// Check if the hospital data is present
 			if (hospitalDataOptional.isPresent()) {
 				HospitalDataList hospitalData = hospitalDataOptional.get();
@@ -336,6 +340,8 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 				// Step 4: Retrieve all HospitalAdmin details using hospitalDataId
 				List<HospitalAdmin> hospitalAdminList = hospitalAdminRepository.findByAdminUserIds(hospitalDataId);
 
+				 // Sort hospitalAdminList by createdOn descending
+	            hospitalAdminList.sort(Comparator.comparing(HospitalAdmin::getUserCreatedOn).reversed());
 				// Create a HashMap for HospitalAdmin details
 				HashMap<String, Object> adminDetails = new HashMap<>();
 				if (hospitalAdminList != null && !hospitalAdminList.isEmpty()) {

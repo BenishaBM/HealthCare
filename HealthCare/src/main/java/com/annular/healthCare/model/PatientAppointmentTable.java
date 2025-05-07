@@ -134,5 +134,7 @@ public class PatientAppointmentTable {
     @Column(name = "totalMedicalTestAmount")
     private float totalMedicalTestAmount;
     
+    @Column(name = "followUpDate")
+    private String followUpDate;
     
 }

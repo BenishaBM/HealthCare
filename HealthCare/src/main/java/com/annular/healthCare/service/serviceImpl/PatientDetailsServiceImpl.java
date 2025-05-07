@@ -35,6 +35,7 @@ import com.annular.healthCare.model.DoctorRole;
 import com.annular.healthCare.model.DoctorSlotSpiltTime;
 import com.annular.healthCare.model.DoctorSlotTime;
 import com.annular.healthCare.model.DoctorSpecialty;
+import com.annular.healthCare.model.HospitalDataList;
 import com.annular.healthCare.model.LabMasterData;
 import com.annular.healthCare.model.MediaFile;
 import com.annular.healthCare.model.MediaFileCategory;
@@ -48,6 +49,7 @@ import com.annular.healthCare.repository.AddressDataRepository;
 import com.annular.healthCare.repository.DoctorSlotSpiltTimeRepository;
 import com.annular.healthCare.repository.DoctorSlotTimeRepository;
 import com.annular.healthCare.repository.DoctorSpecialityRepository;
+import com.annular.healthCare.repository.HospitalDataListRepository;
 import com.annular.healthCare.repository.LabMasterDataRepository;
 import com.annular.healthCare.repository.PatientAppoitmentTablerepository;
 import com.annular.healthCare.repository.PatientDetailsRepository;
@@ -57,6 +59,7 @@ import com.annular.healthCare.repository.SupportStaffMasterDataRepository;
 import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.MediaFileService;
 import com.annular.healthCare.service.PatientDetailsService;
+import com.annular.healthCare.service.SmsService;
 import com.annular.healthCare.webModel.FileInputWebModel;
 import com.annular.healthCare.webModel.FileOutputWebModel;
 import com.annular.healthCare.webModel.PatientAppointmentWebModel;
@@ -103,6 +106,12 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 
 	@Autowired
 	AddressDataRepository addressDataRepository;
+	
+	@Autowired
+	HospitalDataListRepository hospitalDataListRepository;
+	
+	@Autowired
+	private SmsService smsService;
 
 	private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("hh:mm a");
 
@@ -185,6 +194,51 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 			savePatientMediaFiles(userWebModel, savedPatient);
 			// Save patient-hospital mapping
 
+			try {
+			    String phoneNumber = userWebModel.getMobileNumber();
+			    String smsMessage = "You have successfully registered with Aegle Healthcare. Your health is important to us! Stay in touch.";
+			    logger.info("Sending registration SMS to: {}", phoneNumber);
+			    smsService.sendSms(phoneNumber, smsMessage);
+			    logger.info("SMS sent successfully to: {}", phoneNumber);
+			} catch (Exception e) {
+			    logger.error("SMS sending failed: {}", e.getMessage(), e);
+			    // Do not throw or block response, just log the failure
+			}
+
+	        // Send SMS for appointment confirmation
+	        try {
+	            String phoneNumber = userWebModel.getMobileNumber();
+	            String appointmentDate = String.valueOf(userWebModel.getAppointmentDate());
+	            String startTime = userWebModel.getSlotStartTime();
+	            String endTime = userWebModel.getSlotEndTime();
+
+	            String doctorName = ""; // Default
+	            String hospitalName = ""; // Default
+
+	            // Fetch doctor name
+	            if (userWebModel.getDoctorId() != null) {
+	                Optional<User> doctor = userRepository.findById(userWebModel.getDoctorId());
+	                doctorName = doctor.map(User::getUserName).orElse("Your doctor");
+	            }
+
+	            // Fetch hospital name
+	            if (userWebModel.getHospitalId() != null) {
+	                Optional<HospitalDataList> hospital = hospitalDataListRepository.findById(userWebModel.getHospitalId());
+	                hospitalName = hospital.map(HospitalDataList::getHospitalName).orElse("Your hospital");
+	            }
+
+	            String smsMessage = String.format(
+	                "Your appointment is confirmed on %s (%s - %s) with Dr. %s at %s. Thank you!",
+	                appointmentDate, startTime, endTime, doctorName, hospitalName
+	            );
+
+	            logger.info("Sending appointment SMS to: {}", phoneNumber);
+	            smsService.sendSms(phoneNumber, smsMessage);
+	            logger.info("SMS sent successfully to: {}", phoneNumber);
+	        } catch (Exception e) {
+	            logger.error("SMS sending failed: {}", e.getMessage(), e);
+	        }
+			
 			return ResponseEntity.ok(new Response(1, "Success", "Patient registered successfully"));
 		} catch (Exception e) {
 			logger.error("Registration failed: {}", e.getMessage(), e);
@@ -762,8 +816,23 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 				mediaFilesService.saveMediaFiles(fileInput, userFromDB);
 
 			}
+	        // Send SMS
+	        boolean smsSent = true;
+	        String mobile = userWebModel.getMobileNumber();
+	        String message = "You have successfully registered with Aegle Healthcare. Your health is important to us! Stay in touch.";
 
-			return ResponseEntity.ok(new Response(1, "Success", "Patient registered successfully"));
+	        try {
+	            smsService.sendSms(mobile, message);
+	        } catch (Exception smsEx) {
+	            smsSent = false;
+	            logger.error("SMS failed for mobile: " + mobile, smsEx);
+	        }
+
+	        if (!smsSent) {
+	            return ResponseEntity.ok(new Response(1, "Success", "Patient registered successfully, but SMS not sent"));
+	        }
+
+	        return ResponseEntity.ok(new Response(1, "Success", "Patient registered successfully"));
 
 		} catch (Exception e) {
 			logger.error("Registration failed", e);

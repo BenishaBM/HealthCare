@@ -2,6 +2,7 @@ package com.annular.healthCare.service.serviceImpl;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -84,8 +85,12 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	 @Override
 	    public ResponseEntity<?> getAllPatientAppointmentByFilter(String appointmentDate, String appointmentType, Integer doctorId) {
 	        try {
-	            List<PatientAppointmentTable> appointments = patientAppointmentRepository.findAppointmentsByFilter(appointmentDate, appointmentType, doctorId);
-	            
+	           // List<PatientAppointmentTable> appointments = patientAppointmentRepository.findAppointmentsByFilter(appointmentDate, appointmentType, doctorId);
+	        	List<PatientAppointmentTable> appointments = patientAppointmentRepository
+	        	        .findAppointmentsByFilter(appointmentDate, appointmentType, doctorId)
+	        	        .stream()
+	        	        .sorted(Comparator.comparing(PatientAppointmentTable::getCreatedOn).reversed())
+	        	        .collect(Collectors.toList()); 
 	            if (appointments.isEmpty()) {
 	            	return ResponseEntity.ok(new Response(0, "No Appointments Found", null));
 	            }
@@ -171,6 +176,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	         appointment.setAppointmentStatus("COMPLETED");
 	         appointment.setDoctorFees(userWebModel.getDoctorFees());
 	         appointment.setDoctorPrescription(userWebModel.getDoctorPrescription());
+	         appointment.setFollowUpDate(userWebModel.getFollowUpDate());
 
 	         Integer userId = userWebModel.getUserId(); // Who is saving this
 
@@ -580,11 +586,17 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 		         // - Patient is not null
 		         // - Patient is mapped to the given hospital
 		         // - Medicines exist for the appointment
+//		         List<Map<String, Object>> filteredData = appointments.stream()
+//		             .filter(app -> app.getPatient() != null
+//		                         && patientIds.contains(app.getPatient().getPatientDetailsId())
+//		                         && appointmentMedicineRepository.existsByAppointment(app))
+//	             .map(app -> {
 		         List<Map<String, Object>> filteredData = appointments.stream()
-		             .filter(app -> app.getPatient() != null
-		                         && patientIds.contains(app.getPatient().getPatientDetailsId())
-		                         && appointmentMedicineRepository.existsByAppointment(app))
-	             .map(app -> {
+		        		    .filter(app -> app.getPatient() != null
+		        		                && patientIds.contains(app.getPatient().getPatientDetailsId())
+		        		                && appointmentMedicineRepository.existsByAppointment(app))
+		        		    .sorted(Comparator.comparing(PatientAppointmentTable::getCreatedOn).reversed()) // Sort by createdOn descending
+		        		    .map(app -> {
 	                 PatientDetails patient = app.getPatient();
 	                 Map<String, Object> map = new HashMap<>();
 	                 map.put("patientDetailsId", patient.getPatientDetailsId());
@@ -771,8 +783,11 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	            
 	            if (appointments.isEmpty()) {
 	            	return ResponseEntity.ok(new Response(0, "No Appointments Found", null));
+	            
 	            }
-
+	            // Sort appointments by createdOn descending
+	            appointments.sort(Comparator.comparing(PatientAppointmentTable::getCreatedOn).reversed());
+	            
 	            List<Map<String, Object>> appointmentDetails = new ArrayList<>();
 
 	            for (PatientAppointmentTable appointment : appointments) {

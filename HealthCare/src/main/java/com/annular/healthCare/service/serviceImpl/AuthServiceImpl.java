@@ -190,12 +190,30 @@ public class AuthServiceImpl implements AuthService {
 	            processDoctorData(savedUser, userWebModel);
 	        }
 
-//	        if (userWebModel.getPhoneNumber() != null) {
-//	            String smsMessage = "Hi " + userWebModel.getFirstName() + ", you have been successfully registered!";
-//	            smsService.sendSms(userWebModel.getPhoneNumber(), smsMessage);
-//	        }
+	        // Send SMS based on userType
+	        boolean smsSent = true;
+	        if (userWebModel.getPhoneNumber() != null) {
+	            String smsMessage;
+	            if (userWebModel.getUserType().equalsIgnoreCase("ADMIN")) {
+	                smsMessage = "Welcome to Aegle Healthcare Application. Wishing you all the very best!";
+	            } else {
+	                smsMessage = "Hi " + userWebModel.getFirstName() + ", you have been successfully registered!";
+	            }
+
+	            try {
+	                smsService.sendSms(userWebModel.getPhoneNumber(), smsMessage);
+	            } catch (Exception smsEx) {
+	                smsSent = false;
+	                logger.error("SMS could not be sent to user: " + userWebModel.getPhoneNumber(), smsEx);
+	            }
+	        }
+
+	        if (!smsSent) {
+	            return ResponseEntity.ok(new Response(1, "success", "User registered successfully, but SMS not sent"));
+	        }
 
 	        return ResponseEntity.ok(new Response(1, "success", "User registered successfully"));
+	       // return ResponseEntity.ok(new Response(1, "success", "User registered successfully"));
 	    } catch (Exception e) {
 	        logger.error("Error registering user: " + e.getMessage(), e);
 	        response.put("message", "Registration failed");
@@ -626,36 +644,40 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 
 	@Override
 	public ResponseEntity<Response> getUserDetailsByUserType(String userType) {
-		logger.info("Fetching user details for userType: {}", userType);
+	    logger.info("Fetching user details for userType: {}", userType);
 
-		List<User> usersList = userRepository.findByUserType(userType);
+	    List<User> usersList = userRepository.findByUserType(userType);
 
-		if (usersList.isEmpty()) {
-			logger.warn("No users found for userType: {}", userType);
-			return ResponseEntity.ok(new Response(0, "No user found for given userType", new ArrayList<>()));
-		}
+	    if (usersList.isEmpty()) {
+	        logger.warn("No users found for userType: {}", userType);
+	        return ResponseEntity.ok(new Response(0, "No user found for given userType", new ArrayList<>()));
+	    }
 
-		List<Map<String, Object>> usersResponseList = usersList.stream().map(user -> {
-			Map<String, Object> userMap = new HashMap<>();
-			userMap.put("userId", user.getUserId());
-			userMap.put("userName", user.getUserName());
-			userMap.put("emailId", user.getEmailId());
-			userMap.put("phoneNumber", user.getPhoneNumber());
-			userMap.put("address", user.getCurrentAddress());
-			userMap.put("userType", user.getUserType());
-			userMap.put("userIsActive", user.getUserIsActive());
-			userMap.put("empId", user.getEmpId());
-			userMap.put("gender", user.getGender());
+	    List<Map<String, Object>> usersResponseList = usersList.stream()
+	        .sorted(Comparator.comparing(User::getUserCreatedOn).reversed()) // sort by createdOn descending
+	        .map(user -> {
+	            Map<String, Object> userMap = new HashMap<>();
+	            userMap.put("userId", user.getUserId());
+	            userMap.put("userName", user.getUserName());
+	            userMap.put("emailId", user.getEmailId());
+	            userMap.put("phoneNumber", user.getPhoneNumber());
+	            userMap.put("address", user.getCurrentAddress());
+	            userMap.put("userType", user.getUserType());
+	            userMap.put("userIsActive", user.getUserIsActive());
+	            userMap.put("empId", user.getEmpId());
+	            userMap.put("gender", user.getGender());
+	            userMap.put("createdOn", user.getUserCreatedOn());
 
-			return userMap;
-		}).collect(Collectors.toList());
+	            return userMap;
+	        }).collect(Collectors.toList());
 
-		HashMap<String, Object> responseMap = new HashMap<>();
-		responseMap.put("users", usersResponseList);
+	    HashMap<String, Object> responseMap = new HashMap<>();
+	    responseMap.put("users", usersResponseList);
 
-		logger.info("Users retrieved successfully for userType: {}", userType);
-		return ResponseEntity.ok(new Response(1, "Users retrieved successfully", responseMap));
+	    logger.info("Users retrieved successfully for userType: {}", userType);
+	    return ResponseEntity.ok(new Response(1, "Users retrieved successfully", responseMap));
 	}
+
 
 	@Override
 	public ResponseEntity<?> getDropDownByUserTypeByHospitalId() {
@@ -721,6 +743,11 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 			if (userWebModel.getDoctorFees() != null)
 				existingUser.setDoctorFees(userWebModel.getDoctorFees());
 		
+			if(userWebModel.getLabMasterDataId() != null)
+				existingUser.setLabMasterDataId(userWebModel.getLabMasterDataId());
+			
+			if(userWebModel.getSupportStaffId() != null)
+				existingUser.setSupportStaffId(userWebModel.getSupportStaffId());
 			
 
 			// Update timestamp

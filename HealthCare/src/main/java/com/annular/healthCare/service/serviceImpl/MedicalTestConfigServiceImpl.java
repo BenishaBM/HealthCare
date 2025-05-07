@@ -254,7 +254,12 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 		                tests.add(testMap);
 		            }
 		        }
-		        
+		        // Sort the tests within each department by createdOn in descending order
+		        for (Map<String, Object> deptMap : departmentMap.values()) {
+		            List<Map<String, Object>> tests = (List<Map<String, Object>>) deptMap.get("tests");
+		            tests.sort((test1, test2) -> ((Date) test2.get("createdOn")).compareTo((Date) test1.get("createdOn")));
+		        }
+
 		        // Convert to a list for the response
 		        List<Map<String, Object>> responseList = new ArrayList<>(departmentMap.values());
 		        
