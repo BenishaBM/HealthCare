@@ -47,4 +47,9 @@ public interface MedicalTestSlotSpiltTimeRepository extends JpaRepository<Medica
             Integer medicalTestSlotDateId, 
             Boolean isActive
         );
+
+
+	List<MedicalTestSlotSpiltTime> findByMedicalTestSlotDate_MedicalTestSlotDateIdAndIsActiveTrue(
+			Integer medicalTestSlotDateId);
+
 }
