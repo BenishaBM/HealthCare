@@ -38,4 +38,8 @@ public interface PatientDetailsService {
 
 	ResponseEntity<?> getAllAddressData();
 
+	ResponseEntity<?> getDropDownByLabList();
+
+	ResponseEntity<?> getDropDownBySupportStaffList();
+
 }

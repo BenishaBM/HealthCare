@@ -1102,11 +1102,8 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            return ResponseEntity.badRequest().body(new Response(0, "error", "Missing required fields"));
 	        }
 
-	        //LocalDate overrideDate = webModel.getOverrideDate().toInstant()
-	        //        .atZone(ZoneId.systemDefault()).toLocalDate();
 	        LocalDate overrideDate = webModel.getOverrideDate().toInstant()
-	                .atZone(ZoneId.of("Asia/Kolkata")) // Also parse the override date in IST
-	                .toLocalDate();
+	                .atZone(ZoneId.systemDefault()).toLocalDate();
 	       // LocalDate today = LocalDate.now();
 	        LocalDate today = LocalDate.now(ZoneId.of("Asia/Kolkata")); // Use IST instead of system default
 	        

@@ -50,6 +50,8 @@ public class UserWebModel {
 	private Boolean medicalHistoryStatus;
 	private Boolean personalDataStatus;
 	private Integer doctorfees;
+	private Integer supportStaffId;
+	private Integer labMasterDataId;
 
 	
 

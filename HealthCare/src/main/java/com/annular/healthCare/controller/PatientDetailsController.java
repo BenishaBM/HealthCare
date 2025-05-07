@@ -232,5 +232,28 @@ public class PatientDetailsController {
 						.body(new Response(-1, "Fail", e.getMessage()));
 			}
 		}
+		@GetMapping("getDropDownByLabList")
+		public ResponseEntity<?> getDropDownByLabList() {
+			try {
+				logger.info("getDropDownByLabList request for userType: {}");
+				return patientDetailService.getDropDownByLabList();
+			} catch (Exception e) {
+				logger.error("getDropDownByLabList Method Exception: {}", e.getMessage(), e);
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+						.body(new Response(-1, "Fail", e.getMessage()));
+			}
+		}
+		
+		@GetMapping("getDropDownBySupportStaffList")
+		public ResponseEntity<?> getDropDownBySupportStaffList() {
+			try {
+				logger.info("getDropDownBySupportStaffList request for userType: {}");
+				return patientDetailService.getDropDownBySupportStaffList();
+			} catch (Exception e) {
+				logger.error("getDropDownBySupportStaffList Method Exception: {}", e.getMessage(), e);
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+						.body(new Response(-1, "Fail", e.getMessage()));
+			}
+		}
 		
 }

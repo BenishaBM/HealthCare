@@ -102,4 +102,10 @@ public class User {
     
     @Column(name = "doctorFees")
     private Integer doctorFees;
+    
+	@Column(name = "supportStaffId")
+	private Integer supportStaffId;
+	
+	@Column(name = "labMasterDataId")
+	private Integer labMasterDataId;
 }
