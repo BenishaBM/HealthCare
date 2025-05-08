@@ -47,6 +47,7 @@ import com.annular.healthCare.repository.PatientAppoitmentTablerepository;
 import com.annular.healthCare.repository.PatientDetailsRepository;
 import com.annular.healthCare.repository.PatientMappedHospitalIdRepository;
 import com.annular.healthCare.service.DoctorAppoitmentService;
+import com.annular.healthCare.service.SmsService;
 import com.annular.healthCare.webModel.AppointmentMedicalTestWebModel;
 import com.annular.healthCare.webModel.HospitalDataListWebModel;
 import com.annular.healthCare.webModel.MedicineScheduleWebModel;
@@ -79,6 +80,9 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	private AppointmentMedicineRepository appointmentMedicineRepository;
 	
 	@Autowired
+	PatientDetailsRepository patientDetailRepository;
+	
+	@Autowired
 	PatientMappedHospitalIdRepository patientMappedHospitalIdRepository;
 
 	@Autowired
@@ -86,6 +90,9 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 
 	@Autowired
 	MediaFileRepository mediaFilesRepository;
+	
+	@Autowired
+	private SmsService smsService;
 
 	 @Override
 	    public ResponseEntity<?> getAllPatientAppointmentByFilter(String appointmentDate, String appointmentType, Integer doctorId) {
@@ -258,6 +265,27 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 
 	         appointment.setTotalMedicalTestAmount(totalMedicalTestAmount);
 	         patientAppointmentRepository.save(appointment);
+	      // Fetch patient's mobile number from PatientDetail table
+	         Optional<PatientDetails> patientOpt = patientDetailRepository.findById(appointment.getPatient().getPatientDetailsId());
+	         if (patientOpt.isPresent()) {
+	             PatientDetails patient = patientOpt.get();
+	             String phoneNumber = patient.getMobileNumber();
+	             String patientName = patient.getPatientName() != null ? patient.getPatientName() : "Patient";
+
+	             // Send SMS Notifications
+	             try {
+	                 String completionMsg = String.format("Hi %s, your appointment has been successfully completed. Thank you for visiting us.", patientName);
+	                 smsService.sendSms(phoneNumber, completionMsg);
+
+	                 int pharmacyReadyMinutes = 30; // Change dynamically if needed
+	                 String pharmacyMsg = String.format("Hope you feel better now. Your pharmacy order will be ready in next %d minutes.", pharmacyReadyMinutes);
+	                 smsService.sendSms(phoneNumber, pharmacyMsg);
+	             } catch (Exception smsEx) {
+	                // logger.error("Error while sending SMS: {}", smsEx.getMessage(), smsEx);
+	             }
+	         } else {
+	            // logger.warn("Patient details not found for patientId: {}", appointment.getPatient());
+	         }
 
 	         return ResponseEntity.ok(new Response(1, "success", "Appointment updated successfully."));
 	     } catch (Exception e) {
@@ -709,7 +737,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                                     testMap.put("updatedOn", test.getUpdatedOn());
 	                                     testMap.put("testStatus", test.getPatientStatus());
 	                                     boolean resultStatus = getResultStatusForAppointment(test.getId());
-	            	                     map.put("resultStatus", resultStatus);
+	            	                     testMap.put("resultStatus", resultStatus);
 
 	                                     // Map the medical test details
 	                                     Optional<MedicalTestConfig> medicalTest = medicalTestConfigRepository.findById(test.getMedicalTest().getId());
