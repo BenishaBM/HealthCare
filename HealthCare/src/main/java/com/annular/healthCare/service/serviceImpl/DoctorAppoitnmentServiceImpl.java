@@ -35,6 +35,7 @@ import com.annular.healthCare.model.Medicines;
 import com.annular.healthCare.model.PatientAppointmentTable;
 import com.annular.healthCare.model.PatientDetails;
 import com.annular.healthCare.model.PatientMappedHospitalId;
+import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.AppointmentMedicalTestRepository;
 import com.annular.healthCare.repository.AppointmentMedicineRepository;
 import com.annular.healthCare.repository.DoctorSlotSpiltTimeRepository;
@@ -265,27 +266,44 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 
 	         appointment.setTotalMedicalTestAmount(totalMedicalTestAmount);
 	         patientAppointmentRepository.save(appointment);
-	      // Fetch patient's mobile number from PatientDetail table
+
+
+	         Integer hospital = appointment.getDoctor().getHospitalId();
+	        String appointmentDate = appointment.getAppointmentDate();
+
+	         List<PatientAppointmentTable> sameDayAppointments =
+	                 patientAppointmentRepository.findByHospitalAndAppointmentDateOrderByIdAsc(hospital, appointmentDate);
+
+	         int minuteCounter = 5;
+
+	         for (PatientAppointmentTable apt : sameDayAppointments) {
+	             if ("PAID".equalsIgnoreCase(apt.getMedicineStatus())) {
+	                 minuteCounter = 5;
+	             } else if (apt.getMedicineStatus() == null) {
+	                 apt.setReadyMinutesStatus(minuteCounter + " minutes");
+	                 patientAppointmentRepository.save(apt);
+	                 minuteCounter += 5;
+	             }
+	         }
+
+	         // Send SMS to Patient
 	         Optional<PatientDetails> patientOpt = patientDetailRepository.findById(appointment.getPatient().getPatientDetailsId());
 	         if (patientOpt.isPresent()) {
 	             PatientDetails patient = patientOpt.get();
 	             String phoneNumber = patient.getMobileNumber();
 	             String patientName = patient.getPatientName() != null ? patient.getPatientName() : "Patient";
 
-	             // Send SMS Notifications
 	             try {
-	                 String completionMsg = String.format("Hi %s, your appointment has been successfully completed. Thank you for visiting us.", patientName);
-	                 smsService.sendSms(phoneNumber, completionMsg);
 
-	                 int pharmacyReadyMinutes = 30; // Change dynamically if needed
-	                 String pharmacyMsg = String.format("Hope you feel better now. Your pharmacy order will be ready in next %d minutes.", pharmacyReadyMinutes);
+
+	                 String pharmacyMsg = String.format("Hope you feel better now. Your pharmacy order will be ready in next %s.", appointment.getReadyMinutesStatus());
 	                 smsService.sendSms(phoneNumber, pharmacyMsg);
 	             } catch (Exception smsEx) {
-	                // logger.error("Error while sending SMS: {}", smsEx.getMessage(), smsEx);
+	                 // Log SMS error
 	             }
-	         } else {
-	            // logger.warn("Patient details not found for patientId: {}", appointment.getPatient());
 	         }
+
+	        
 
 	         return ResponseEntity.ok(new Response(1, "success", "Appointment updated successfully."));
 	     } catch (Exception e) {

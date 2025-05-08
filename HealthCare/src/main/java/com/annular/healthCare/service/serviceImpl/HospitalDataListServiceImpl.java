@@ -55,6 +55,7 @@ import com.annular.healthCare.repository.PatientAppoitmentTablerepository;
 import com.annular.healthCare.repository.PatientDetailsRepository;
 import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.HospitalDataListService;
+import com.annular.healthCare.service.SmsService;
 import com.annular.healthCare.webModel.DoctorSlotTimeOverrideWebModel;
 import com.annular.healthCare.webModel.FileInputWebModel;
 import com.annular.healthCare.webModel.HospitalAdminWebModel;
@@ -119,7 +120,10 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 
 	@Value("${annular.app.imageLocation}")
 	private String imageLocation;
-
+	
+	@Autowired
+	SmsService smsService;
+	
 	@Override
 	public ResponseEntity<?> register(HospitalDataListWebModel userWebModel) {
 	    HashMap<String, Object> response = new HashMap<>();
@@ -1259,10 +1263,24 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            }
 
 	            if (isFuture) {
-	                appt.setSlotStartTime(start.plusMinutes(durationMinutes).format(formatter));
-	                appt.setSlotEndTime(end.plusMinutes(durationMinutes).format(formatter));
-	                updatedAppointments.add(appt);
-	                updatedApptCount++;
+	            	 String newStartTime = start.plusMinutes(durationMinutes).format(formatter);
+	            	    String newEndTime = end.plusMinutes(durationMinutes).format(formatter);
+//	                appt.setSlotStartTime(start.plusMinutes(durationMinutes).format(formatter));
+//	                appt.setSlotEndTime(end.plusMinutes(durationMinutes).format(formatter));
+	                    appt.setSlotStartTime(newStartTime);
+	                    appt.setSlotEndTime(newEndTime);
+	                    updatedAppointments.add(appt);
+	                    updatedApptCount++;
+	                Optional<PatientDetails> patientOpt = patientDetailsRepository.findById(appt.getPatient().getPatientDetailsId());
+	                if (patientOpt.isPresent()) {
+	                    PatientDetails patient = patientOpt.get();
+	                    String mobile = patient.getMobileNumber();
+	                    String smsText = String.format(
+	                            "Your appointment has been rescheduled to %s - %s on %s. Thanks for your understanding.",
+	                            newStartTime, newEndTime, dateString
+	                    );
+	                    smsService.sendSms(mobile, smsText); 
+	                }
 	            }
 	        }
 
@@ -1290,6 +1308,8 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	                .body(new Response(0, "error", "Internal error: " + e.getMessage()));
 	    }
 	}
+
+
 
 	private int extractDurationInMinutes(String newSlotTime) {
 	    try {

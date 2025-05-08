@@ -137,4 +137,7 @@ public class PatientAppointmentTable {
     @Column(name = "followUpDate")
     private String followUpDate;
     
+    @Column(name = "readyMinuteStatus")
+    private String readyMinutesStatus;
+    
 }
