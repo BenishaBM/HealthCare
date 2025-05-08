@@ -677,8 +677,8 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                     map.put("totalMedicineTestAmount", appointment.getTotalMedicineAmount());
 	                     
 	                     // Step 2: Fetch the result status for this appointment
-	                     boolean resultStatus = getResultStatusForAppointment(appointment.getAppointmentId());
-	                     map.put("resultStatus", resultStatus);
+//	                     boolean resultStatus = getResultStatusForAppointment(appointment.getAppointmentId());
+//	                     map.put("resultStatus", resultStatus);
 
 	                     // Map patient details if available
 	                     PatientDetails patient = appointment.getPatient();
@@ -708,6 +708,8 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                                     testMap.put("updatedBy", test.getUpdatedBy());
 	                                     testMap.put("updatedOn", test.getUpdatedOn());
 	                                     testMap.put("testStatus", test.getPatientStatus());
+	                                     boolean resultStatus = getResultStatusForAppointment(test.getId());
+	            	                     map.put("resultStatus", resultStatus);
 
 	                                     // Map the medical test details
 	                                     Optional<MedicalTestConfig> medicalTest = medicalTestConfigRepository.findById(test.getMedicalTest().getId());
