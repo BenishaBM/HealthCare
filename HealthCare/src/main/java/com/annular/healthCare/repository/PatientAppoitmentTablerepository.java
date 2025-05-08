@@ -88,6 +88,13 @@ public interface PatientAppoitmentTablerepository extends JpaRepository<PatientA
 
 	List<PatientAppointmentTable> findByFollowUpDate(String todayDate);
 
+	@Query("SELECT p FROM PatientAppointmentTable p " +
+		       "WHERE p.doctor.hospitalId = :hospitalId " +
+		       "AND p.appointmentDate = :appointmentDate " +
+		       "ORDER BY p.appointmentId ASC")
+	List<PatientAppointmentTable> findByHospitalAndAppointmentDateOrderByIdAsc(Integer hospital,
+			String appointmentDate);
+
 	
 
 
