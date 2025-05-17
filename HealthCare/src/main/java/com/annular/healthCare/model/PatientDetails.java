@@ -113,4 +113,11 @@ public class PatientDetails {
 	
 	@Column(name = "otp")
 	private Integer otp;
+	
+	@Column(name = "emergencyName")
+	private String emergencyName;
+	
+	@Column(name = "emergencyRelationship")
+	private String emergencyRelationship;
+
 }

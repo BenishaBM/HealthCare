@@ -42,7 +42,10 @@ public class PatientDetailsWebModel {
 	private Date userUpdatedOn;
 	private String emergencyContact;
     private String dateOfBirth;
-	private String previousMedicalHistory;
+	private String emergencyName;
+	private String emergencyRelationship;
+	private String emergencyContactNumber;
+    private String previousMedicalHistory;
 	private String insuranceDetails;
 	private String insurerName;
 	private String insuranceProvider;

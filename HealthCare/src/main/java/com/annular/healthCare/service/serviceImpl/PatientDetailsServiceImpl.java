@@ -304,6 +304,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 				.otp(100).gender(userWebModel.getGender()).bloodGroup(userWebModel.getBloodGroup())
 				.mobileNumber(userWebModel.getMobileNumber()).emailId(userWebModel.getEmailId())
 				.address(userWebModel.getAddress()).currentAddress(userWebModel.getCurrentAddress())
+				.emergencyName(userWebModel.getEmergencyName()).emergencyRelationship(userWebModel.getEmergencyRelationship())
 				.emergencyContact(userWebModel.getEmergencyContact()).purposeOfVisit(userWebModel.getPurposeOfVisit())
 				.doctorId(userWebModel.getDoctorId()).userIsActive(true).createdBy(userWebModel.getCreatedBy())
 				.userCreatedOn(new Date()).previousMedicalHistory(userWebModel.getPreviousMedicalHistory())
@@ -537,6 +538,8 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 				patientData.put("emergencyContact", patient.getEmergencyContact());
 				patientData.put("hospitalId", hospitalId); // from method param
 				patientData.put("purposeOfVisit", patient.getPurposeOfVisit());
+				patientData.put("emergencyName", patient.getEmergencyName());
+				patientData.put("emergencyRelationship", patient.getEmergencyRelationship());
 				patientData.put("doctorId", patient.getDoctorId());
 				patientData.put("userIsActive", patient.getUserIsActive());
 				patientData.put("createdBy", patient.getCreatedBy());
@@ -598,6 +601,10 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 				patient.setCurrentAddress(userWebModel.getCurrentAddress());
 			if (userWebModel.getEmergencyContact() != null)
 				patient.setEmergencyContact(userWebModel.getEmergencyContact());
+			if (userWebModel.getEmergencyName() != null)
+				patient.setEmergencyName(userWebModel.getEmergencyName());
+			if (userWebModel.getEmergencyRelationship() != null)
+				patient.setEmergencyRelationship(userWebModel.getEmergencyRelationship());
 			if (userWebModel.getPurposeOfVisit() != null)
 				patient.setPurposeOfVisit(userWebModel.getPurposeOfVisit());
 			if (userWebModel.getDoctorId() != null)
@@ -675,6 +682,8 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 			webModel.setPolicyNumber(patient.getPolicyNumber());
 			webModel.setDisability(patient.getDisability());
 			webModel.setUserUpdatedBy(patient.getUserUpdatedBy());
+			webModel.setEmergencyName(patient.getEmergencyName());
+			webModel.setEmergencyRelationship(patient.getEmergencyRelationship());
 
 			// Fetch media files
 			List<FileOutputWebModel> mediaFiles = mediaFilesService
