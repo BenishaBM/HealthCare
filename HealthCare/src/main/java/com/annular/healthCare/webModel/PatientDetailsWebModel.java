@@ -44,7 +44,6 @@ public class PatientDetailsWebModel {
     private String dateOfBirth;
 	private String emergencyName;
 	private String emergencyRelationship;
-	private String emergencyContactNumber;
     private String previousMedicalHistory;
 	private String insuranceDetails;
 	private String insurerName;
