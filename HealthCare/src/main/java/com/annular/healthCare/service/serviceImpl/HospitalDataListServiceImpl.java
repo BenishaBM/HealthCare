@@ -215,23 +215,32 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	}
 	
 	public String generateHospitalCode() {
-	    // Get the latest hospital code from the repository
-	    String lastCode = userRepository.findLastHospitalCode(); // e.g., "HC0023"
-
+	    // Add debug logging to see what's happening
+	    String lastCode = userRepository.findLastHospitalCode();
+	    System.out.println("Last code from database: " + lastCode);
+	    
 	    int nextNumber = 1;
+	    
 	    if (lastCode != null && lastCode.startsWith("HC")) {
 	        try {
-	            nextNumber = Integer.parseInt(lastCode.substring(2)) + 1;
+	            // Extract numeric part and increment
+	            String numberPart = lastCode.substring(2); // Get "0023"
+	            nextNumber = Integer.parseInt(numberPart) + 1;
+	            System.out.println("Extracted number: " + numberPart + ", Next number: " + nextNumber);
 	        } catch (NumberFormatException e) {
-	            // fallback in case the code is corrupted
+	            // If parsing fails, fallback to 1
+	            System.out.println("Failed to parse number: " + e.getMessage());
 	            nextNumber = 1;
 	        }
+	    } else {
+	        System.out.println("No previous code found or invalid format");
 	    }
-
-	    // Format the code as HC0001, HC0002, etc.
-	    return String.format("HC%04d", nextNumber);
+	    
+	    // Format the new code as "HC0001", "HC0002", etc.
+	    String newCode = String.format("HC%04d", nextNumber);
+	    System.out.println("Generated new code: " + newCode);
+	    return newCode;
 	}
-
 
 
 	// Helper method to handle file uploads (hospital logo)
