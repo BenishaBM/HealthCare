@@ -122,6 +122,7 @@ public class AuthenticationController {
 
 	            // Retrieve hospital name and logo
 	            String hospitalName = "";
+	            String hospitalCode = "";
 	            ArrayList<FileInputWebModel> filesInputWebModel = new ArrayList<>();
 
 	            if (user.getHospitalId() != null) {
@@ -129,6 +130,7 @@ public class AuthenticationController {
 	                if (hospitalDataOpt.isPresent()) {
 	                    HospitalDataList hospitalData = hospitalDataOpt.get();
 	                    hospitalName = hospitalData.getHospitalName();
+	                    hospitalCode = hospitalData.getHospitalCode();
 
 	                    // Retrieve hospital logo
 	                    List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
@@ -166,7 +168,9 @@ public class AuthenticationController {
 	                    userDetails.getUserEmailId(),
 	                    user.getHospitalId(),
 	                    hospitalName,
-	                    filesInputWebModel
+	                    filesInputWebModel,
+	                    hospitalCode
+	                    
 	            ));
 	        } else {
 	            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Invalid email or password"));
@@ -196,7 +200,7 @@ public class AuthenticationController {
 			refreshTokenRepository.save(refreshToken);
 			return ResponseEntity.ok(new JwtResponse(jwt, userData.get().getUserId(),
 
-					1, token.getData().toString(), userData.get().getUserType(), userData.get().getEmailId(), userData.get().getHospitalId(),"",null));
+					1, token.getData().toString(), userData.get().getUserType(), userData.get().getEmailId(), userData.get().getHospitalId(),"",null,""));
 		}
 		return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Refresh Token Failed"));
 	}
@@ -418,7 +422,7 @@ public class AuthenticationController {
 	                "PATIENT", 
 	                user.getEmailId(), 
 	                1,
-	                hospitalName, null
+	                hospitalName, null,""
 	            ));
 	        } else {
 	            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
