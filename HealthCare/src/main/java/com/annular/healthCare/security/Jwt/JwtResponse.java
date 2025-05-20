@@ -31,5 +31,6 @@ public class JwtResponse {
     private Integer hospitalId;
     private String hospitalName;
     private List<FileInputWebModel> hospitalLogo;
+    private String hospitalCode;
    
 }
