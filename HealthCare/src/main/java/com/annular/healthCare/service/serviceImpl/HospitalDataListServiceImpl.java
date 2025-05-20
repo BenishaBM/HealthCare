@@ -643,6 +643,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            hospitalData.put("hospitalName", user.getHospitalName());
 	            hospitalData.put("linkStatus", user.getLinkstatus());
 	            hospitalData.put("hospitalLink", user.getHospitalLink());
+	            hospitalData.put("hospitalCode", user.getHospitalCode());
 
 	            // Retrieve all HospitalAdmin details using hospitalDataId
 	            List<HospitalAdmin> hospitalAdminList = hospitalAdminRepository.findByAdminUserIds(user.getHospitalDataId());
