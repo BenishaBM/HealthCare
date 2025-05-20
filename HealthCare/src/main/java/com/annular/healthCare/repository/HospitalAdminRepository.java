@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.annular.healthCare.model.HospitalAdmin;
+import com.annular.healthCare.model.HospitalDataList;
 
 @Repository
 public interface HospitalAdminRepository extends JpaRepository<HospitalAdmin, Integer> {
@@ -17,6 +18,8 @@ public interface HospitalAdminRepository extends JpaRepository<HospitalAdmin, In
 
 	@Query("SELECT ha FROM HospitalAdmin ha WHERE ha.hospitalDataList.hospitalDataId = :hospitalDataId AND ha.userIsActive = true")
 	List<HospitalAdmin> findByAdminUserIds(Integer hospitalDataId);
+
+	List<HospitalAdmin> findByHospitalDataList(HospitalDataList existingHospitalData);
 
 	//Optional<HospitalAdmin> findByAdminUserIds(Integer hospitalDataId);
 	

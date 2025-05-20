@@ -573,30 +573,51 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 
 	@Override
 	public ResponseEntity<?> deleteHospitalDataByUserId(Integer hospitalDataId) {
-		HashMap<String, Object> response = new HashMap<>();
-		try {
-			logger.info("Soft deleting hospital data for hospitalDataId: " + hospitalDataId);
+	    HashMap<String, Object> response = new HashMap<>();
+	    try {
+	        logger.info("Soft deleting hospital data for hospitalDataId: " + hospitalDataId);
 
-			// Step 1: Retrieve the existing hospital data by hospitalDataId
-			Optional<HospitalDataList> hospitalDataOptional = userRepository.findById(hospitalDataId);
+	        // Step 1: Retrieve the existing hospital data by hospitalDataId
+	        Optional<HospitalDataList> hospitalDataOptional = userRepository.findById(hospitalDataId);
 
-			// Step 2: Check if hospital data exists
-			if (!hospitalDataOptional.isPresent()) {
-				response.put("message", "Hospital data not found");
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-			}
+	        // Step 2: Check if hospital data exists
+	        if (!hospitalDataOptional.isPresent()) {
+	            response.put("message", "Hospital data not found");
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+	        }
 
-			// Step 3: Get the existing hospital data entity
-			HospitalDataList existingHospitalData = hospitalDataOptional.get();
+	        // Step 3: Get the existing hospital data entity
+	        HospitalDataList existingHospitalData = hospitalDataOptional.get();
 
-			// Step 4: Set the userIsActive flag to false for soft delete
-			existingHospitalData.setUserIsActive(false); // Soft delete by marking user as inactive
-			existingHospitalData.setUserUpdatedBy(existingHospitalData.getCreatedBy()); // Set the updated by user
-			existingHospitalData.setUserUpdatedOn(new Date()); // Set the updated time to current time
+	        // Step 4: Set the userIsActive flag to false for soft delete
+	        existingHospitalData.setUserIsActive(false); // Soft delete by marking user as inactive
+	        existingHospitalData.setUserUpdatedBy(existingHospitalData.getCreatedBy()); // Set the updated by user
+	        existingHospitalData.setUserUpdatedOn(new Date()); // Set the updated time to current time
 
-			// Step 5: Save the updated hospital data entity back to the database
-			HospitalDataList updatedHospitalData = userRepository.save(existingHospitalData);
+	        // Step 5: Save the updated hospital data entity back to the database
+	        HospitalDataList updatedHospitalData = userRepository.save(existingHospitalData);
 
+	        // Step 6: Soft delete related HospitalAdmin entries
+	        List<HospitalAdmin> admins = hospitalAdminRepository.findByHospitalDataList(existingHospitalData);
+	        for (HospitalAdmin admin : admins) {
+	            admin.setUserIsActive(false);
+	            admin.setUserUpdatedBy(existingHospitalData.getCreatedBy());
+	            admin.setUserUpdatedOn(new Date());
+	        }
+	        hospitalAdminRepository.saveAll(admins);
+
+	        // Step 7: Set hospitalId = null in User table for the soft-deleted admins
+	        for (HospitalAdmin admin : admins) {
+	            Integer adminUserId = admin.getAdminUserId();
+	            Optional<User> optionalUser = usersRepository.findById(adminUserId);
+	            if (optionalUser.isPresent()) {
+	                User user = optionalUser.get();
+	                user.setHospitalId(null); // Remove hospital association
+	                usersRepository.save(user);
+	            } else {
+	                logger.warn("User not found for admin userId: " + adminUserId);
+	            }
+	        }
 			// Step 6: Handle associated media files
 			List<MediaFile> mediaFiles = mediaFileRepository
 					.findByFileDomainReferenceId(existingHospitalData.getHospitalDataId());
