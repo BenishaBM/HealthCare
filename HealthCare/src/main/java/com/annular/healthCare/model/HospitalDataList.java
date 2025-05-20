@@ -75,6 +75,9 @@ public class HospitalDataList {
 	@Column(name = "hospitalName")
 	private String hospitalName;
 	
+	@Column(name = "hospitalCode")
+	private String hospitalCode;
+	
 	
 	// One hospital can have multiple admins
 	@OneToMany(mappedBy = "hospitalDataList", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

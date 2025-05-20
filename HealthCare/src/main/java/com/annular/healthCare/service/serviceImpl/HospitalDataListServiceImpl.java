@@ -136,6 +136,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            response.put("message", "Hospital with this name already exists");
 	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 	        }
+	        String generatedCode = generateHospitalCode();
 
 	        // Create a new hospital data entity (hospital)
 	        HospitalDataList newHospitalData = HospitalDataList.builder()
@@ -146,6 +147,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	                .addressLine1(userWebModel.getAddressLine1())
 	                .addressLine2(userWebModel.getAddressLine2())
 	                .createdBy(userWebModel.getCreatedBy())
+	                .hospitalCode(generatedCode) // ← set the hospital code here
 	                .hospitalName(userWebModel.getHospitalName()) // Set the hospital name here
 	                .build();
 
@@ -210,6 +212,25 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 	    }
 	}
+	
+	public String generateHospitalCode() {
+	    // Get the latest hospital code from the repository
+	    String lastCode = userRepository.findLastHospitalCode(); // e.g., "HC0023"
+
+	    int nextNumber = 1;
+	    if (lastCode != null && lastCode.startsWith("HC")) {
+	        try {
+	            nextNumber = Integer.parseInt(lastCode.substring(2)) + 1;
+	        } catch (NumberFormatException e) {
+	            // fallback in case the code is corrupted
+	            nextNumber = 1;
+	        }
+	    }
+
+	    // Format the code as HC0001, HC0002, etc.
+	    return String.format("HC%04d", nextNumber);
+	}
+
 
 
 	// Helper method to handle file uploads (hospital logo)

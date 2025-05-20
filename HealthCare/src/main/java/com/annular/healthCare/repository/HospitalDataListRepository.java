@@ -24,6 +24,9 @@ public interface HospitalDataListRepository extends JpaRepository<HospitalDataLi
 	@Query("SELECT u FROM HospitalDataList u WHERE u.hospitalDataId = :hospitalId")
 	Optional<HospitalDataList> findByHospitalId(Integer hospitalId);
 
+	@Query("SELECT h.hospitalCode FROM HospitalDataList h ORDER BY h.hospitalCode DESC LIMIT 1")
+	String findLastHospitalCode();
+
 
 
 
