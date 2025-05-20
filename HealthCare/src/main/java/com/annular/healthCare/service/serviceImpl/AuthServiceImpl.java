@@ -1777,5 +1777,19 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	    }
 	}
 
+	@Override
+	public ResponseEntity<?> saveHospitalLink(HospitalDataListWebModel userWebModel) {
+	    Optional<HospitalDataList> optionalPatient = hospitalDataListRepository.findById(userWebModel.getHospitalId());
+
+	    if (optionalPatient.isPresent()) {
+	    	HospitalDataList patient = optionalPatient.get();
+	        patient.setHospitalLink(userWebModel.getHospitalLink());
+	        patient.setLinkstatus(true);
+	        return ResponseEntity.ok("Hospital link updated successfully.");
+	    } else {
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Patient not found with ID: " + userWebModel.getPatientId());
+	    }
+	}
+
 
 }

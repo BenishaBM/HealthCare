@@ -65,6 +65,8 @@ public class HospitalDataListWebModel {
     private String token;
     private Integer appointmentId;
     private List<Integer> medicineIds;
+	private String hospitalLink;
+	private Boolean linkstatus;
     private List<Integer> medicalTestIds;
     private List<AppointmentMedicalTestWebModel> medicalTests;
     private List<MedicineDetail> medicineDetails;

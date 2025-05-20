@@ -50,5 +50,7 @@ public interface AuthService {
 
 	ResponseEntity<?> verifyMobileNumberWithoutHospitalId(String mobileNumber);
 
+	ResponseEntity<?> saveHospitalLink(HospitalDataListWebModel userWebModel);
+
 	
 }

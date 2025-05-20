@@ -143,6 +143,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	                .emailId(userWebModel.getEmailId())
 	                .phoneNumber(userWebModel.getPhoneNumber())
 	                .userIsActive(true) // Default to active
+	                .linkstatus(false)
 	                .currentAddress(userWebModel.getCurrentAddress())
 	                .addressLine1(userWebModel.getAddressLine1())
 	                .addressLine2(userWebModel.getAddressLine2())
@@ -302,6 +303,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            data.put("yearOfExperience", hospitalData.getYearOfExperiences());
 	            data.put("gender", hospitalData.getGender());
 	            data.put("userIsActive", hospitalData.getUserIsActive());
+	            
 
 	            // Filter only active doctor roles
 	            List<Map<String, Object>> roleDetails = new ArrayList<>();
@@ -639,6 +641,8 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            hospitalData.put("currentAddress", user.getCurrentAddress());
 	            hospitalData.put("isActive", user.getUserIsActive());
 	            hospitalData.put("hospitalName", user.getHospitalName());
+	            hospitalData.put("linkStatus", user.getLinkstatus());
+	            hospitalData.put("hospitalLink", user.getHospitalLink());
 
 	            // Retrieve all HospitalAdmin details using hospitalDataId
 	            List<HospitalAdmin> hospitalAdminList = hospitalAdminRepository.findByAdminUserIds(user.getHospitalDataId());
