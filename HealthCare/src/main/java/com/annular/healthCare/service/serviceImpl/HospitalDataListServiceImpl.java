@@ -9,6 +9,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -632,7 +633,18 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 					mediaFileRepository.deleteById(mediaFile.getFileId());
 				}
 			}
+			
+			 // ✅ Step 6: Soft delete users by userType (Doctor, Pharmacists, Lab, Receptionists)
+	        List<String> userTypes = Arrays.asList("Doctor", "Pharmacists", "lab", "Receptionists","SupportStaff");
+	        List<User> staffToDeactivate = usersRepository.findByHospitalIdAndUserTypeIn(hospitalDataId, userTypes);
 
+	        for (User staff : staffToDeactivate) {
+	            staff.setUserIsActive(false);
+	         
+	            staff.setUserUpdatedBy(existingHospitalData.getCreatedBy());
+	            staff.setUserUpdatedOn(new Date());
+	        }
+	        usersRepository.saveAll(staffToDeactivate);
 			// Step 7: Prepare the success response
 			response.put("message", "Hospital data and associated media files soft deleted successfully");
 			response.put("data", updatedHospitalData);
