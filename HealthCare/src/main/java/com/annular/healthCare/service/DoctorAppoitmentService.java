@@ -36,4 +36,6 @@ public interface DoctorAppoitmentService {
 
 	ResponseEntity<?> updateFeesStatus(HospitalDataListWebModel userWebModel);
 
+	ResponseEntity<?> getAllDoctorFilterByLocation(String location);
+
 }

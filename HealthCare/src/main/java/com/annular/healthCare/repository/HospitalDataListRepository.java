@@ -28,6 +28,8 @@ public interface HospitalDataListRepository extends JpaRepository<HospitalDataLi
 	@Query(value = "SELECT hospital_code FROM hospital_data_list WHERE hospital_code LIKE 'HC%' ORDER BY LENGTH(hospital_code), hospital_code DESC LIMIT 1", nativeQuery = true)
 	String findLastHospitalCode();
 
+	List<HospitalDataList> findByCurrentAddressContainingIgnoreCaseAndUserIsActiveTrue(String location);
+
 
 
 

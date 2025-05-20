@@ -229,6 +229,19 @@ public class DoctorAppointmentController {
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+	
+	@GetMapping("getAllDoctorFilterByLocation")
+	public ResponseEntity<?> getAllDoctorFilterByLocation(@RequestParam("location")String location) {
+	    try {
+	        // Call the service to perform the update
+	        return doctorAppoitmentService.getAllDoctorFilterByLocation(location);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("getAllDoctorFilterByLocation Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 }
 
 

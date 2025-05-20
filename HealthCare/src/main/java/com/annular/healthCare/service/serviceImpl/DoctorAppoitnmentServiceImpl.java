@@ -26,6 +26,8 @@ import com.annular.healthCare.Response;
 import com.annular.healthCare.model.AppointmentMedicalTest;
 import com.annular.healthCare.model.AppointmentMedicine;
 import com.annular.healthCare.model.DoctorSlotSpiltTime;
+import com.annular.healthCare.model.DoctorSpecialty;
+import com.annular.healthCare.model.HospitalDataList;
 import com.annular.healthCare.model.MediaFile;
 import com.annular.healthCare.model.MediaFileCategory;
 import com.annular.healthCare.model.MedicalTest;
@@ -39,6 +41,8 @@ import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.AppointmentMedicalTestRepository;
 import com.annular.healthCare.repository.AppointmentMedicineRepository;
 import com.annular.healthCare.repository.DoctorSlotSpiltTimeRepository;
+import com.annular.healthCare.repository.DoctorSpecialityRepository;
+import com.annular.healthCare.repository.HospitalDataListRepository;
 import com.annular.healthCare.repository.MediaFileRepository;
 import com.annular.healthCare.repository.MedicalTestConfigRepository;
 import com.annular.healthCare.repository.MedicalTestRepository;
@@ -47,6 +51,7 @@ import com.annular.healthCare.repository.MedicinesRepository;
 import com.annular.healthCare.repository.PatientAppoitmentTablerepository;
 import com.annular.healthCare.repository.PatientDetailsRepository;
 import com.annular.healthCare.repository.PatientMappedHospitalIdRepository;
+import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.DoctorAppoitmentService;
 import com.annular.healthCare.service.SmsService;
 import com.annular.healthCare.webModel.AppointmentMedicalTestWebModel;
@@ -72,6 +77,12 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	MedicalTestRepository medicalTestRepository;
 	
 	@Autowired
+	HospitalDataListRepository hospitalDataListRepository;
+	
+	@Autowired
+	DoctorSpecialityRepository doctorSpecialtyRepository;
+	
+	@Autowired
 	MedicalTestConfigRepository medicalTestConfigRepository;
 	
 	@Autowired
@@ -94,6 +105,9 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	
 	@Autowired
 	private SmsService smsService;
+	
+	@Autowired
+	UserRepository userRepository;
 
 	 @Override
 	    public ResponseEntity<?> getAllPatientAppointmentByFilter(String appointmentDate, String appointmentType, Integer doctorId) {
@@ -1137,6 +1151,77 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                .body("Error while updating status: " + e.getMessage());
 	    }
 	}
+	@Override
+	public ResponseEntity<?> getAllDoctorFilterByLocation(String location) {
+	    try {
+	        // Step 1: Get hospitals in the specified location
+	        List<HospitalDataList> hospitals = hospitalDataListRepository
+	                .findByCurrentAddressContainingIgnoreCaseAndUserIsActiveTrue(location);
+
+	        if (hospitals.isEmpty()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body(new Response(0, "Failure", "No hospitals found in the given location"));
+	        }
+
+	        // Step 2: Get all doctors
+	        List<User> allDoctors = userRepository.findByUserTypeIgnoreCaseAndUserIsActiveTrue("DOCTOR");
+
+	        // Step 3: Filter doctors whose hospital is in the location
+	        List<Map<String, Object>> doctorList = new ArrayList<>();
+
+	        for (User doctor : allDoctors) {
+	            Integer hospitalId = doctor.getHospitalId();
+	            if (hospitalId == null) continue;
+
+	            // Match hospital
+	            Optional<HospitalDataList> hospitalOpt = hospitals.stream()
+	                    .filter(h -> h.getHospitalDataId().equals(hospitalId))
+	                    .findFirst();
+
+	            if (hospitalOpt.isEmpty()) continue;
+
+	            HospitalDataList hospital = hospitalOpt.get();
+
+	            // Compose full name
+	            String fullName = (doctor.getFirstName() != null ? doctor.getFirstName() : "") +
+	                              " " +
+	                              (doctor.getLastName() != null ? doctor.getLastName() : "");
+	            if (fullName.trim().isEmpty()) {
+	                fullName = doctor.getUserName();
+	            }
+
+	            // Get specialties
+	            List<DoctorSpecialty> specialties = doctorSpecialtyRepository.findSpecialtiesByUserId(doctor.getUserId());
+	            List<String> specialtyNames = specialties.stream()
+	                    .map(DoctorSpecialty::getSpecialtyName)
+	                    .filter(Objects::nonNull)
+	                    .collect(Collectors.toList());
+
+	            // Prepare response
+	            Map<String, Object> doctorMap = new HashMap<>();
+	            doctorMap.put("userId", doctor.getUserId());
+	            doctorMap.put("userName", fullName.trim());
+	            doctorMap.put("hospitalId", hospital.getHospitalDataId());
+	            doctorMap.put("hospitalName", hospital.getHospitalName());
+	            doctorMap.put("specialties", specialtyNames);
+
+	            doctorList.add(doctorMap);
+	        }
+
+	        if (doctorList.isEmpty()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body(new Response(0, "Failure", "No doctors found in the given location"));
+	        }
+
+	        return ResponseEntity.ok(new Response(1, "Success", doctorList));
+
+	    } catch (Exception e) {
+	       // logger.error("Error in getAllDoctorFilterByLocation: ", e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "Failure", "An error occurred while fetching doctor data"));
+	    }
+	}
+
 
 
 
