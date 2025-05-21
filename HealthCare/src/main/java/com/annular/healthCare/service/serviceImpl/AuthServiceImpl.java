@@ -586,7 +586,7 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	            mediaFile.setFileOriginalName(fileInput.getFileName());
 	            mediaFile.setFileSize(fileInput.getFileSize());
 	            mediaFile.setFileType(fileInput.getFileType());
-	            mediaFile.setCategory(MediaFileCategory.patientDocument); // Define a suitable enum value
+	            mediaFile.setCategory(MediaFileCategory.profilePic); // Define a suitable enum value
 	            mediaFile.setFileDomainId(HealthCareConstant.ProfilePhoto); // This constant can be changed to represent logo files
 	            mediaFile.setFileDomainReferenceId(user.getUserId()); // Set the hospital ID reference
 	            mediaFile.setFileIsActive(true);
@@ -997,29 +997,28 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	        }
 	        data.put("roles", roleDetails);
 
-	        // Profile Photos
-	        List<MediaFile> files = mediaFileRepository
-	                .findByFileDomainIdAndFileDomainReferenceId(HealthCareConstant.ProfilePhoto, user.getUserId());
-	        List<FileInputWebModel> filesInputWebModel = new ArrayList<>();
-	        if (files != null) {
-	            for (MediaFile mediaFile : files) {
-	                FileInputWebModel filesInput = new FileInputWebModel();
-	                filesInput.setFileName(mediaFile.getFileOriginalName());
-	                filesInput.setFileId(mediaFile.getFileId());
-	                filesInput.setFileSize(mediaFile.getFileSize());
-	                filesInput.setFileType(mediaFile.getFileType());
 
-	                try {
-	                    String fileData = Base64FileUpload.encodeToBase64String(imageLocation + "/ProfilePhoto",
-	                            mediaFile.getFileName());
-	                    filesInput.setFileData(fileData);
-	                } catch (Exception e) {
-	                    logger.error("Error encoding file {}: {}", mediaFile.getFileName(), e.getMessage());
-	                    filesInput.setFileData("Error encoding file");
-	                }
-	                filesInputWebModel.add(filesInput);
-	            }
-	        }
+	    	// Retrieve media files associated with the hospital data (Profile Photo)
+			List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
+					HealthCareConstant.ProfilePhoto, user.getUserId());
+
+			// Prepare the list of FileInputWebModel from retrieved media files
+			ArrayList<FileInputWebModel> filesInputWebModel = new ArrayList<>();
+
+			for (MediaFile mediaFile : files) {
+				FileInputWebModel filesInput = new FileInputWebModel();
+				filesInput.setFileName(mediaFile.getFileOriginalName());
+				filesInput.setFileId(mediaFile.getFileId());
+				filesInput.setFileSize(mediaFile.getFileSize());
+				filesInput.setFileType(mediaFile.getFileType());
+
+				String fileData = Base64FileUpload.encodeToBase64String(imageLocation + "/profilePhoto",
+						mediaFile.getFileName());
+				filesInput.setFileData(fileData);
+
+				filesInputWebModel.add(filesInput);
+			}
+
 	        data.put("profilePhotos", filesInputWebModel);
 
 	        // Doctor-specific data
