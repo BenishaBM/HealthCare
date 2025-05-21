@@ -544,7 +544,11 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 				patientData.put("userIsActive", patient.getUserIsActive());
 				patientData.put("createdBy", patient.getCreatedBy());
 				patientData.put("userCreatedOn", patient.getUserCreatedOn());
-
+				patientData.put("previousMedicalHistory", patient.getPreviousMedicalHistory());
+				patientData.put("insuranceDetails", patient.getInsuranceDetails());
+				patientData.put("insurerName", patient.getInsurerName());
+                patientData.put("insuranceProvider", patient.getInsuranceProvider());
+                patientData.put("policyNumber", patient.getPolicyNumber());
 				patientList.add(patientData);
 			}
 
