@@ -30,6 +30,9 @@ public interface HospitalDataListRepository extends JpaRepository<HospitalDataLi
 
 	List<HospitalDataList> findByCurrentAddressContainingIgnoreCaseAndUserIsActiveTrue(String location);
 
+	@Query("SELECT u FROM HospitalDataList u WHERE u.emailId = :emailId AND u.userIsActive = true")
+	Optional<HospitalDataList> findByEmailId(String emailId);
+
 
 
 

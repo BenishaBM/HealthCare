@@ -134,7 +134,17 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	        // Check if the hospital already exists based on the hospital name
 	        Optional<HospitalDataList> existingHospital = userRepository.findByHospitalName(userWebModel.getHospitalName());
 	        if (existingHospital.isPresent()) {
+	        	response.put("status", 0);
 	            response.put("message", "Hospital with this name already exists");
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+	        }
+	        
+	        // ✅ Check if emailId already exists
+	        Optional<HospitalDataList> existingHospitalByEmail = userRepository.findByEmailId(userWebModel.getEmailId());
+	        if (existingHospitalByEmail.isPresent()) {
+	            logger.warn("Email ID already exists: " + userWebModel.getEmailId());
+	            response.put("status", 0);
+	            response.put("message", "Hospital emailId already exists");
 	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 	        }
 	        String generatedCode = generateHospitalCode();
