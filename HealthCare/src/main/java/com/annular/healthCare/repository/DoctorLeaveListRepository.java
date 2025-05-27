@@ -25,4 +25,7 @@ public interface DoctorLeaveListRepository extends JpaRepository<DoctorLeaveList
            "FUNCTION('DATE', d.doctorLeaveDate) = FUNCTION('DATE', :leaveDate) AND d.userIsActive = true")
     boolean isDoctorOnLeave(@Param("user") User user, @Param("leaveDate") Date leaveDate);
 
+    @Query("SELECT COUNT(d) > 0 FROM DoctorLeaveList d WHERE d.user.userId = :userId AND d.doctorLeaveDate = :leaveDate")
+	boolean existsByUserUserIdAndDoctorLeaveDate(Integer userId, Date leaveDate);
+
 }

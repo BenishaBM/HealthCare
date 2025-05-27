@@ -806,15 +806,35 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 					doctorRoleRepository.save(doctorRole);
 				}
 			}
-			// Save doctor leaves if provided
+//			// Save doctor leaves if provided
+//			if (userWebModel.getDoctorLeaveList() != null) {
+//				for (DoctorLeaveListWebModel leaveModel : userWebModel.getDoctorLeaveList()) {
+//					DoctorLeaveList doctorLeave = DoctorLeaveList.builder().user(updatedUser)
+//							.doctorLeaveDate(leaveModel.getDoctorLeaveDate()).createdBy(updatedUser.getCreatedBy())
+//							.userIsActive(true).build();
+//					doctorLeaveListRepository.save(doctorLeave);
+//				}
+//			}
 			if (userWebModel.getDoctorLeaveList() != null) {
-				for (DoctorLeaveListWebModel leaveModel : userWebModel.getDoctorLeaveList()) {
-					DoctorLeaveList doctorLeave = DoctorLeaveList.builder().user(updatedUser)
-							.doctorLeaveDate(leaveModel.getDoctorLeaveDate()).createdBy(updatedUser.getCreatedBy())
-							.userIsActive(true).build();
-					doctorLeaveListRepository.save(doctorLeave);
-				}
+			    for (DoctorLeaveListWebModel leaveModel : userWebModel.getDoctorLeaveList()) {
+			        Date leaveDate = leaveModel.getDoctorLeaveDate();
+			        boolean leaveExists = doctorLeaveListRepository
+			            .existsByUserUserIdAndDoctorLeaveDate(updatedUser.getUserId(), leaveDate);
+			        
+			        if (!leaveExists) {
+			            DoctorLeaveList doctorLeave = DoctorLeaveList.builder()
+			                .user(updatedUser)
+			                .doctorLeaveDate(leaveDate)
+			                .createdBy(updatedUser.getCreatedBy())
+			                .userIsActive(true)
+			                .build();
+			            doctorLeaveListRepository.save(doctorLeave);
+			        } else {
+			            logger.info("Leave already exists for userId: " + updatedUser.getUserId() + " on date: " + leaveDate);
+			        }
+			    }
 			}
+
 
 			// Step 6: Return success response
 			response.put("message", "User details updated successfully");
