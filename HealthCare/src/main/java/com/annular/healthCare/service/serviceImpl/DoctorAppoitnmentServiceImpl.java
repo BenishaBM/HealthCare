@@ -17,12 +17,15 @@ import java.util.stream.Collectors;
 import javax.persistence.Column;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.annular.healthCare.Response;
+import com.annular.healthCare.Util.Base64FileUpload;
+import com.annular.healthCare.Util.HealthCareConstant;
 import com.annular.healthCare.model.AppointmentMedicalTest;
 import com.annular.healthCare.model.AppointmentMedicine;
 import com.annular.healthCare.model.DoctorSlotSpiltTime;
@@ -55,6 +58,7 @@ import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.DoctorAppoitmentService;
 import com.annular.healthCare.service.SmsService;
 import com.annular.healthCare.webModel.AppointmentMedicalTestWebModel;
+import com.annular.healthCare.webModel.FileInputWebModel;
 import com.annular.healthCare.webModel.HospitalDataListWebModel;
 import com.annular.healthCare.webModel.MedicineScheduleWebModel;
 
@@ -107,7 +111,13 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	private SmsService smsService;
 	
 	@Autowired
+	MediaFileRepository mediaFileRepository;
+	
+	@Autowired
 	UserRepository userRepository;
+	
+	@Value("${annular.app.imageLocation}")
+	private String imageLocation;
 
 	 @Override
 	    public ResponseEntity<?> getAllPatientAppointmentByFilter(String appointmentDate, String appointmentType, Integer doctorId) {
@@ -1163,17 +1173,16 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                    .body(new Response(0, "Failure", "No hospitals found in the given location"));
 	        }
 
-	        // Step 2: Get all doctors
+	        // Step 2: Get all active doctors
 	        List<User> allDoctors = userRepository.findByUserTypeIgnoreCaseAndUserIsActiveTrue("DOCTOR");
 
-	        // Step 3: Filter doctors whose hospital is in the location
+	        // Step 3: Filter doctors based on hospital location
 	        List<Map<String, Object>> doctorList = new ArrayList<>();
 
 	        for (User doctor : allDoctors) {
 	            Integer hospitalId = doctor.getHospitalId();
 	            if (hospitalId == null) continue;
 
-	            // Match hospital
 	            Optional<HospitalDataList> hospitalOpt = hospitals.stream()
 	                    .filter(h -> h.getHospitalDataId().equals(hospitalId))
 	                    .findFirst();
@@ -1197,13 +1206,33 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                    .filter(Objects::nonNull)
 	                    .collect(Collectors.toList());
 
-	            // Prepare response
+
+	            List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
+	                    HealthCareConstant.ProfilePhoto, doctor.getUserId());
+
+	            List<FileInputWebModel> profilePhotos = new ArrayList<>();
+	            for (MediaFile mediaFile : files) {
+	                FileInputWebModel input = new FileInputWebModel();
+	                input.setFileName(mediaFile.getFileOriginalName());
+	                input.setFileId(mediaFile.getFileId());
+	                input.setFileSize(mediaFile.getFileSize());
+	                input.setFileType(mediaFile.getFileType());
+
+	                String fileData = Base64FileUpload.encodeToBase64String(imageLocation + "/profilePhoto",
+	                        mediaFile.getFileName());
+	                input.setFileData(fileData);
+
+	                profilePhotos.add(input);
+	            }
+
+	            // Prepare final doctor map
 	            Map<String, Object> doctorMap = new HashMap<>();
 	            doctorMap.put("userId", doctor.getUserId());
 	            doctorMap.put("userName", fullName.trim());
 	            doctorMap.put("hospitalId", hospital.getHospitalDataId());
 	            doctorMap.put("hospitalName", hospital.getHospitalName());
 	            doctorMap.put("specialties", specialtyNames);
+	            doctorMap.put("profilePhotos", profilePhotos); //  Added profile photos
 
 	            doctorList.add(doctorMap);
 	        }
@@ -1216,13 +1245,10 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	        return ResponseEntity.ok(new Response(1, "Success", doctorList));
 
 	    } catch (Exception e) {
-	       // logger.error("Error in getAllDoctorFilterByLocation: ", e);
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 	                .body(new Response(0, "Failure", "An error occurred while fetching doctor data"));
 	    }
 	}
-
-
 
 
 
