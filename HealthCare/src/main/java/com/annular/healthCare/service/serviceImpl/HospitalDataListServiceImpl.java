@@ -524,9 +524,18 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 
 			// Update the 'userUpdatedOn' field to current time
 			existingHospitalData.setUserUpdatedOn(new Date());
+			
+			
 
 			// Step 4: Save the updated hospital data entity back to the database
 			HospitalDataList updatedHospitalData = userRepository.save(existingHospitalData);
+			
+			// Step 5: Deactivate old admins before adding new ones
+			List<HospitalAdmin> existingAdmins = hospitalAdminRepository.findActiveAdminsByHospitalDataId(updatedHospitalData.getHospitalDataId());
+			for (HospitalAdmin admin : existingAdmins) {
+			    admin.setUserIsActive(false);
+			    hospitalAdminRepository.save(admin);
+			}
 			 // Register multiple admins if provided and update their hospitalId in the user table
 	        if (userWebModel.getAdmins() != null && !userWebModel.getAdmins().isEmpty()) {
 	            for (HospitalAdminWebModel adminWebModel : userWebModel.getAdmins()) {

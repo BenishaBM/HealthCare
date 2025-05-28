@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.annular.healthCare.model.HospitalAdmin;
@@ -20,6 +21,9 @@ public interface HospitalAdminRepository extends JpaRepository<HospitalAdmin, In
 	List<HospitalAdmin> findByAdminUserIds(Integer hospitalDataId);
 
 	List<HospitalAdmin> findByHospitalDataList(HospitalDataList existingHospitalData);
+
+	@Query("SELECT h FROM HospitalAdmin h WHERE h.hospitalDataList.hospitalDataId = :hospitalDataId AND h.userIsActive = true")
+	List<HospitalAdmin> findActiveAdminsByHospitalDataId(@Param("hospitalDataId") Integer hospitalDataId);
 
 	//Optional<HospitalAdmin> findByAdminUserIds(Integer hospitalDataId);
 	
