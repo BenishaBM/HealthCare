@@ -503,9 +503,6 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 			if (userWebModel.getPhoneNumber() != null) {
 				existingHospitalData.setPhoneNumber(userWebModel.getPhoneNumber());
 			}
-			if (userWebModel.getUserIsActive() != null) {
-				existingHospitalData.setUserIsActive(userWebModel.getUserIsActive());
-			}
 			if (userWebModel.getCurrentAddress() != null) {
 				existingHospitalData.setCurrentAddress(userWebModel.getCurrentAddress());
 			}
