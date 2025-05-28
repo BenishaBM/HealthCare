@@ -674,7 +674,11 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	    HashMap<String, Object> response = new HashMap<>();
 	    try {
 	        // Fetch users with userType = "HOSPITAL"
-	        List<HospitalDataList> users = hospitalDataListRepository.findByData();
+	       List<HospitalDataList> users = hospitalDataListRepository.findByData();
+	    	users.sort(Comparator.comparing((HospitalDataList u) -> 
+	        Optional.ofNullable(u.getUserUpdatedOn()).orElse(u.getUserCreatedOn())
+	    ).reversed());
+
 
 	        if (users.isEmpty()) {
 	            return ResponseEntity.ok(new Response(1, "No hospitals found.", new ArrayList<>()));
