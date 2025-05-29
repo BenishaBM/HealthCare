@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -1222,7 +1223,6 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	                .filter(slot -> isValidSlot(slot, requestDate))
 	                .map(slot -> mapDoctorSlot(slot, requestDate))
 	                .filter(doctorSlotMap -> {
-	                    // Filter out doctor slots that have no available day slots
 	                    @SuppressWarnings("unchecked")
 	                    List<Map<String, Object>> daySlots = (List<Map<String, Object>>) doctorSlotMap.get("daySlots");
 	                    return daySlots != null && !daySlots.isEmpty();
@@ -1257,6 +1257,7 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	}
 
 	private LocalDate convertToLocalDate(Date date) {
+	    if (date == null) return null;
 	    return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 	}
 
@@ -1265,7 +1266,6 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	            .filter(slot -> isValidDaySlot(slot, requestDate))
 	            .map(slot -> mapDoctorDaySlot(slot, requestDate))
 	            .filter(daySlotMap -> {
-	                // Filter out day slots that have no available time slots
 	                @SuppressWarnings("unchecked")
 	                List<Map<String, Object>> timeSlots = (List<Map<String, Object>>) daySlotMap.get("slotTimes");
 	                return timeSlots != null && !timeSlots.isEmpty();
@@ -1283,12 +1283,17 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 
 	    LocalDate startDate = convertToLocalDate(daySlot.getStartSlotDate());
 	    LocalDate endDate = convertToLocalDate(daySlot.getEndSlotDate());
-	    String requestDay = requestDate.getDayOfWeek().toString();
+	    
+	    if (startDate == null || endDate == null) return false;
+	    
+	    // Fix: Use proper day comparison
+	    String requestDay = requestDate.getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH);
+	    String slotDay = daySlot.getDay();
 
 	    return Boolean.TRUE.equals(daySlot.getIsActive())
 	            && !requestDate.isBefore(startDate)
 	            && !requestDate.isAfter(endDate)
-	            && requestDay.equalsIgnoreCase(daySlot.getDay());
+	            && requestDay.equalsIgnoreCase(slotDay);
 	}
 
 	private Map<String, Object> mapDoctorDaySlot(DoctorDaySlot daySlot, LocalDate requestDate) {
@@ -1303,7 +1308,6 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	            .filter(slotTime -> Boolean.TRUE.equals(slotTime.getIsActive()))
 	            .map(slotTime -> mapDoctorSlotTime(slotTime, requestDate))
 	            .filter(timeSlotMap -> {
-	                // Filter out time slots that have no available split times
 	                @SuppressWarnings("unchecked")
 	                List<Map<String, Object>> splitTimes = (List<Map<String, Object>>) timeSlotMap.get("slotSplitTimes");
 	                return splitTimes != null && !splitTimes.isEmpty();
@@ -1321,12 +1325,15 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	    timeSlotData.put("endTime", slotTime.getSlotEndTime());
 	    timeSlotData.put("isActive", slotTime.getIsActive());
 
+	    // Fix: Convert LocalDate to proper string format for database query
+	    String dateString = requestDate.toString(); // This gives YYYY-MM-DD format
+	    
 	    List<DoctorSlotDate> doctorSlotDates = doctorSlotDateRepository
 	            .findByDoctorSlotTimeIdAndDoctorDaySlotIdAndDoctorSlotIdAndDateAndIsActive(
 	                    slotTime.getDoctorSlotTimeId(),
 	                    slotTime.getDoctorDaySlot().getDoctorDaySlotId(),
 	                    slotTime.getDoctorDaySlot().getDoctorSlot().getDoctorSlotId(),
-	                    requestDate.toString(),
+	                    dateString,
 	                    true
 	            );
 
@@ -1338,26 +1345,33 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	    boolean isPastDate = requestDate.isBefore(currentDate);
 
 	    List<Map<String, Object>> splitTimeList = doctorSlotDates.stream()
-	            .flatMap((DoctorSlotDate slotDate) -> {
-	                List<DoctorSlotSpiltTime> splitTimes = doctorSlotSplitTimeRepository
-	                    .findByDoctorSlotDateIdAndIsActive(slotDate.getDoctorSlotDateId(), true);
-
-	                return splitTimes.stream()
-	                    .filter(split -> {
-	                        // Filter out past slots entirely
-	                        if (isPastDate) {
-	                            // For past dates, exclude all Available slots
-	                            return !"Available".equals(split.getSlotStatus());
-	                        } else if (isToday) {
-	                            // For today, exclude Available slots that have passed
-	                            if ("Available".equals(split.getSlotStatus())) {
-	                                LocalTime slotEndTime = parseTimeString(split.getSlotEndTime());
-	                                return slotEndTime == null || !slotEndTime.isBefore(currentTime);
-	                            }
-	                        }
-	                        // Include all other slots (non-Available or future dates)
-	                        return true;
-	                    })
+	    	    .flatMap((DoctorSlotDate slotDate) -> {
+	    	        List<DoctorSlotSpiltTime> splitTimes = doctorSlotSplitTimeRepository
+	    	            .findByDoctorSlotDateIdAndIsActive(slotDate.getDoctorSlotDateId(), true);
+	    	        return splitTimes.stream()
+	    	            .filter(split -> {
+	    	                // Fix: Improved filtering logic
+	    	                if (isPastDate) {
+	    	                    // For past dates, only show non-Available slots (Booked, etc.)
+	    	                    return !"Booked" .equalsIgnoreCase(split.getSlotStatus());
+	    	                } else if (isToday) {
+	    	                    // For today, always show Booked slots
+//	    	                    if ("Booked".equalsIgnoreCase(split.getSlotStatus())) {
+//	    	                        return true;
+//	    	                    }
+	    	                    // For today, check if Available slots have passed
+	    	                	 if ("Booked".equalsIgnoreCase(split.getSlotStatus()) || "Available".equalsIgnoreCase(split.getSlotStatus())) {
+	    	                        LocalTime slotStartTime = parseTimeString(split.getSlotStartTime());
+	    	                        // Show slot if start time is in the future or current
+	    	                        return slotStartTime != null && !slotStartTime.isBefore(currentTime);
+	    	                    }
+	    	                    // Show all other non-Available slots for today
+	    	                    return true;
+	    	                } else {
+	    	                    // For future dates, show all slots
+	    	                    return true;
+	    	                }
+	    	            })
 	                    .map(split -> {
 	                        Map<String, Object> splitData = new LinkedHashMap<>();
 	                        splitData.put("slotSplitTimeId", split.getDoctorSlotSpiltTimeId());
@@ -1375,15 +1389,27 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 
 	// Helper method to parse time string (e.g., "10:16 AM" -> LocalTime)
 	private LocalTime parseTimeString(String timeString) {
+	    if (timeString == null || timeString.trim().isEmpty()) {
+	        return null;
+	    }
+	    
 	    try {
-	        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH);
-	        return LocalTime.parse(timeString, formatter);
+	        // Handle different time formats
+	        DateTimeFormatter formatter12Hour = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH);
+	        DateTimeFormatter formatter24Hour = DateTimeFormatter.ofPattern("H:mm");
+	        
+	        timeString = timeString.trim();
+	        
+	        if (timeString.contains("AM") || timeString.contains("PM")) {
+	            return LocalTime.parse(timeString, formatter12Hour);
+	        } else {
+	            return LocalTime.parse(timeString, formatter24Hour);
+	        }
 	    } catch (Exception e) {
 	        logger.warn("Failed to parse time string: {}", timeString, e);
 	        return null;
 	    }
 	}
-
 	@Override
 	public ResponseEntity<?> deleteDoctorLeaveByLeaveId(Integer doctorLeaveListId) {
 		try {
