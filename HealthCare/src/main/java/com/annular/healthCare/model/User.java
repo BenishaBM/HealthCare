@@ -108,4 +108,7 @@ public class User {
 	
 	@Column(name = "labMasterDataId")
 	private Integer labMasterDataId;
+	
+	@Column(name = "countryCode")
+	private String countryCode;
 }
