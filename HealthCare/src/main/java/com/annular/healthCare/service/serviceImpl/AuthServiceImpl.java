@@ -1360,7 +1360,7 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 //	    	                        return true;
 //	    	                    }
 	    	                    // For today, check if Available slots have passed
-	    	                	 if ("Booked".equalsIgnoreCase(split.getSlotStatus()) || "Available".equalsIgnoreCase(split.getSlotStatus())) {
+	    	                	 if ("Booked".equalsIgnoreCase(split.getSlotStatus()) || "Available".equalsIgnoreCase(split.getSlotStatus()) || "OVERRIDDEN".equalsIgnoreCase(split.getSlotStatus())) {
 	    	                        LocalTime slotStartTime = parseTimeString(split.getSlotStartTime());
 	    	                        // Show slot if start time is in the future or current
 	    	                        return slotStartTime != null && !slotStartTime.isBefore(currentTime);
