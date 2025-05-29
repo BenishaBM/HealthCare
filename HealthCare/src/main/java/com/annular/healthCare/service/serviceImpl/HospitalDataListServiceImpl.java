@@ -558,6 +558,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	        List<MediaFile> oldMediaFiles = mediaFileRepository.findByUserId(HealthCareConstant.hospitalLogo, updatedHospitalData.getHospitalDataId());
 	        if (!oldMediaFiles.isEmpty()) {
 	            for (MediaFile oldMediaFile : oldMediaFiles) {
+	            	  oldMediaFile.setFileIsActive(false);
 	                Base64FileUpload.deleteFile(imageLocation + "/hospitalLogo", oldMediaFile.getFileName());
 	                mediaFileRepository.deleteById(oldMediaFile.getFileId());
 	            }
@@ -727,28 +728,28 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	                }
 	            }
 
-	            // Get Media Files for Hospital Logo
-	            List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
-	                    HealthCareConstant.hospitalLogo, user.getHospitalDataId());
-
-	            List<FileInputWebModel> filesInputWebModel = new ArrayList<>();
-
-	            for (MediaFile mediaFile : files) {
-	                FileInputWebModel filesInput = new FileInputWebModel();
-	                filesInput.setFileName(mediaFile.getFileOriginalName());
-	                filesInput.setFileId(mediaFile.getFileId());
-	                filesInput.setFileSize(mediaFile.getFileSize());
-	                filesInput.setFileType(mediaFile.getFileType());
-
-	                String fileData = Base64FileUpload.encodeToBase64String(
-	                        imageLocation + "/hospitalLogo", mediaFile.getFileName());
-	                filesInput.setFileData(fileData);
-
-	                filesInputWebModel.add(filesInput);
-	            }
+//	            // Get Media Files for Hospital Logo
+//	            List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
+//	                    HealthCareConstant.hospitalLogo, user.getHospitalDataId());
+//
+//	            List<FileInputWebModel> filesInputWebModel = new ArrayList<>();
+//
+//	            for (MediaFile mediaFile : files) {
+//	                FileInputWebModel filesInput = new FileInputWebModel();
+//	                filesInput.setFileName(mediaFile.getFileOriginalName());
+//	                filesInput.setFileId(mediaFile.getFileId());
+//	                filesInput.setFileSize(mediaFile.getFileSize());
+//	                filesInput.setFileType(mediaFile.getFileType());
+//
+//	                String fileData = Base64FileUpload.encodeToBase64String(
+//	                        imageLocation + "/hospitalLogo", mediaFile.getFileName());
+//	                filesInput.setFileData(fileData);
+//
+//	                filesInputWebModel.add(filesInput);
+//	            }
 
 	            hospitalData.put("hospitalAdmins", allAdminDetails);
-	            hospitalData.put("hospitalLogo", filesInputWebModel); // ✅ Add profile photos to hospital data
+	 //           hospitalData.put("hospitalLogo", filesInputWebModel); // ✅ Add profile photos to hospital data
 
 	            hospitalDataList.add(hospitalData);
 	        }
