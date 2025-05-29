@@ -53,6 +53,7 @@ public class HospitalDataListWebModel {
 	private Integer fileId;
 	private List<HospitalAdminWebModel> admins; // List of admins if provided
 	private Date dateOfBirth;
+	private String dob;
 	private List<Integer> roles; // Add this field to hold the roles (e.g., ["ROLE_DOCTOR", "ROLE_ADMIN"])
 	private ArrayList<FileInputWebModel> filesInputWebModel;
 	 // For document uploads (Insurance card, Aadhaar, PAN etc.)

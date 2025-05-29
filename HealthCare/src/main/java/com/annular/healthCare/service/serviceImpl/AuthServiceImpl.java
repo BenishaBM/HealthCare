@@ -232,6 +232,7 @@ public class AuthServiceImpl implements AuthService {
 	            .password(passwordEncoder.encode(userWebModel.getPassword()))
 	            .yearOfExperiences(userWebModel.getYearOfExperiences())
 	            .userType(userWebModel.getUserType())
+	            .dob(userWebModel.getDob())
 	            .supportStaffId(userWebModel.getSupportStaffId())
 	            .labMasterDataId(userWebModel.getLabMasterDataId())
 	            .phoneNumber(userWebModel.getPhoneNumber())
@@ -749,6 +750,8 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 			if(userWebModel.getSupportStaffId() != null)
 				existingUser.setSupportStaffId(userWebModel.getSupportStaffId());
 			
+			if(userWebModel.getDob() != null)
+				existingUser.setDob(userWebModel.getDob());
 
 			// Update timestamp
 			existingUser.setUserUpdatedOn(new Date());

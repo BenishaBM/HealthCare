@@ -52,6 +52,7 @@ public class UserWebModel {
 	private Integer doctorfees;
 	private Integer supportStaffId;
 	private Integer labMasterDataId;
+	private String dob;
 
 	
 
