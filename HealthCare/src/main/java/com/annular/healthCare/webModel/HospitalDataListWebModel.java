@@ -87,6 +87,7 @@ public class HospitalDataListWebModel {
     private Integer doctorFees;
     private String doctorFeesStatus;
     private String medicineStatus;
+    private String countryCode;
     private String medicalTestStatus;
 	private String addressLine1;
 	private String addressLine2;

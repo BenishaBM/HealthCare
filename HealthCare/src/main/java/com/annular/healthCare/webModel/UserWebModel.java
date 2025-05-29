@@ -36,6 +36,7 @@ public class UserWebModel {
 	private String userName;
 	private String empId;
 	private String yearOfExperiences;
+	private String countryCode;
 	private String gender;
 	private Integer hospitalId;
 	private String firstName;
@@ -53,6 +54,7 @@ public class UserWebModel {
 	private Integer supportStaffId;
 	private Integer labMasterDataId;
 	private String dob;
+	
 
 	
 

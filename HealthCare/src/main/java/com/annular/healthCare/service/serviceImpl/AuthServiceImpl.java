@@ -233,6 +233,7 @@ public class AuthServiceImpl implements AuthService {
 	            .password(passwordEncoder.encode(userWebModel.getPassword()))
 	            .yearOfExperiences(userWebModel.getYearOfExperiences())
 	            .userType(userWebModel.getUserType())
+	            .countryCode(userWebModel.getCountryCode())
 	            .dob(userWebModel.getDob())
 	            .supportStaffId(userWebModel.getSupportStaffId())
 	            .labMasterDataId(userWebModel.getLabMasterDataId())
@@ -744,6 +745,9 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 			
 			if (userWebModel.getDoctorFees() != null)
 				existingUser.setDoctorFees(userWebModel.getDoctorFees());
+			
+			if(userWebModel.getCountryCode() != null)
+				existingUser.setCountryCode(userWebModel.getCountryCode());
 		
 			if(userWebModel.getLabMasterDataId() != null)
 				existingUser.setLabMasterDataId(userWebModel.getLabMasterDataId());
@@ -965,9 +969,11 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	        data.put("userType", user.getUserType());
 	        data.put("firstName", user.getFirstName());
 	        data.put("lastName", user.getLastName());
+	        data.put("address", user.getCurrentAddress());
 	        data.put("doctorFees", user.getDoctorFees());
 	        data.put("phoneNumber", user.getPhoneNumber());
 	        data.put("gender", user.getGender());
+	        data.put("countryCode", user.getCountryCode());
 	        data.put("dob", user.getDob());
 	        data.put("yearOfExperience", user.getYearOfExperiences());
 	        Integer hospitalId = user.getHospitalId();
