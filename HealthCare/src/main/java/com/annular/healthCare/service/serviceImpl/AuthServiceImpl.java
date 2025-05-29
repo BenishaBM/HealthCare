@@ -1221,6 +1221,12 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	        List<Map<String, Object>> doctorSlotList = doctorDaySlotRepository.findByDoctorSlot_User(user).stream()
 	                .filter(slot -> isValidSlot(slot, requestDate))
 	                .map(slot -> mapDoctorSlot(slot, requestDate))
+	                .filter(doctorSlotMap -> {
+	                    // Filter out doctor slots that have no available day slots
+	                    @SuppressWarnings("unchecked")
+	                    List<Map<String, Object>> daySlots = (List<Map<String, Object>>) doctorSlotMap.get("daySlots");
+	                    return daySlots != null && !daySlots.isEmpty();
+	                })
 	                .distinct()
 	                .collect(Collectors.toList());
 
@@ -1258,6 +1264,12 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	    List<Map<String, Object>> daySlotList = doctorDaySlotRepository.findByDoctorSlot(daySlot.getDoctorSlot()).stream()
 	            .filter(slot -> isValidDaySlot(slot, requestDate))
 	            .map(slot -> mapDoctorDaySlot(slot, requestDate))
+	            .filter(daySlotMap -> {
+	                // Filter out day slots that have no available time slots
+	                @SuppressWarnings("unchecked")
+	                List<Map<String, Object>> timeSlots = (List<Map<String, Object>>) daySlotMap.get("slotTimes");
+	                return timeSlots != null && !timeSlots.isEmpty();
+	            })
 	            .collect(Collectors.toList());
 
 	    Map<String, Object> doctorSlotData = new LinkedHashMap<>();
@@ -1290,6 +1302,12 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	    List<Map<String, Object>> timeSlotList = doctorSlotTimeRepository.findByDoctorDaySlot(daySlot).stream()
 	            .filter(slotTime -> Boolean.TRUE.equals(slotTime.getIsActive()))
 	            .map(slotTime -> mapDoctorSlotTime(slotTime, requestDate))
+	            .filter(timeSlotMap -> {
+	                // Filter out time slots that have no available split times
+	                @SuppressWarnings("unchecked")
+	                List<Map<String, Object>> splitTimes = (List<Map<String, Object>>) timeSlotMap.get("slotSplitTimes");
+	                return splitTimes != null && !splitTimes.isEmpty();
+	            })
 	            .collect(Collectors.toList());
 
 	    daySlotData.put("slotTimes", timeSlotList);
@@ -1312,25 +1330,58 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	                    true
 	            );
 
+	    // Get current date and time in Kolkata timezone for comparison
+	    ZoneId kolkataZone = ZoneId.of("Asia/Kolkata");
+	    LocalDate currentDate = LocalDate.now(kolkataZone);
+	    LocalTime currentTime = LocalTime.now(kolkataZone);
+	    boolean isToday = requestDate.equals(currentDate);
+	    boolean isPastDate = requestDate.isBefore(currentDate);
+
 	    List<Map<String, Object>> splitTimeList = doctorSlotDates.stream()
-	    	    .flatMap((DoctorSlotDate slotDate) -> {
-	    	        List<DoctorSlotSpiltTime> splitTimes = doctorSlotSplitTimeRepository
-	    	            .findByDoctorSlotDateIdAndIsActive(slotDate.getDoctorSlotDateId(), true);
+	            .flatMap((DoctorSlotDate slotDate) -> {
+	                List<DoctorSlotSpiltTime> splitTimes = doctorSlotSplitTimeRepository
+	                    .findByDoctorSlotDateIdAndIsActive(slotDate.getDoctorSlotDateId(), true);
 
-	    	        return splitTimes.stream().map(split -> {
-	    	            Map<String, Object> splitData = new LinkedHashMap<>();
-	    	            splitData.put("slotSplitTimeId", split.getDoctorSlotSpiltTimeId());
-	    	            splitData.put("slotStartTime", split.getSlotStartTime());
-	    	            splitData.put("slotEndTime", split.getSlotEndTime());
-	    	            splitData.put("slotStatus", split.getSlotStatus());
-	    	            return splitData;
-	    	        });
-	    	    })
-	    	    .collect(Collectors.toList());
-
+	                return splitTimes.stream()
+	                    .filter(split -> {
+	                        // Filter out past slots entirely
+	                        if (isPastDate) {
+	                            // For past dates, exclude all Available slots
+	                            return !"Available".equals(split.getSlotStatus());
+	                        } else if (isToday) {
+	                            // For today, exclude Available slots that have passed
+	                            if ("Available".equals(split.getSlotStatus())) {
+	                                LocalTime slotEndTime = parseTimeString(split.getSlotEndTime());
+	                                return slotEndTime == null || !slotEndTime.isBefore(currentTime);
+	                            }
+	                        }
+	                        // Include all other slots (non-Available or future dates)
+	                        return true;
+	                    })
+	                    .map(split -> {
+	                        Map<String, Object> splitData = new LinkedHashMap<>();
+	                        splitData.put("slotSplitTimeId", split.getDoctorSlotSpiltTimeId());
+	                        splitData.put("slotStartTime", split.getSlotStartTime());
+	                        splitData.put("slotEndTime", split.getSlotEndTime());
+	                        splitData.put("slotStatus", split.getSlotStatus());
+	                        return splitData;
+	                    });
+	            })
+	            .collect(Collectors.toList());
 
 	    timeSlotData.put("slotSplitTimes", splitTimeList);
 	    return timeSlotData;
+	}
+
+	// Helper method to parse time string (e.g., "10:16 AM" -> LocalTime)
+	private LocalTime parseTimeString(String timeString) {
+	    try {
+	        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH);
+	        return LocalTime.parse(timeString, formatter);
+	    } catch (Exception e) {
+	        logger.warn("Failed to parse time string: {}", timeString, e);
+	        return null;
+	    }
 	}
 
 	@Override
