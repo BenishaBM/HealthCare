@@ -23,6 +23,8 @@ public interface DoctorRoleRepository extends JpaRepository<DoctorRole, Integer>
     @Query("UPDATE User u SET u.userIsActive = false WHERE u.userId = :userId")
     void deactivateUser(@Param("userId") Integer userId);
 
+	List<DoctorRole> findByRoleIdAndUserIsActiveTrue(Integer doctorSpecialtiesId);
+
 
 	
 }

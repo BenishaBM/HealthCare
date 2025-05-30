@@ -1023,4 +1023,66 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	    }
 	}
 
+	@Override
+	public ResponseEntity<?> getSpecialitiesDoctorList(String speciality) {
+	    try {
+	        List<DoctorSpecialty> doctorSpecialties = doctorSpecialityRepository.findBySpecialtyNameIgnoreCase(speciality);
+
+	        if (doctorSpecialties == null || doctorSpecialties.isEmpty()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body(new Response(0, "No doctors found for the given specialty", null));
+	        }
+
+	        List<HashMap<String, Object>> doctorList = new ArrayList<>();
+
+	        for (DoctorSpecialty doctorSpecialty : doctorSpecialties) {
+
+	            List<DoctorRole> doctorRoles = doctorRoleRepository
+	                    .findByRoleIdAndUserIsActiveTrue(doctorSpecialty.getDoctorSpecialtiesId());
+
+	            for (DoctorRole role : doctorRoles) {
+	                User user = role.getUser();
+	                if (user != null) {
+	                    HashMap<String, Object> map = new HashMap<>();
+	                    map.put("userId", user.getUserId());
+	                    map.put("userName", user.getUserName());
+	                    map.put("doctorFees", user.getDoctorFees());
+	                    map.put("experience", user.getYearOfExperiences());
+
+	                    List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
+	    	                    HealthCareConstant.ProfilePhoto, user.getUserId());
+
+	    	            List<FileInputWebModel> profilePhotos = new ArrayList<>();
+	    	            for (MediaFile mediaFile : files) {
+	    	                FileInputWebModel input = new FileInputWebModel();
+	    	                input.setFileName(mediaFile.getFileOriginalName());
+	    	                input.setFileId(mediaFile.getFileId());
+	    	                input.setFileSize(mediaFile.getFileSize());
+	    	                input.setFileType(mediaFile.getFileType());
+
+	    	                String fileData = Base64FileUpload.encodeToBase64String(imageLocation + "/profilePhoto",
+	    	                        mediaFile.getFileName());
+	    	                input.setFileData(fileData);
+
+	    	                profilePhotos.add(input);
+	    	            }
+
+
+	                    map.put("profilePhotos", profilePhotos);
+
+	                    doctorList.add(map);
+	                }
+	            }
+	        }
+
+	        return ResponseEntity.ok(new Response(1, "Success", doctorList));
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Error", e.getMessage()));
+	    }
+	}
+
+
 }

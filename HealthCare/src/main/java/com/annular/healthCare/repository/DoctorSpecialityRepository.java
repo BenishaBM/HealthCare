@@ -18,6 +18,10 @@ public interface DoctorSpecialityRepository  extends JpaRepository<DoctorSpecial
 	  @Query("SELECT ds FROM DoctorSpecialty ds JOIN DoctorRole dr ON ds.doctorSpecialtiesId = dr.roleId WHERE dr.user.userId = :userId AND ds.userIsActive = true")
 	  List<DoctorSpecialty> findSpecialtiesByUserId(@Param("userId") Integer userId);
 
+		List<DoctorSpecialty> findBySpecialtyNameIgnoreCase(String speciality);
+
+		
+
 
 
 }

@@ -23,5 +23,7 @@ public interface HospitalDataListService {
 
 	ResponseEntity<?> saveDoctorSlotTimeOverride(DoctorSlotTimeOverrideWebModel userWebModel);
 
+	ResponseEntity<?> getSpecialitiesDoctorList(String speciality);
+
 
 }

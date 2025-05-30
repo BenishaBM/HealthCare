@@ -133,5 +133,16 @@ public class HospitalDataListController {
 
 	}
 	
+	@GetMapping("getSpecialitiesDoctorList")
+	public ResponseEntity<?> getSpecialitiesDoctorList(@RequestParam("speciality") String speciality) {
+	    try {
+	        logger.info("getSpecialitiesDoctorList controller start for speciality: {}", speciality);
+	        return authService.getSpecialitiesDoctorList(speciality); // Make sure this method exists in your service
+	    } catch (Exception e) {
+	        logger.error("getSpecialitiesDoctorList Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 
 }
