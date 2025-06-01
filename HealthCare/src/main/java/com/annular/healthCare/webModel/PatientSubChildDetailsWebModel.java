@@ -1,6 +1,7 @@
 package com.annular.healthCare.webModel;
 
 import java.util.Date;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -41,6 +42,7 @@ public class PatientSubChildDetailsWebModel {
     private String age;
     private Integer patientDetailsId;
     private String relationshipType;
+    private List<FileInputWebModel> mediaFiless;
 
 
 }

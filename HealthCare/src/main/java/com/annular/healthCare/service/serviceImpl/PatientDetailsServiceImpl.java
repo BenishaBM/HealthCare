@@ -780,7 +780,6 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 			// ✅ Fetch sub-child patient details
 			List<PatientSubChildDetails> subChildren = patientSubChildDetailsRepository
 					.findByPatientDetailsId(patientDetailsID);
-
 			List<PatientSubChildDetailsWebModel> subChildWebModels = subChildren.stream().map(child -> {
 				PatientSubChildDetailsWebModel model = new PatientSubChildDetailsWebModel();
 				model.setPatientSubChildDetailsId(child.getPatientSubChildDetailsId());
@@ -806,6 +805,36 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 				model.setDisability(child.getDisability());
 				model.setAge(child.getAge());
 				model.setRelationshipType(child.getRelationshipType());
+
+				// ✅ Retrieve media files for sub-child
+				List<MediaFile> mediaFiles = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
+						HealthCareConstant.patientSubChildDocument, child.getPatientSubChildDetailsId());
+
+				List<FileInputWebModel> fileInputWebModels = new ArrayList<>();
+				for (MediaFile mediaFile : mediaFiles) {
+					FileInputWebModel filesInput = new FileInputWebModel();
+					filesInput.setFileName(mediaFile.getFileOriginalName());
+					filesInput.setFileId(mediaFile.getFileId());
+					filesInput.setFileSize(mediaFile.getFileSize());
+					filesInput.setFileType(mediaFile.getFileType());
+
+					String fileData = null;
+					try {
+						fileData = Base64FileUpload.encodeToBase64String(
+								imageLocation + "/patientSubChildDocument", mediaFile.getFileName());
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					System.out.println("fileData---------->" + fileData);
+					filesInput.setFileData(fileData);
+
+					fileInputWebModels.add(filesInput);
+				}
+
+				// ✅ Set media files to sub-child model
+				model.setMediaFiless(fileInputWebModels);
+
 				return model;
 			}).collect(Collectors.toList());
 			webModel.setSubChildDetails(subChildWebModels);
@@ -1309,6 +1338,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 
 			// Save any associated media files
 			savePatientMediaFiless(userWebModel, savedPatient);
+			
 
 			return ResponseEntity.ok(new Response(1, "success", "Sub-child patient registered successfully"));
 
@@ -1319,18 +1349,40 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 		}
 	}
 
+	
 	private void savePatientMediaFiless(PatientDetailsWebModel userWebModel, PatientSubChildDetails savedPatient) {
-		if (!Utility.isNullOrEmptyList(userWebModel.getFiles())) {
-			FileInputWebModel fileInput = FileInputWebModel.builder()
-					.category(MediaFileCategory.patientSubChildDocument)
-					.categoryRefId(savedPatient.getPatientSubChildDetailsId()) // Use getId() of sub-child, not
-																				// patientDetailsId
-					.files(userWebModel.getFiles()).build();
+	    if (!Utility.isNullOrEmptyList(userWebModel.getFiles())) {
+	        List<MultipartFile> files = userWebModel.getFiles();
+	        List<MediaFile> filesList = new ArrayList<>();
 
-			User createdByUser = userRepository.findById(userWebModel.getCreatedBy()).orElse(null);
+	        for (MultipartFile file : files) {
+	            try {
+	                byte[] fileBytes = file.getBytes();
+	                String base64Data = Base64.getEncoder().encodeToString(fileBytes);
+	                String fileName = UUID.randomUUID().toString();
 
-			//mediaFilesService.saveMediaFiles(fileInput, createdByUser);
-		}
+	                MediaFile mediaFile = new MediaFile();
+	                mediaFile.setFileName(fileName);
+	                mediaFile.setFileOriginalName(file.getOriginalFilename());
+	                
+	                mediaFile.setFileType(file.getContentType());
+	                mediaFile.setCategory(MediaFileCategory.patientSubChildDocument);
+	                mediaFile.setFileDomainId(HealthCareConstant.patientSubChildDocument);
+	                mediaFile.setFileDomainReferenceId(savedPatient.getPatientSubChildDetailsId());
+	                mediaFile.setFileIsActive(true);
+	                mediaFile.setFileCreatedBy(userWebModel.getCreatedBy());
+
+	                mediaFile = mediaFileRepository.save(mediaFile);
+	                filesList.add(mediaFile);
+
+	                // Save file to filesystem
+	                Base64FileUpload.saveFile(imageLocation + "/patientSubChildDocument", base64Data, fileName);
+
+	            } catch (IOException e) {
+	                e.printStackTrace(); // Use proper logging in production
+	            }
+	        }
+	    }
 	}
 
 	@Override
