@@ -201,14 +201,12 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 	            }
 	        }
 
-	     // Handle file uploads
-	        try {
+	        
+	        // Handle file uploads (e.g., hospital logo)
+	        if (userWebModel.getFilesInputWebModel() != null) {
 	            handleFileUploads(savedPatient, userWebModel.getFilesInputWebModel());
-	            logger.info("Patient documents uploaded successfully for patientId {}", savedPatient.getPatientDetailsId());
-	        } catch (Exception e) {
-	            logger.error("Failed to upload patient documents: {}", e.getMessage(), e);
-	            // You may choose to continue or fail here depending on business logic
 	        }
+
 
 
 	        // Send registration SMS first
@@ -540,7 +538,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 	            filesList.add(mediaFile);
 
 	            // Save the file to the file system
-	            Base64FileUpload.saveFiles(imageLocation + "/patientDocument", fileInput.getFileData(), fileName);
+	            Base64FileUpload.saveFile(imageLocation + "/patientDocument", fileInput.getFileData(), fileName);
 	        }
 	    }
 	}
@@ -806,7 +804,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 	            filesInput.setFileSize(mediaFile.getFileSize());
 	            filesInput.setFileType(mediaFile.getFileType());
 
-	            String fileData = Base64FileUpload.encodeToBase64Strings(imageLocation + "/patientDocument",
+	            String fileData = Base64FileUpload.encodeToBase64String(imageLocation + "/patientDocument",
 	                    mediaFile.getFileName());
 	            filesInput.setFileData(fileData);
 
