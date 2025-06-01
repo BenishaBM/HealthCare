@@ -730,7 +730,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 
 			// ✅ Retrieve media files (Profile Photo)
 			List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
-					HealthCareConstant.ProfilePhoto, patient.getPatientDetailsId());
+					HealthCareConstant.patientDocument, patient.getPatientDetailsId());
 
 			ArrayList<FileInputWebModel> filesInputWebModel = new ArrayList<>();
 			for (MediaFile mediaFile : files) {
@@ -742,6 +742,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 
 				String fileData = Base64FileUpload.encodeToBase64String(
 						imageLocation + "/patientDocument", mediaFile.getFileName());
+				System.out.println("fileData---------->"+fileData);
 				filesInput.setFileData(fileData);
 
 				filesInputWebModel.add(filesInput);

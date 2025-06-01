@@ -68,23 +68,17 @@ public class Base64FileUpload {
 
 	
 
-	public static String encodeToBase64String(String uploadDirectory, String fileName) throws IOException {
-		String filePath = uploadDirectory + "/" + fileName;
-		File fi = new File(filePath);
-		byte[] fileContent = Files.readAllBytes(fi.toPath());
+	    public static String encodeToBase64String(String uploadDirectory, String fileName) throws IOException {
+	        Path path = Paths.get(uploadDirectory, fileName);  // Proper platform-independent join
+	        if (!Files.exists(path)) {
+	            System.err.println("File not found at: " + path.toAbsolutePath());
+	            return "";
+	        }
+	        byte[] fileContent = Files.readAllBytes(path);
+	        return Base64.getEncoder().encodeToString(fileContent);
+	    }
 
-		String encodedString = Base64.getEncoder().encodeToString(fileContent);
-
-		return encodedString;
-
-	}
-	public static String encodeToBase64Strings(String uploadDirectory, String fileName) throws IOException {
-	    Path filePath = Paths.get(uploadDirectory, fileName); // platform-independent
-	    byte[] fileContent = Files.readAllBytes(filePath);
-
-	    return Base64.getEncoder().encodeToString(fileContent);
-	}
-
+	
 
 	public static void deleteFile(String uploadDirectory, String fileName) throws IOException {
 		Path uploadPath = Paths.get(uploadDirectory);
