@@ -75,6 +75,8 @@ public class PatientDetailsWebModel {
    private List<PatientSubChildDetailsWebModel> subChildDetails;
    private List<FileInputWebModel> profilePhotos;
    private List<FileInputWebModel> filess;
+   private List<FileInputWebModel> mediaFiles;
+
 
 
 

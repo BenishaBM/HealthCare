@@ -25,22 +25,47 @@ public class Base64FileUpload {
 	    @Value("${file.upload.path}")
 	    private static String fileUploadPath;
 
+//
+//	public static void saveFile(String uploadDirectory, String base64Image, String fileName) throws IOException {
+//
+//		byte[] imageData = DatatypeConverter.parseBase64Binary(base64Image);
+//		Path uploadPath = Paths.get(uploadDirectory);
+//		if (!Files.exists(uploadPath)) {
+//			Files.createDirectories(uploadPath);
+//		}
+//		String path = uploadDirectory + "/" + fileName;
+//		File file = new File(path);
+//
+//		try (OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file))) {
+//			outputStream.write(imageData);
+//		}
+//
+//	}
+	    public static void saveFile(String uploadDirectory, String base64Image, String fileName) throws IOException {
+	        System.out.println("▶ Attempting to save file...");
+	        System.out.println("→ Upload Directory: " + uploadDirectory);
+	        System.out.println("→ File Name: " + fileName);
 
-	public static void saveFile(String uploadDirectory, String base64Image, String fileName) throws IOException {
+	        byte[] imageData = DatatypeConverter.parseBase64Binary(base64Image);
+	        Path uploadPath = Paths.get(uploadDirectory);
 
-		byte[] imageData = DatatypeConverter.parseBase64Binary(base64Image);
-		Path uploadPath = Paths.get(uploadDirectory);
-		if (!Files.exists(uploadPath)) {
-			Files.createDirectories(uploadPath);
-		}
-		String path = uploadDirectory + "/" + fileName;
-		File file = new File(path);
+	        if (!Files.exists(uploadPath)) {
+	            Files.createDirectories(uploadPath);
+	            System.out.println("📁 Directory created at: " + uploadPath.toAbsolutePath());
+	        }
 
-		try (OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file))) {
-			outputStream.write(imageData);
-		}
+	        String path = uploadDirectory + "/" + fileName;
+	        File file = new File(path);
 
-	}
+	        try (OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file))) {
+	            outputStream.write(imageData);
+	            System.out.println("✅ File saved at: " + file.getAbsolutePath());
+	        } catch (IOException e) {
+	            System.err.println("❌ Error writing file: " + e.getMessage());
+	            throw e;
+	        }
+	    }
+
 	
 
 	public static String encodeToBase64String(String uploadDirectory, String fileName) throws IOException {
