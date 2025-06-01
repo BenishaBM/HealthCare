@@ -1,5 +1,6 @@
 package com.annular.healthCare.service.serviceImpl;
 
+import java.io.IOException;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -21,6 +23,7 @@ import javax.persistence.Column;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -29,6 +32,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.annular.healthCare.Response;
 import com.annular.healthCare.Util.Base64FileUpload;
+import com.annular.healthCare.Util.HealthCareConstant;
 import com.annular.healthCare.Util.Utility;
 import com.annular.healthCare.model.AddressData;
 import com.annular.healthCare.model.DoctorRole;
@@ -51,6 +55,7 @@ import com.annular.healthCare.repository.DoctorSlotTimeRepository;
 import com.annular.healthCare.repository.DoctorSpecialityRepository;
 import com.annular.healthCare.repository.HospitalDataListRepository;
 import com.annular.healthCare.repository.LabMasterDataRepository;
+import com.annular.healthCare.repository.MediaFileRepository;
 import com.annular.healthCare.repository.PatientAppoitmentTablerepository;
 import com.annular.healthCare.repository.PatientDetailsRepository;
 import com.annular.healthCare.repository.PatientMappedHospitalIdRepository;
@@ -76,6 +81,10 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 
 	@Autowired
 	MediaFileService mediaFilesService;
+	
+
+	@Autowired
+	MediaFileRepository mediaFileRepository;
 
 	@Autowired
 	LabMasterDataRepository labMasterDataRepository;
@@ -112,6 +121,9 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 	
 	@Autowired
 	private SmsService smsService;
+	
+	@Value("${annular.app.imageLocation}")
+	private String imageLocation;
 
 	private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("hh:mm a");
 
@@ -189,8 +201,15 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 	            }
 	        }
 
-	        // Save media files if any
-	        savePatientMediaFiles(userWebModel, savedPatient);
+	     // Handle file uploads
+	        try {
+	            handleFileUploads(savedPatient, userWebModel.getFilesInputWebModel());
+	            logger.info("Patient documents uploaded successfully for patientId {}", savedPatient.getPatientDetailsId());
+	        } catch (Exception e) {
+	            logger.error("Failed to upload patient documents: {}", e.getMessage(), e);
+	            // You may choose to continue or fail here depending on business logic
+	        }
+
 
 	        // Send registration SMS first
 	        try {
@@ -498,6 +517,42 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 		}
 	}
 
+	public void handleFileUploads(PatientDetails user, List<FileInputWebModel> filesInputWebModel) throws IOException {
+	    if (filesInputWebModel == null || filesInputWebModel.isEmpty()) {
+	        return; // No files to upload
+	    }
+
+	    List<MediaFile> filesList = new ArrayList<>();
+	    for (FileInputWebModel fileInput : filesInputWebModel) {
+	        if (fileInput.getFileData() != null) {
+	            // Create a new MediaFile instance for each file
+	            MediaFile mediaFile = new MediaFile();
+	            String fileName = UUID.randomUUID().toString(); // Generate a unique file name for each file
+
+	            // Set properties of the media file
+	            mediaFile.setFileName(fileName);
+	            PatientDetails hospitalUser = patientDetailsRepository.findById(user.getPatientDetailsId())
+	                    .orElseThrow(() -> new RuntimeException("User not found"));
+	           // mediaFile.setUser(hospitalUser);
+
+	            mediaFile.setFileOriginalName(fileInput.getFileName());
+	            mediaFile.setFileSize(fileInput.getFileSize());
+	            mediaFile.setFileType(fileInput.getFileType());
+	            mediaFile.setCategory(MediaFileCategory.patientDocument); // Define a suitable enum value
+	            mediaFile.setFileDomainId(HealthCareConstant.patientDocument); // This constant can be changed to represent logo files
+	            mediaFile.setFileDomainReferenceId(user.getPatientDetailsId()); // Set the hospital ID reference
+	            mediaFile.setFileIsActive(true);
+	            mediaFile.setFileCreatedBy(user.getCreatedBy());
+
+	            // Save media file to the database
+	            mediaFile = mediaFileRepository.save(mediaFile);
+	            filesList.add(mediaFile);
+
+	            // Save the file to the file system
+	            Base64FileUpload.saveFile(imageLocation + "/patientDocument", fileInput.getFileData(), fileName);
+	        }
+	    }
+	}
 	@Override
 	public ResponseEntity<?> getAllPatientDetails(Integer hospitalId) {
 		Map<String, Object> response = new HashMap<>();
@@ -653,113 +708,133 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 
 	@Override
 	public ResponseEntity<?> getPatientDetailsById(Integer patientDetailsID) {
-		try {
-			if (patientDetailsID == null) {
-				return ResponseEntity.badRequest().body(new Response(0, "Fail", "Patient ID is required"));
-			}
+	    try {
+	        if (patientDetailsID == null) {
+	            return ResponseEntity.badRequest().body(new Response(0, "Fail", "Patient ID is required"));
+	        }
 
-			Optional<PatientDetails> optionalPatient = patientDetailsRepository.findById(patientDetailsID);
-			if (optionalPatient.isEmpty()) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body(new Response(0, "Fail", "Patient not found with ID: " + patientDetailsID));
-			}
+	        Optional<PatientDetails> optionalPatient = patientDetailsRepository.findById(patientDetailsID);
+	        if (optionalPatient.isEmpty()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body(new Response(0, "Fail", "Patient not found with ID: " + patientDetailsID));
+	        }
 
-			PatientDetails patient = optionalPatient.get();
-			PatientDetailsWebModel webModel = new PatientDetailsWebModel();
-			webModel.setPatientDetailsId(patient.getPatientDetailsId());
-			webModel.setPatientName(patient.getPatientName());
-			webModel.setDob(patient.getDob());
-			webModel.setAge(patient.getAge());
-			webModel.setGender(patient.getGender());
-			webModel.setBloodGroup(patient.getBloodGroup());
-			webModel.setMobileNumber(patient.getMobileNumber());
-			webModel.setEmailId(patient.getEmailId());
-			webModel.setAddress(patient.getAddress());
-			webModel.setCurrentAddress(patient.getCurrentAddress());
-			webModel.setEmergencyContact(patient.getEmergencyContact());
-			webModel.setPurposeOfVisit(patient.getPurposeOfVisit());
-			webModel.setDoctorId(patient.getDoctorId());
-			webModel.setPreviousMedicalHistory(patient.getPreviousMedicalHistory());
-			webModel.setInsuranceDetails(patient.getInsuranceDetails());
-			webModel.setInsurerName(patient.getInsurerName());
-			webModel.setInsuranceProvider(patient.getInsuranceProvider());
-			webModel.setPolicyNumber(patient.getPolicyNumber());
-			webModel.setDisability(patient.getDisability());
-			webModel.setUserUpdatedBy(patient.getUserUpdatedBy());
-			webModel.setEmergencyName(patient.getEmergencyName());
-			webModel.setEmergencyRelationship(patient.getEmergencyRelationship());
+	        PatientDetails patient = optionalPatient.get();
+	        PatientDetailsWebModel webModel = new PatientDetailsWebModel();
+	        webModel.setPatientDetailsId(patient.getPatientDetailsId());
+	        webModel.setPatientName(patient.getPatientName());
+	        webModel.setDob(patient.getDob());
+	        webModel.setAge(patient.getAge());
+	        webModel.setGender(patient.getGender());
+	        webModel.setBloodGroup(patient.getBloodGroup());
+	        webModel.setMobileNumber(patient.getMobileNumber());
+	        webModel.setEmailId(patient.getEmailId());
+	        webModel.setAddress(patient.getAddress());
+	        webModel.setCurrentAddress(patient.getCurrentAddress());
+	        webModel.setEmergencyContact(patient.getEmergencyContact());
+	        webModel.setPurposeOfVisit(patient.getPurposeOfVisit());
+	        webModel.setDoctorId(patient.getDoctorId());
+	        webModel.setPreviousMedicalHistory(patient.getPreviousMedicalHistory());
+	        webModel.setInsuranceDetails(patient.getInsuranceDetails());
+	        webModel.setInsurerName(patient.getInsurerName());
+	        webModel.setInsuranceProvider(patient.getInsuranceProvider());
+	        webModel.setPolicyNumber(patient.getPolicyNumber());
+	        webModel.setDisability(patient.getDisability());
+	        webModel.setUserUpdatedBy(patient.getUserUpdatedBy());
+	        webModel.setEmergencyName(patient.getEmergencyName());
+	        webModel.setEmergencyRelationship(patient.getEmergencyRelationship());
 
-			// Fetch media files
-			List<FileOutputWebModel> mediaFiles = mediaFilesService
-					.getMediaFilesByCategoryAndRefId(MediaFileCategory.patientDocument, patient.getPatientDetailsId());
-			webModel.setFiless(mediaFiles);
+	        // Fetch appointments
+	        List<PatientAppointmentTable> appointments = patientAppointmentRepository
+	                .findByPatient_PatientDetailsId(patientDetailsID);
+	        List<PatientAppointmentWebModel> appointmentWebModels = appointments.stream().map(appointment -> {
+	            PatientAppointmentWebModel model = new PatientAppointmentWebModel();
+	            model.setAppointmentId(appointment.getAppointmentId());
+	            model.setDoctorId(appointment.getDoctor().getUserId());
+	            model.setDoctorSlotId(appointment.getDoctorSlotId());
+	            model.setDaySlotId(appointment.getDaySlotId());
+	            model.setTimeSlotId(appointment.getTimeSlotId());
+	            model.setAppointmentDate(appointment.getAppointmentDate());
+	            model.setSlotStartTime(appointment.getSlotStartTime());
+	            model.setSlotEndTime(appointment.getSlotEndTime());
+	            model.setSlotTime(appointment.getSlotTime());
+	            model.setIsActive(appointment.getIsActive());
+	            model.setCreatedBy(appointment.getCreatedBy());
+	            model.setCreatedOn(appointment.getCreatedOn());
+	            model.setUpdatedBy(appointment.getUpdatedBy());
+	            model.setUpdatedOn(appointment.getUpdatedOn());
+	            model.setAppointmentStatus(appointment.getAppointmentStatus());
+	            model.setPatientNotes(appointment.getPatientNotes());
+	            return model;
+	        }).collect(Collectors.toList());
+	        webModel.setAppointments(appointmentWebModels);
 
-			// Fetch appointments
-			List<PatientAppointmentTable> appointments = patientAppointmentRepository
-					.findByPatient_PatientDetailsId(patientDetailsID);
-			List<PatientAppointmentWebModel> appointmentWebModels = appointments.stream().map(appointment -> {
-				PatientAppointmentWebModel model = new PatientAppointmentWebModel();
-				model.setAppointmentId(appointment.getAppointmentId());
-				model.setDoctorId(appointment.getDoctor().getUserId());
-				model.setDoctorSlotId(appointment.getDoctorSlotId());
-				model.setDaySlotId(appointment.getDaySlotId());
-				model.setTimeSlotId(appointment.getTimeSlotId());
-				model.setAppointmentDate(appointment.getAppointmentDate());
-				model.setSlotStartTime(appointment.getSlotStartTime());
-				model.setSlotEndTime(appointment.getSlotEndTime());
-				model.setSlotTime(appointment.getSlotTime());
-				model.setIsActive(appointment.getIsActive());
-				model.setCreatedBy(appointment.getCreatedBy());
-				model.setCreatedOn(appointment.getCreatedOn());
-				model.setUpdatedBy(appointment.getUpdatedBy());
-				model.setUpdatedOn(appointment.getUpdatedOn());
-				model.setAppointmentStatus(appointment.getAppointmentStatus());
-				model.setPatientNotes(appointment.getPatientNotes());
-				return model;
-			}).collect(Collectors.toList());
-			webModel.setAppointments(appointmentWebModels);
+	        // Fetch sub-child patient details
+	        List<PatientSubChildDetails> subChildren = patientSubChildDetailsRepository
+	                .findByPatientDetailsId(patientDetailsID);
+	        List<PatientSubChildDetailsWebModel> subChildWebModels = subChildren.stream().map(child -> {
+	            PatientSubChildDetailsWebModel model = new PatientSubChildDetailsWebModel();
+	            model.setPatientSubChildDetailsId(child.getPatientSubChildDetailsId());
+	            model.setPatientName(child.getPatientName());
+	            model.setDob(child.getDob());
+	            model.setGender(child.getGender());
+	            model.setBloodGroup(child.getBloodGroup());
+	            model.setAddress(child.getAddress());
+	            model.setEmergencyContact(child.getEmergencyContact());
+	            model.setPurposeOfVisit(child.getPurposeOfVisit());
+	            model.setDoctorId(child.getDoctorId());
+	            model.setUserIsActive(child.getUserIsActive());
+	            model.setCurrentAddress(child.getCurrentAddress());
+	            model.setCreatedBy(child.getCreatedBy());
+	            model.setUserCreatedOn(child.getUserCreatedOn());
+	            model.setUserUpdatedBy(child.getUserUpdatedBy());
+	            model.setUserUpdatedOn(child.getUserUpdatedOn());
+	            model.setPreviousMedicalHistory(child.getPreviousMedicalHistory());
+	            model.setInsuranceDetails(child.getInsuranceDetails());
+	            model.setInsurerName(child.getInsurerName());
+	            model.setInsuranceProvider(child.getInsuranceProvider());
+	            model.setPolicyNumber(child.getPolicyNumber());
+	            model.setDisability(child.getDisability());
+	            model.setAge(child.getAge());
+	            model.setRelationshipType(child.getRelationshipType());
+	            return model;
+	        }).collect(Collectors.toList());
+	        webModel.setSubChildDetails(subChildWebModels);
 
-			// ✅ Fetch sub-child patient details
-			List<PatientSubChildDetails> subChildren = patientSubChildDetailsRepository
-					.findByPatientDetailsId(patientDetailsID);
-			List<PatientSubChildDetailsWebModel> subChildWebModels = subChildren.stream().map(child -> {
-				PatientSubChildDetailsWebModel model = new PatientSubChildDetailsWebModel();
-				model.setPatientSubChildDetailsId(child.getPatientSubChildDetailsId());
-				model.setPatientName(child.getPatientName());
-				model.setDob(child.getDob());
-				model.setGender(child.getGender());
-				model.setBloodGroup(child.getBloodGroup());
-				model.setAddress(child.getAddress());
-				model.setEmergencyContact(child.getEmergencyContact());
-				model.setPurposeOfVisit(child.getPurposeOfVisit());
-				model.setDoctorId(child.getDoctorId());
-				model.setUserIsActive(child.getUserIsActive());
-				model.setCurrentAddress(child.getCurrentAddress());
-				model.setCreatedBy(child.getCreatedBy());
-				model.setUserCreatedOn(child.getUserCreatedOn());
-				model.setUserUpdatedBy(child.getUserUpdatedBy());
-				model.setUserUpdatedOn(child.getUserUpdatedOn());
-				model.setPreviousMedicalHistory(child.getPreviousMedicalHistory());
-				model.setInsuranceDetails(child.getInsuranceDetails());
-				model.setInsurerName(child.getInsurerName());
-				model.setInsuranceProvider(child.getInsuranceProvider());
-				model.setPolicyNumber(child.getPolicyNumber());
-				model.setDisability(child.getDisability());
-				model.setAge(child.getAge());
-				model.setRelationshipType(child.getRelationshipType());
-				return model;
-			}).collect(Collectors.toList());
-			webModel.setSubChildDetails(subChildWebModels);
+	        // Retrieve media files associated with the patient (Profile Photos)
+	        List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
+	                HealthCareConstant.patientDocument, patient.getPatientDetailsId());
 
-			return ResponseEntity.ok(new Response(1, "Success", webModel));
+	        // Prepare the list of FileInputWebModel from retrieved media files
+	        ArrayList<FileInputWebModel> filesInputWebModel = new ArrayList<>();
 
-		} catch (Exception e) {
-			logger.error("Failed to fetch patient details", e);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new Response(0, "Fail", "Something went wrong while retrieving patient details"));
-		}
+	        for (MediaFile mediaFile : files) {
+	            FileInputWebModel filesInput = new FileInputWebModel();
+	            filesInput.setFileName(mediaFile.getFileOriginalName());
+	            filesInput.setFileId(mediaFile.getFileId());
+	            filesInput.setFileSize(mediaFile.getFileSize());
+	            filesInput.setFileType(mediaFile.getFileType());
+
+	            String fileData = Base64FileUpload.encodeToBase64String(imageLocation + "/patientDocument",
+	                    mediaFile.getFileName());
+	            filesInput.setFileData(fileData);
+
+	            filesInputWebModel.add(filesInput);
+	        }
+
+	        webModel.setFiless(filesInputWebModel);
+
+
+
+
+	        return ResponseEntity.ok(new Response(1, "Success", webModel));
+
+	    } catch (Exception e) {
+	        logger.error("Failed to fetch patient details", e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "Fail", "Something went wrong while retrieving patient details"));
+	    }
 	}
-
 	@Override
 	public ResponseEntity<?> getDoctorListByHospitalId(Integer hospitalId) {
 		try {

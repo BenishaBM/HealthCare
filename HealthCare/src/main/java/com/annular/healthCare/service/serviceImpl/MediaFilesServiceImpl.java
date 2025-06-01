@@ -101,7 +101,7 @@ public class MediaFilesServiceImpl implements MediaFileService {
                         mediaFile.setFileType(file.getContentType());
                         mediaFile.setFileSize(String.valueOf(file.getSize()));
                         mediaFile.setFileIsActive(true);
-                        mediaFile.setFileDomainId(HealthCareConstant.patient);
+                        mediaFile.setFileDomainId(HealthCareConstant.patientDocument);
                         mediaFile.setFileIds(UUID.randomUUID().toString());
                         mediaFile.setFileCreatedBy(user.getUserId());
                         mediaFile.setFileCreatedOn(new Date());

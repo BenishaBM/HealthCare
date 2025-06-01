@@ -1,5 +1,6 @@
 package com.annular.healthCare.webModel;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -53,7 +54,7 @@ public class PatientDetailsWebModel {
 	private String relationshipType;
 	private String age;
 	private List<MultipartFile> files;
-	private List<FileOutputWebModel> filess;
+	//private List<FileOutputWebModel> filess;
 
 	// Appointment-related Fields
 	private Integer doctorSlotId;
@@ -61,7 +62,7 @@ public class PatientDetailsWebModel {
 	private Integer timeSlotId;
 	private String appointmentDate;
 	private Integer doctorFees;
-
+	private ArrayList<FileInputWebModel> filesInputWebModel;
 	private String slotStartTime;
 	private String slotEndTime;
 	private String slotTime;
@@ -72,6 +73,8 @@ public class PatientDetailsWebModel {
    private List<PatientAppointmentWebModel> appointments;
    private Integer PatientSubChildDetailsId;
    private List<PatientSubChildDetailsWebModel> subChildDetails;
+   private List<FileInputWebModel> profilePhotos;
+   private List<FileInputWebModel> filess;
 
 
 
