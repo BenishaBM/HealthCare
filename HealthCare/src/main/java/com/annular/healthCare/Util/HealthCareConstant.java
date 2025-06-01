@@ -7,6 +7,7 @@ public class HealthCareConstant {
 	public static final int patientDocument = 3;
 	public static final int scanDocument = 4;
 	public static final int resultDocument = 5;
+	public static final int patientSubChildDocument = 6;
 	
 
 }
