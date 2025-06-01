@@ -16,8 +16,7 @@ public interface PatientDetailsService {
 
 	ResponseEntity<?> getDoctorListByHospitalId(Integer hospitalId);
 
-	boolean deleteMediaFilesById(Integer fileId);
-
+	
 	ResponseEntity<?> adminPatientRegister(PatientDetailsWebModel userWebModel);
 
 	ResponseEntity<?> patientAppoitmentByOffline(PatientDetailsWebModel patientDetailsWebModel);
