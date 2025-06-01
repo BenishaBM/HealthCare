@@ -2,6 +2,7 @@ package com.annular.healthCare.Util;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -40,6 +41,30 @@ public class Base64FileUpload {
 		}
 
 	}
+	
+	public static void saveFiles(String uploadDirectory, String base64Data, String fileName) throws IOException {
+	    byte[] decodedBytes = Base64.getDecoder().decode(base64Data);
+	    Path uploadPath = Paths.get(uploadDirectory);
+
+	    if (!Files.exists(uploadPath)) {
+	        Files.createDirectories(uploadPath); // Ensure directory exists
+	    }
+
+	    Path filePath = uploadPath.resolve(fileName);
+	    Files.write(filePath, decodedBytes);
+	}
+
+	public static String encodeToBase64Strings(String uploadDirectory, String fileName) throws IOException {
+	    Path filePath = Paths.get(uploadDirectory, fileName);
+
+	    if (!Files.exists(filePath)) {
+	        throw new FileNotFoundException("File not found: " + filePath.toString());
+	    }
+
+	    byte[] fileContent = Files.readAllBytes(filePath);
+	    return Base64.getEncoder().encodeToString(fileContent);
+	}
+
 
 	public static String encodeToBase64String(String uploadDirectory, String fileName) throws IOException {
 		String filePath = uploadDirectory + "/" + fileName;

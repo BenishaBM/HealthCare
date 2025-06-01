@@ -506,16 +506,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 		return null;
 	}
 
-	private void savePatientMediaFiles(PatientDetailsWebModel userWebModel, PatientDetails savedPatient) {
-		if (!Utility.isNullOrEmptyList(userWebModel.getFiles())) {
-			FileInputWebModel fileInput = FileInputWebModel.builder().category(MediaFileCategory.patientDocument)
-					.categoryRefId(savedPatient.getPatientDetailsId()).files(userWebModel.getFiles()).build();
 
-			User userFromDB = userRepository.findById(userWebModel.getCreatedBy()).orElse(null);
-
-			mediaFilesService.saveMediaFiles(fileInput, userFromDB);
-		}
-	}
 
 	public void handleFileUploads(PatientDetails user, List<FileInputWebModel> filesInputWebModel) throws IOException {
 	    if (filesInputWebModel == null || filesInputWebModel.isEmpty()) {
@@ -549,7 +540,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 	            filesList.add(mediaFile);
 
 	            // Save the file to the file system
-	            Base64FileUpload.saveFile(imageLocation + "/patientDocument", fileInput.getFileData(), fileName);
+	            Base64FileUpload.saveFiles(imageLocation + "/patientDocument", fileInput.getFileData(), fileName);
 	        }
 	    }
 	}
@@ -815,7 +806,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 	            filesInput.setFileSize(mediaFile.getFileSize());
 	            filesInput.setFileType(mediaFile.getFileType());
 
-	            String fileData = Base64FileUpload.encodeToBase64String(imageLocation + "/patientDocument",
+	            String fileData = Base64FileUpload.encodeToBase64Strings(imageLocation + "/patientDocument",
 	                    mediaFile.getFileName());
 	            filesInput.setFileData(fileData);
 
