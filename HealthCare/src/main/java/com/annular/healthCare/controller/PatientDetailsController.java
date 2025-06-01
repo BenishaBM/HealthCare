@@ -108,21 +108,21 @@ public class PatientDetailsController {
 		}
 	}
 	
-	  @DeleteMapping("/deleteMediaFilesById")
-	    public ResponseEntity<?> deleteMediaFilesById(@RequestParam("fileId")Integer fileId) {
-	        try {
-	            boolean isDeleted = patientDetailService.deleteMediaFilesById(fileId);
-	            if (isDeleted) {
-	                return ResponseEntity.ok(new Response(1, "Success","deleteMediaFilesById successfully."));
-	            } else {
-	                return ResponseEntity.badRequest().body(new Response(-1, "fail","Failed to delete post"));
-	            }
-	        } catch (Exception e) {
-	            logger.error("deleteQuestionById Method Exception -> {}", e.getMessage());
-	            e.printStackTrace();
-	            return ResponseEntity.internalServerError().body(new Response(-1, "Fail", e.getMessage()));
-	        }
-	    }
+//	  @DeleteMapping("/deleteMediaFilesById")
+//	    public ResponseEntity<?> deleteMediaFilesById(@RequestParam("fileId")Integer fileId) {
+//	        try {
+//	            boolean isDeleted = patientDetailService.deleteMediaFilesById(fileId);
+//	            if (isDeleted) {
+//	                return ResponseEntity.ok(new Response(1, "Success","deleteMediaFilesById successfully."));
+//	            } else {
+//	                return ResponseEntity.badRequest().body(new Response(-1, "fail","Failed to delete post"));
+//	            }
+//	        } catch (Exception e) {
+//	            logger.error("deleteQuestionById Method Exception -> {}", e.getMessage());
+//	            e.printStackTrace();
+//	            return ResponseEntity.internalServerError().body(new Response(-1, "Fail", e.getMessage()));
+//	        }
+//	    }
 	  
 		@PostMapping("patientAppoitmentByOffline")
 		public ResponseEntity<?> patientAppoitmentByOffline(@RequestBody PatientDetailsWebModel patientDetailsWebModel) {

@@ -89,7 +89,7 @@ import com.annular.healthCare.webModel.TimeSlotModel;
 @Service
 public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 	
-	public static final Logger log = LoggerFactory.getLogger(MediaFilesServiceImpl.class);
+	public static final Logger log = LoggerFactory.getLogger(MedicalTestConfigServiceImpl.class);
 	
 	@Autowired
 	MedicalTestConfigRepository medicalTestConfigRepository;

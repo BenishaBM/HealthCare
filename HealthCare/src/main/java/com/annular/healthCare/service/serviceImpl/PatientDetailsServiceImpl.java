@@ -1,6 +1,7 @@
 package com.annular.healthCare.service.serviceImpl;
 
 import java.io.IOException;
+
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -62,7 +63,7 @@ import com.annular.healthCare.repository.PatientMappedHospitalIdRepository;
 import com.annular.healthCare.repository.PatientSubChildDetailsRepository;
 import com.annular.healthCare.repository.SupportStaffMasterDataRepository;
 import com.annular.healthCare.repository.UserRepository;
-import com.annular.healthCare.service.MediaFileService;
+
 import com.annular.healthCare.service.PatientDetailsService;
 import com.annular.healthCare.service.SmsService;
 import com.annular.healthCare.webModel.FileInputWebModel;
@@ -79,8 +80,8 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 	@Autowired
 	PatientDetailsRepository patientDetailsRepository;
 
-	@Autowired
-	MediaFileService mediaFilesService;
+//	@Autowired
+//	MediaFileService mediaFilesService;
 	
 
 	@Autowired
@@ -677,14 +678,14 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 			// Save updated patient
 			patientDetailsRepository.save(patient);
 
-			// Save or update media files (if passed)
-			if (!Utility.isNullOrEmptyList(userWebModel.getFiles())) {
-				FileInputWebModel fileInput = FileInputWebModel.builder().category(MediaFileCategory.patientDocument)
-						.categoryRefId(patient.getPatientDetailsId()).files(userWebModel.getFiles()).build();
-
-				User userFromDB = userRepository.findById(userWebModel.getUserUpdatedBy()).orElse(null);
-				mediaFilesService.saveMediaFiles(fileInput, userFromDB);
-			}
+//			// Save or update media files (if passed)
+//			if (!Utility.isNullOrEmptyList(userWebModel.getFiles())) {
+//				FileInputWebModel fileInput = FileInputWebModel.builder().category(MediaFileCategory.patientDocument)
+//						.categoryRefId(patient.getPatientDetailsId()).files(userWebModel.getFiles()).build();
+//
+//				User userFromDB = userRepository.findById(userWebModel.getUserUpdatedBy()).orElse(null);
+//				mediaFilesService.saveMediaFiles(fileInput, userFromDB);
+//			}
 
 			return ResponseEntity.ok(new Response(1, "Success", "Patient updated successfully"));
 
@@ -804,7 +805,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 	            filesInput.setFileSize(mediaFile.getFileSize());
 	            filesInput.setFileType(mediaFile.getFileType());
 
-	            String fileData = Base64FileUpload.encodeToBase64String(imageLocation + "/patientDocument",
+	            String fileData = Base64FileUpload.encodeToBase64Strings(imageLocation + "/patientDocument",
 	                    mediaFile.getFileName());
 	            filesInput.setFileData(fileData);
 
@@ -865,11 +866,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 		}
 	}
 
-	@Override
-	public boolean deleteMediaFilesById(Integer fileId) {
-		return mediaFilesService.deleteMediaFilesByUserIdAndCategoryAndRefIds(MediaFileCategory.patientDocument,
-				fileId);
-	}
+
 
 	@Override
 	public ResponseEntity<?> adminPatientRegister(PatientDetailsWebModel userWebModel) {
@@ -923,7 +920,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 				User userFromDB = userRepository.findById(userWebModel.getCreatedBy()).orElse(null); // Or handle
 																										// accordingly
 
-				mediaFilesService.saveMediaFiles(fileInput, userFromDB);
+			//	mediaFilesService.saveMediaFiles(fileInput, userFromDB);
 
 			}
 	        // Send SMS
@@ -1332,7 +1329,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 
 			User createdByUser = userRepository.findById(userWebModel.getCreatedBy()).orElse(null);
 
-			mediaFilesService.saveMediaFiles(fileInput, createdByUser);
+			//mediaFilesService.saveMediaFiles(fileInput, createdByUser);
 		}
 	}
 
