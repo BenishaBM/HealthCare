@@ -17,7 +17,7 @@ public interface HospitalDataListService {
 
 	ResponseEntity<?> deleteHospitalDataByUserId(Integer hospitalDataId);
 
-	ResponseEntity<?> getByHopitalName();
+	ResponseEntity<?> getByHopitalName(Integer pageNo, Integer pageSize);
 
 	ResponseEntity<?> getByDoctorSpeciallity();
 

@@ -25,6 +25,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -644,10 +647,9 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 		// TODO Auto-generated method stub
 		return new Response(-1, "Fail", "RefreshToken expired");
 	}
-
 	@Override
-	public ResponseEntity<Response> getUserDetailsByUserType(String userType) {
-	    logger.info("Fetching user details for userType: {}", userType);
+	public ResponseEntity<Response> getUserDetailsByUserType(String userType, Integer pageNo, Integer pageSize) {
+	    logger.info("Fetching user details for userType: {}, pageNo: {}, pageSize: {}", userType, pageNo, pageSize);
 
 	    List<User> usersList = userRepository.findByUserType(userType);
 
@@ -656,30 +658,51 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	        return ResponseEntity.ok(new Response(0, "No user found for given userType", new ArrayList<>()));
 	    }
 
-	    List<Map<String, Object>> usersResponseList = usersList.stream()
-	        .sorted(Comparator.comparing(User::getUserCreatedOn).reversed()) // sort by createdOn descending
-	        .map(user -> {
-	            Map<String, Object> userMap = new HashMap<>();
-	            userMap.put("userId", user.getUserId());
-	            userMap.put("userName", user.getUserName());
-	            userMap.put("emailId", user.getEmailId());
-	            userMap.put("phoneNumber", user.getPhoneNumber());
-	            userMap.put("address", user.getCurrentAddress());
-	            userMap.put("userType", user.getUserType());
-	            userMap.put("userIsActive", user.getUserIsActive());
-	            userMap.put("empId", user.getEmpId());
-	            userMap.put("gender", user.getGender());
-	            userMap.put("createdOn", user.getUserCreatedOn());
+	    // Step 1: Sort by createdOn descending
+	    List<User> sortedList = usersList.stream()
+	        .sorted(Comparator.comparing(User::getUserCreatedOn).reversed())
+	        .collect(Collectors.toList());
 
-	            return userMap;
-	        }).collect(Collectors.toList());
+	    // Step 2: Manual pagination
+	    int totalElements = sortedList.size();
+	    int totalPages = (int) Math.ceil((double) totalElements / pageSize);
+	    int fromIndex = pageNo * pageSize;
+	    int toIndex = Math.min(fromIndex + pageSize, totalElements);
 
-	    HashMap<String, Object> responseMap = new HashMap<>();
+	    if (fromIndex >= totalElements) {
+	        return ResponseEntity.ok(new Response(0, "Page number out of range", new ArrayList<>()));
+	    }
+
+	    List<User> paginatedList = sortedList.subList(fromIndex, toIndex);
+
+	    // Step 3: Map to response format
+	    List<Map<String, Object>> usersResponseList = paginatedList.stream().map(user -> {
+	        Map<String, Object> userMap = new HashMap<>();
+	        userMap.put("userId", user.getUserId());
+	        userMap.put("userName", user.getUserName());
+	        userMap.put("emailId", user.getEmailId());
+	        userMap.put("phoneNumber", user.getPhoneNumber());
+	        userMap.put("address", user.getCurrentAddress());
+	        userMap.put("userType", user.getUserType());
+	        userMap.put("userIsActive", user.getUserIsActive());
+	        userMap.put("empId", user.getEmpId());
+	        userMap.put("gender", user.getGender());
+	        userMap.put("createdOn", user.getUserCreatedOn());
+	        return userMap;
+	    }).collect(Collectors.toList());
+
+	    // Step 4: Prepare response
+	    Map<String, Object> responseMap = new HashMap<>();
 	    responseMap.put("users", usersResponseList);
+	    responseMap.put("currentPage", pageNo);
+	    responseMap.put("pageSize", pageSize);
+	    responseMap.put("totalPages", totalPages);
+	    responseMap.put("totalElements", totalElements);
 
 	    logger.info("Users retrieved successfully for userType: {}", userType);
 	    return ResponseEntity.ok(new Response(1, "Users retrieved successfully", responseMap));
 	}
+
 
 
 	@Override

@@ -18,7 +18,7 @@ public interface AuthService {
 
 	Response verifyExpiration(RefreshToken refreshToken);
 
-	ResponseEntity<?> getUserDetailsByUserType(String userType);
+	ResponseEntity<?> getUserDetailsByUserType(String userType, Integer pageNo, Integer pageSize);
 
 	ResponseEntity<?> getDropDownByUserTypeByHospitalId();
 

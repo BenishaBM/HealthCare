@@ -206,10 +206,10 @@ public class AuthenticationController {
 	}
 
 	@GetMapping("getUserDetailsByUserType")
-	public ResponseEntity<?> getUserDetailsByUserType(@RequestParam("userType") String userType) {
+	public ResponseEntity<?> getUserDetailsByUserType(@RequestParam("userType") String userType,@RequestParam("pageNo")Integer pageNo,@RequestParam("pageSize")Integer pageSize) {
 		try {
 			logger.info("getUserDetailsByUserType request for userType: {}", userType);
-			return authService.getUserDetailsByUserType(userType);
+			return authService.getUserDetailsByUserType(userType,pageNo,pageSize);
 		} catch (Exception e) {
 			logger.error("getUserDetailsByUserType Method Exception: {}", e.getMessage(), e);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
