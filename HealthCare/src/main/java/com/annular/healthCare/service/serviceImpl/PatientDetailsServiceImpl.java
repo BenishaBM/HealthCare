@@ -540,72 +540,92 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 	}
 
 	@Override
-	public ResponseEntity<?> getAllPatientDetails(Integer hospitalId) {
-		Map<String, Object> response = new HashMap<>();
-		try {
-			// Step 1: Get all mapped patients for hospital
-			List<PatientMappedHospitalId> mappings = patientMappedHospitalIdRepository.findByHospitalId(hospitalId);
+	public ResponseEntity<?> getAllPatientDetails(Integer hospitalId, Integer pageNo, Integer pageSize) {
+	    Map<String, Object> response = new HashMap<>();
+	    try {
+	        // Step 1: Get all mapped patients for hospital
+	        List<PatientMappedHospitalId> mappings = patientMappedHospitalIdRepository.findByHospitalId(hospitalId);
 
-			if (mappings.isEmpty()) {
-				response.put("status", 0);
-				response.put("message", "No patients found for the given hospital.");
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-			}
+	        if (mappings.isEmpty()) {
+	            response.put("status", 0);
+	            response.put("message", "No patients found for the given hospital.");
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+	        }
 
-			// Step 2: Extract patient IDs
-			List<Integer> patientIds = mappings.stream().map(PatientMappedHospitalId::getPatientId)
-					.collect(Collectors.toList());
+	        // Step 2: Extract patient IDs
+	        List<Integer> patientIds = mappings.stream()
+	                .map(PatientMappedHospitalId::getPatientId)
+	                .collect(Collectors.toList());
 
-			// Step 3: Fetch patient details
-			//List<PatientDetails> patients = patientDetailsRepository.findAllById(patientIds);
-			List<PatientDetails> patients = patientDetailsRepository.findAllById(patientIds)
-				    .stream()
-				    .sorted(Comparator.comparing(PatientDetails::getUserCreatedOn).reversed()) // Sort by latest created
-				    .collect(Collectors.toList());
+	        // Step 3: Fetch and sort patient details by latest created date
+	        List<PatientDetails> sortedPatients = patientDetailsRepository.findAllById(patientIds)
+	                .stream()
+	                .sorted(Comparator.comparing(PatientDetails::getUserCreatedOn).reversed())
+	                .collect(Collectors.toList());
 
+	        // Step 4: Manual pagination
+	        int totalElements = sortedPatients.size();
+	        int fromIndex = pageNo * pageSize;
+	        int toIndex = Math.min(fromIndex + pageSize, totalElements);
 
-			List<Map<String, Object>> patientList = new ArrayList<>();
-			for (PatientDetails patient : patients) {
-				Map<String, Object> patientData = new HashMap<>();
-				patientData.put("patientDetailsId", patient.getPatientDetailsId());
-				patientData.put("patientName", patient.getPatientName());
-				patientData.put("dob", patient.getDob());
-				patientData.put("gender", patient.getGender());
-				patientData.put("bloodGroup", patient.getBloodGroup());
-				patientData.put("mobileNumber", patient.getMobileNumber());
-				patientData.put("emailId", patient.getEmailId());
-				patientData.put("address", patient.getAddress());
-				patientData.put("currentAddress", patient.getCurrentAddress());
-				patientData.put("emergencyContact", patient.getEmergencyContact());
-				patientData.put("hospitalId", hospitalId); // from method param
-				patientData.put("purposeOfVisit", patient.getPurposeOfVisit());
-				patientData.put("emergencyName", patient.getEmergencyName());
-				patientData.put("emergencyRelationship", patient.getEmergencyRelationship());
-				patientData.put("doctorId", patient.getDoctorId());
-				patientData.put("userIsActive", patient.getUserIsActive());
-				patientData.put("countryCode", patient.getCountryCode());
-				patientData.put("emerCountryCode", patient.getCountryCode());
-				patientData.put("createdBy", patient.getCreatedBy());
-				patientData.put("userCreatedOn", patient.getUserCreatedOn());
-				patientData.put("previousMedicalHistory", patient.getPreviousMedicalHistory());
-				patientData.put("insuranceDetails", patient.getInsuranceDetails());
-				patientData.put("insurerName", patient.getInsurerName());
-                patientData.put("insuranceProvider", patient.getInsuranceProvider());
-                patientData.put("policyNumber", patient.getPolicyNumber());
-				patientList.add(patientData);
-			}
+	        if (fromIndex >= totalElements) {
+	            response.put("status", 0);
+	            response.put("message", "Page number out of range");
+	            response.put("data", new ArrayList<>());
+	            return ResponseEntity.ok(response);
+	        }
 
-			response.put("status", 1);
-			response.put("message", "Success");
-			response.put("data", patientList);
-			return ResponseEntity.ok(response);
+	        List<PatientDetails> paginatedList = sortedPatients.subList(fromIndex, toIndex);
 
-		} catch (Exception e) {
-			response.put("status", 0);
-			response.put("message", "Error retrieving patient details");
-			response.put("error", e.getMessage());
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-		}
+	        // Step 5: Build response data
+	        List<Map<String, Object>> patientList = new ArrayList<>();
+	        for (PatientDetails patient : paginatedList) {
+	            Map<String, Object> patientData = new HashMap<>();
+	            patientData.put("patientDetailsId", patient.getPatientDetailsId());
+	            patientData.put("patientName", patient.getPatientName());
+	            patientData.put("dob", patient.getDob());
+	            patientData.put("gender", patient.getGender());
+	            patientData.put("bloodGroup", patient.getBloodGroup());
+	            patientData.put("mobileNumber", patient.getMobileNumber());
+	            patientData.put("emailId", patient.getEmailId());
+	            patientData.put("address", patient.getAddress());
+	            patientData.put("currentAddress", patient.getCurrentAddress());
+	            patientData.put("emergencyContact", patient.getEmergencyContact());
+	            patientData.put("hospitalId", hospitalId); // from method param
+	            patientData.put("purposeOfVisit", patient.getPurposeOfVisit());
+	            patientData.put("emergencyName", patient.getEmergencyName());
+	            patientData.put("emergencyRelationship", patient.getEmergencyRelationship());
+	            patientData.put("doctorId", patient.getDoctorId());
+	            patientData.put("userIsActive", patient.getUserIsActive());
+	            patientData.put("countryCode", patient.getCountryCode());
+	            patientData.put("emerCountryCode", patient.getCountryCode()); // You might want to fix if it's a different field
+	            patientData.put("createdBy", patient.getCreatedBy());
+	            patientData.put("userCreatedOn", patient.getUserCreatedOn());
+	            patientData.put("previousMedicalHistory", patient.getPreviousMedicalHistory());
+	            patientData.put("insuranceDetails", patient.getInsuranceDetails());
+	            patientData.put("insurerName", patient.getInsurerName());
+	            patientData.put("insuranceProvider", patient.getInsuranceProvider());
+	            patientData.put("policyNumber", patient.getPolicyNumber());
+
+	            patientList.add(patientData);
+	        }
+
+	        // Step 6: Add pagination metadata (optional)
+	        response.put("status", 1);
+	        response.put("message", "Success");
+	        response.put("data", patientList);
+	        response.put("totalElements", totalElements);
+	        response.put("pageNo", pageNo);
+	        response.put("pageSize", pageSize);
+	        response.put("fetchedRecords", paginatedList.size());
+	        return ResponseEntity.ok(response);
+
+	    } catch (Exception e) {
+	        response.put("status", 0);
+	        response.put("message", "Error retrieving patient details");
+	        response.put("error", e.getMessage());
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
 	}
 
 	@Override

@@ -9,7 +9,7 @@ public interface HospitalDataListService {
 
 	ResponseEntity<?> register(HospitalDataListWebModel userWebModel);
 
-	ResponseEntity<?> getHospitalDataByUserTypeAndHospitalId(String userType, Integer hospitalId);
+	ResponseEntity<?> getHospitalDataByUserTypeAndHospitalId(String userType, Integer hospitalId, Integer pageNo, Integer pageSize);
 
 	ResponseEntity<?> getHospitalDataByUserId(Integer hospitalDataId);
 

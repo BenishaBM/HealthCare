@@ -72,10 +72,10 @@ public class PatientDetailsController {
 
 
 	@GetMapping("getAllPatientDetails")
-	public ResponseEntity<?> getAllPatientDetails(@RequestParam("hospitalId") Integer hospitalId) {
+	public ResponseEntity<?> getAllPatientDetails(@RequestParam("hospitalId") Integer hospitalId,@RequestParam("pageNo")Integer pageNo,@RequestParam("pageSize")Integer pageSize) {
 		try {
 			logger.info("getAllPatientDetails request for userType: {}", hospitalId);
-			return patientDetailService.getAllPatientDetails(hospitalId);
+			return patientDetailService.getAllPatientDetails(hospitalId,pageNo,pageSize);
 		} catch (Exception e) {
 			logger.error("getAllPatientDetails Method Exception: {}", e.getMessage(), e);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

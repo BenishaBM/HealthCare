@@ -8,7 +8,7 @@ public interface PatientDetailsService {
 
 	ResponseEntity<?> register(PatientDetailsWebModel userWebModel);
 
-	ResponseEntity<?> getAllPatientDetails(Integer hospitalId);
+	ResponseEntity<?> getAllPatientDetails(Integer hospitalId, Integer pageNo, Integer pageSize);
 
 	ResponseEntity<?> updatePatientDetails(PatientDetailsWebModel userWebModel);
 

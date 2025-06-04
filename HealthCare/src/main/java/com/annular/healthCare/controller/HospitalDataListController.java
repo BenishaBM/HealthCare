@@ -44,10 +44,10 @@ public class HospitalDataListController {
 	}
 
 	@GetMapping("getHospitalDataByUserTypeAndHospitalId")
-	public ResponseEntity<?> getHospitalDataByUserTypeAndHospitalId(@RequestParam("userType") String userType,@RequestParam("hospitalId")Integer hospitalId) {
+	public ResponseEntity<?> getHospitalDataByUserTypeAndHospitalId(@RequestParam("userType") String userType,@RequestParam("hospitalId")Integer hospitalId,@RequestParam("pageNo")Integer pageNo,@RequestParam("pageSize")Integer pageSize) {
 		try {
 			logger.info("getHospitalDataByUserTypeAndHospitalId request for userType: {}", userType);
-			return authService.getHospitalDataByUserTypeAndHospitalId(userType,hospitalId);
+			return authService.getHospitalDataByUserTypeAndHospitalId(userType,hospitalId,pageNo,pageSize);
 		} catch (Exception e) {
 			logger.error("getUserDetailsByUserType Method Exception: {}", e.getMessage(), e);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
