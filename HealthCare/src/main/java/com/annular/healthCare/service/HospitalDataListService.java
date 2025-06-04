@@ -27,5 +27,7 @@ public interface HospitalDataListService {
 
 	ResponseEntity<?> getByHopitalNameWithouPagination();
 
+	ResponseEntity<?> getHospitalDataByUserTypeAndHospitalIdWithoutPagination(String userType, Integer hospitalId);
+
 
 }

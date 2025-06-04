@@ -43,11 +43,23 @@ public class HospitalDataListController {
 
 	}
 
-	@GetMapping("getHospitalDataByUserTypeAndHospitalId")
+	@GetMapping("getHospitalDataByUserTypeAndHospitalIdWithPagination")
 	public ResponseEntity<?> getHospitalDataByUserTypeAndHospitalId(@RequestParam("userType") String userType,@RequestParam("hospitalId")Integer hospitalId,@RequestParam("pageNo")Integer pageNo,@RequestParam("pageSize")Integer pageSize) {
 		try {
 			logger.info("getHospitalDataByUserTypeAndHospitalId request for userType: {}", userType);
 			return authService.getHospitalDataByUserTypeAndHospitalId(userType,hospitalId,pageNo,pageSize);
+		} catch (Exception e) {
+			logger.error("getUserDetailsByUserType Method Exception: {}", e.getMessage(), e);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(new Response(-1, "Fail", e.getMessage()));
+		}
+	}
+	
+	@GetMapping("getHospitalDataByUserTypeAndHospitalId")
+	public ResponseEntity<?> getHospitalDataByUserTypeAndHospitalIds(@RequestParam("userType") String userType,@RequestParam("hospitalId")Integer hospitalId) {
+		try {
+			logger.info("getHospitalDataByUserTypeAndHospitalId request for userType: {}", userType);
+			return authService.getHospitalDataByUserTypeAndHospitalIdWithoutPagination(userType,hospitalId);
 		} catch (Exception e) {
 			logger.error("getUserDetailsByUserType Method Exception: {}", e.getMessage(), e);
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

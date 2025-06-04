@@ -1179,5 +1179,78 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	    }
 	}
 
+	@Override
+	public ResponseEntity<?> getHospitalDataByUserTypeAndHospitalIdWithoutPagination(String userType,
+			Integer hospitalId) {
+		
+		    HashMap<String, Object> response = new HashMap<>();
+		    try {
+		        logger.info("Fetching hospital data for userType: " + userType + " and hospitalId: " + hospitalId);
 
-}
+		        // Query the repository for the matching data
+		        List<User> hospitalDataList = usersRepository.findByUserTypeAndHospitalIds(userType, hospitalId);
+
+		        // Check if data exists
+		        if (hospitalDataList.isEmpty()) {
+		            return ResponseEntity.ok(new Response(1, "No hospital data found for the given userType and hospitalId", new ArrayList<>()));
+		        }
+		        hospitalDataList.sort(Comparator.comparing(User::getUserCreatedOn).reversed());
+
+
+		        // Extract the hospital data
+		        List<HashMap<String, Object>> dataList = new ArrayList<>();
+		        for (User hospitalData : hospitalDataList) {
+		            HashMap<String, Object> data = new HashMap<>();
+		            data.put("hospitalDataId", hospitalData.getUserId());
+		            data.put("hospitalId", hospitalData.getHospitalId());
+		            data.put("userName", hospitalData.getUserName());
+		            data.put("firstName", hospitalData.getFirstName()); // Corrected the field
+		            data.put("lastName", hospitalData.getLastName()); // Added missing lastName
+		            data.put("emailId", hospitalData.getEmailId());
+		            data.put("userType", hospitalData.getUserType());
+		            data.put("userId", hospitalData.getUserId());
+		            data.put("phoneNumber", hospitalData.getPhoneNumber());
+		            data.put("currentAddress", hospitalData.getCurrentAddress());
+		            data.put("empId", hospitalData.getEmpId());
+		            data.put("yearOfExperience", hospitalData.getYearOfExperiences());
+		            data.put("gender", hospitalData.getGender());
+		            data.put("userIsActive", hospitalData.getUserIsActive());
+		            
+
+		            // Filter only active doctor roles
+		            List<Map<String, Object>> roleDetails = new ArrayList<>();
+		            if (hospitalData.getDoctorRoles() != null) { // Corrected reference
+		                for (DoctorRole doctorRole : hospitalData.getDoctorRoles()) {
+		                    if (doctorRole.getUserIsActive()) { // Check if the role is active
+		                        Map<String, Object> roleMap = new HashMap<>();
+		                        roleMap.put("roleId", doctorRole.getRoleId());
+		                        roleMap.put("doctorRoleId", doctorRole.getDoctorRoleId());
+
+		                        try {
+		                            String specialtyName = doctorSpecialityRepository.findSpecialtyNameByRoleId(doctorRole.getRoleId());
+		                            roleMap.put("specialtyName", specialtyName != null ? specialtyName : "N/A");
+		                        } catch (Exception e) {
+		                            logger.error("Error fetching specialty name for roleId {}: {}", doctorRole.getRoleId(), e.getMessage());
+		                            roleMap.put("specialtyName", "Error retrieving");
+		                        }
+
+		                        roleDetails.add(roleMap);
+		                    }
+		                }
+		            }
+		            data.put("doctorRoles", roleDetails); // Added doctorRoles to response
+		            dataList.add(data);
+		        }
+
+		        return ResponseEntity.ok(new Response(1, "Success", dataList));
+
+		    } catch (Exception e) {
+		        logger.error("Error retrieving hospital data: " + e.getMessage(), e);
+		        response.put("message", "Error retrieving data");
+		        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		    }
+		}
+	}
+
+
+
