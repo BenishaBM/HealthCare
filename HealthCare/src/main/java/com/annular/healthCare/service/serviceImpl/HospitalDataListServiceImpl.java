@@ -225,6 +225,98 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	    }
 	}
 	
+	@Override
+	public ResponseEntity<?> getByHopitalNameWithouPagination() {
+	    HashMap<String, Object> response = new HashMap<>();
+	    try {
+	        // Fetch users with userType = "HOSPITAL"
+	       List<HospitalDataList> users = hospitalDataListRepository.findByData();
+	    	users.sort(Comparator.comparing((HospitalDataList u) -> 
+	        Optional.ofNullable(u.getUserUpdatedOn()).orElse(u.getUserCreatedOn())
+	    ).reversed());
+
+
+	        if (users.isEmpty()) {
+	            return ResponseEntity.ok(new Response(1, "No hospitals found.", new ArrayList<>()));
+	        }
+
+	        List<HashMap<String, Object>> hospitalDataList = new ArrayList<>();
+
+	        for (HospitalDataList user : users) {
+	            HashMap<String, Object> hospitalData = new HashMap<>();
+	            hospitalData.put("id", user.getHospitalDataId());
+	            hospitalData.put("emailId", user.getEmailId());
+	            hospitalData.put("phoneNumber", user.getPhoneNumber());
+	            hospitalData.put("currentAddress", user.getCurrentAddress());
+	            hospitalData.put("isActive", user.getUserIsActive());
+	            hospitalData.put("hospitalName", user.getHospitalName());
+	            hospitalData.put("linkStatus", user.getLinkstatus());
+	            hospitalData.put("hospitalLink", user.getHospitalLink());
+	            hospitalData.put("hospitalCode", user.getHospitalCode());
+
+	            // Get Hospital Admins
+	            List<HospitalAdmin> hospitalAdminList = hospitalAdminRepository.findByAdminUserIds(user.getHospitalDataId());
+	            List<HashMap<String, Object>> allAdminDetails = new ArrayList<>();
+
+	            if (hospitalAdminList != null && !hospitalAdminList.isEmpty()) {
+	                for (HospitalAdmin hospitalAdmin : hospitalAdminList) {
+	                    HashMap<String, Object> adminData = new HashMap<>();
+	                    adminData.put("adminId", hospitalAdmin.getAdminId());
+	                    adminData.put("adminUserId", hospitalAdmin.getAdminUserId());
+	                    adminData.put("userIsActive", hospitalAdmin.getUserIsActive());
+
+	                    Optional<User> userOptional = usersRepository.findByUserId(hospitalAdmin.getAdminUserId());
+	                    if (userOptional.isPresent()) {
+	                        User adminUser = userOptional.get();
+	                        String fullName = (adminUser.getFirstName() != null ? adminUser.getFirstName() : "") + " " +
+	                                          (adminUser.getLastName() != null ? adminUser.getLastName() : "");
+	                        adminData.put("firstName", adminUser.getFirstName());
+	                        adminData.put("lastName", adminUser.getLastName());
+	                        adminData.put("userName", fullName.trim());
+	                    } else {
+	                        adminData.put("message", "No user found for this adminUserId.");
+	                    }
+
+	                    allAdminDetails.add(adminData);
+	                }
+	            }
+
+//	            // Get Media Files for Hospital Logo
+//	            List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
+//	                    HealthCareConstant.hospitalLogo, user.getHospitalDataId());
+//
+//	            List<FileInputWebModel> filesInputWebModel = new ArrayList<>();
+//
+//	            for (MediaFile mediaFile : files) {
+//	                FileInputWebModel filesInput = new FileInputWebModel();
+//	                filesInput.setFileName(mediaFile.getFileOriginalName());
+//	                filesInput.setFileId(mediaFile.getFileId());
+//	                filesInput.setFileSize(mediaFile.getFileSize());
+//	                filesInput.setFileType(mediaFile.getFileType());
+//
+//	                String fileData = Base64FileUpload.encodeToBase64String(
+//	                        imageLocation + "/hospitalLogo", mediaFile.getFileName());
+//	                filesInput.setFileData(fileData);
+//
+//	                filesInputWebModel.add(filesInput);
+//	            }
+
+	            hospitalData.put("hospitalAdmins", allAdminDetails);
+	 //           hospitalData.put("hospitalLogo", filesInputWebModel); // ✅ Add profile photos to hospital data
+
+	            hospitalDataList.add(hospitalData);
+	        }
+
+	        return ResponseEntity.ok(new Response(1, "Hospitals retrieved successfully.", hospitalDataList));
+
+	    } catch (Exception e) {
+	        logger.error("Error fetching hospitals: {}", e.getMessage(), e);
+	        response.put("message", "Error retrieving hospitals.");
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
+	}
+
+	
 	public String generateHospitalCode() {
 	    // Add debug logging to see what's happening
 	    String lastCode = userRepository.findLastHospitalCode();

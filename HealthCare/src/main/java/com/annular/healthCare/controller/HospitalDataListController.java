@@ -92,11 +92,23 @@ public class HospitalDataListController {
 	    }
 	}
 	
-	@GetMapping("getByHopitalName")
+	@GetMapping("getByHopitalNameByPagination")
 	public ResponseEntity<?> getByHopitalName(@RequestParam("pageNo")Integer pageNo,@RequestParam("pageSize")Integer pageSize) {
 	    try {
 	        // Call the service to perform the update
 	        return authService.getByHopitalName(pageNo,pageSize);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("getByHopitalName Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+	@GetMapping("getByHopitalName")
+	public ResponseEntity<?> getByHopitalName() {
+	    try {
+	        // Call the service to perform the update
+	        return authService.getByHopitalNameWithouPagination();
 	    } catch (Exception e) {
 	        // Handle errors and return a meaningful response
 	        logger.error("getByHopitalName Method Exception: {}", e.getMessage(), e);

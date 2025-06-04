@@ -25,5 +25,7 @@ public interface HospitalDataListService {
 
 	ResponseEntity<?> getSpecialitiesDoctorList(String speciality);
 
+	ResponseEntity<?> getByHopitalNameWithouPagination();
+
 
 }

@@ -119,5 +119,11 @@ public class PatientDetails {
 	
 	@Column(name = "emergencyRelationship")
 	private String emergencyRelationship;
+	
+	@Column(name = "countryCode")
+	private String countryCode;
+	
+	@Column(name = "emerCountryCode")
+	private String emerCountryCode;
 
 }

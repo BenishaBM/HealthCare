@@ -48,11 +48,13 @@ public class PatientDetailsWebModel {
     private String previousMedicalHistory;
 	private String insuranceDetails;
 	private String insurerName;
+	private String emerCountryCode;
 	private String insuranceProvider;
 	private String policyNumber;
 	private Boolean disability;
 	private String relationshipType;
 	private String age;
+	private String countryCode;
 	private List<MultipartFile> files;
 	//private List<FileOutputWebModel> filess;
 

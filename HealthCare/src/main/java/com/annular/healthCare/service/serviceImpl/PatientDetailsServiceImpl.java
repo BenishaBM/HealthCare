@@ -317,6 +317,8 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 		PatientDetails savedPatient = patientDetailsRepository.save(PatientDetails.builder()
 				.patientName(userWebModel.getPatientName()).dob(userWebModel.getDob()).age(userWebModel.getAge())
 				.otp(100).gender(userWebModel.getGender()).bloodGroup(userWebModel.getBloodGroup())
+				.countryCode(userWebModel.getCountryCode())
+				.emerCountryCode(userWebModel.getEmerCountryCode())
 				.mobileNumber(userWebModel.getMobileNumber()).emailId(userWebModel.getEmailId())
 				.address(userWebModel.getAddress()).currentAddress(userWebModel.getCurrentAddress())
 				.emergencyName(userWebModel.getEmergencyName()).emergencyRelationship(userWebModel.getEmergencyRelationship())
@@ -581,6 +583,8 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 				patientData.put("emergencyRelationship", patient.getEmergencyRelationship());
 				patientData.put("doctorId", patient.getDoctorId());
 				patientData.put("userIsActive", patient.getUserIsActive());
+				patientData.put("countryCode", patient.getCountryCode());
+				patientData.put("emerCountryCode", patient.getCountryCode());
 				patientData.put("createdBy", patient.getCreatedBy());
 				patientData.put("userCreatedOn", patient.getUserCreatedOn());
 				patientData.put("previousMedicalHistory", patient.getPreviousMedicalHistory());
@@ -664,6 +668,13 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 				patient.setPolicyNumber(userWebModel.getPolicyNumber());
 			if (userWebModel.getDisability() != null)
 				patient.setDisability(userWebModel.getDisability());
+			
+			if (userWebModel.getCountryCode() != null)
+				patient.setCountryCode(userWebModel.getCountryCode());
+			
+			if (userWebModel.getEmerCountryCode() != null)
+				patient.setEmerCountryCode(userWebModel.getEmerCountryCode());
+
 
 			patient.setUserUpdatedOn(new Date());
 			if (userWebModel.getUserUpdatedBy() != null)
@@ -727,6 +738,8 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 			webModel.setUserUpdatedBy(patient.getUserUpdatedBy());
 			webModel.setEmergencyName(patient.getEmergencyName());
 			webModel.setEmergencyRelationship(patient.getEmergencyRelationship());
+			webModel.setCountryCode(patient.getCountryCode());
+			webModel.setEmerCountryCode(patient.getEmerCountryCode());
 
 			// ✅ Retrieve media files (Profile Photo)
 			List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
@@ -918,6 +931,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 					.bloodGroup(userWebModel.getBloodGroup()).mobileNumber(userWebModel.getMobileNumber())
 					.emailId(userWebModel.getEmailId()).address(userWebModel.getAddress())
 					.currentAddress(userWebModel.getCurrentAddress())
+					.countryCode(userWebModel.getCountryCode())
 					.emergencyContact(userWebModel.getEmergencyContact())
 					.purposeOfVisit(userWebModel.getPurposeOfVisit()).doctorId(userWebModel.getDoctorId())
 					.userIsActive(true).createdBy(userWebModel.getCreatedBy()).userCreatedOn(new Date())
@@ -1043,6 +1057,9 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 					responseMap.put("emailId", patient.getEmailId());
 					responseMap.put("address", patient.getAddress());
 					responseMap.put("emergencyContact", patient.getEmergencyContact());
+					responseMap.put("countryCode", patient.getCountryCode());
+					responseMap.put("EmerCountryCode", patient.getEmerCountryCode());
+					responseMap.put("countryCode", patient.getCountryCode());
 					responseMap.put("doctorId", patient.getDoctorId());
 					responseMap.put("userIsActive", patient.getUserIsActive());
 
@@ -1112,6 +1129,8 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 			patientData.put("bloodGroup", patient.getBloodGroup());
 			patientData.put("mobileNumber", patient.getMobileNumber());
 			patientData.put("emailId", patient.getEmailId());
+			patientData.put("countryCode", patient.getCountryCode());
+			patientData.put("EmercountryCode", patient.getEmerCountryCode());
 			patientData.put("address", patient.getAddress());
 			patientData.put("emergencyContact", patient.getEmergencyContact());
 			// patientData.put("hospitalId", patient.getHospitalId());
