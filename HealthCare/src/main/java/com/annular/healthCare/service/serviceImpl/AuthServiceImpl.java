@@ -682,6 +682,7 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	        userMap.put("userName", user.getUserName());
 	        userMap.put("emailId", user.getEmailId());
 	        userMap.put("phoneNumber", user.getPhoneNumber());
+	        userMap.put("countryCode", user.getCountryCode());
 	        userMap.put("address", user.getCurrentAddress());
 	        userMap.put("userType", user.getUserType());
 	        userMap.put("userIsActive", user.getUserIsActive());
