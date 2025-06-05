@@ -901,6 +901,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                details.put("doctorSlotId", appointment.getDoctorSlotId());
 	                details.put("daySlotId", appointment.getDaySlotId());
 	                details.put("timeSlotId", appointment.getTimeSlotId());
+	                details.put("doctorprescription", appointment.getDoctorPrescription());
 	                details.put("age", appointment.getAge());
 	                details.put("dob", appointment.getDateOfBirth());
 	                details.put("relationshipType", appointment.getRelationShipType());
@@ -980,6 +981,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                map.put("totalmedicaltestamount", appointment.getTotalMedicalTestAmount());
 	                map.put("doctorfees",appointment.getDoctorFees());
 	                map.put("doctorfeesStatus", appointment.getDoctorFeesStatus());
+	                map.put("doctorprescription", appointment.getDoctorPrescription());
 
 	                // Audit fields
 	                map.put("isActive", appointment.getIsActive());
