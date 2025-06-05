@@ -60,6 +60,9 @@ public class HospitalDataList {
 	
 	@Column(name = "addressLine2")
 	private String addressLine2;
+	
+	@Column(name = "countryCode")
+	private String countryCode;
 
 	@CreationTimestamp
 	@Column(name = "user_created_on")

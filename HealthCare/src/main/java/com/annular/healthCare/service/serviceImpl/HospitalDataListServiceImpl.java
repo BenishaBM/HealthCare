@@ -153,6 +153,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	        HospitalDataList newHospitalData = HospitalDataList.builder()
 	                .emailId(userWebModel.getEmailId())
 	                .phoneNumber(userWebModel.getPhoneNumber())
+	                .countryCode(userWebModel.getCountryCode())
 	                .userIsActive(true) // Default to active
 	                .linkstatus(false)
 	                .currentAddress(userWebModel.getCurrentAddress())
@@ -247,6 +248,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            hospitalData.put("id", user.getHospitalDataId());
 	            hospitalData.put("emailId", user.getEmailId());
 	            hospitalData.put("phoneNumber", user.getPhoneNumber());
+	            hospitalData.put("countryCode", user.getCountryCode());
 	            hospitalData.put("currentAddress", user.getCurrentAddress());
 	            hospitalData.put("isActive", user.getUserIsActive());
 	            hospitalData.put("hospitalName", user.getHospitalName());
@@ -414,6 +416,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            HashMap<String, Object> data = new HashMap<>();
 	            data.put("hospitalDataId", hospitalData.getUserId());
 	            data.put("hospitalId", hospitalData.getHospitalId());
+	            data.put("countryCode", hospitalData.getCountryCode());
 	            data.put("userName", hospitalData.getUserName());
 	            data.put("firstName", hospitalData.getFirstName());
 	            data.put("lastName", hospitalData.getLastName());
@@ -484,6 +487,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 				userDetails.put("hospitalDataId", hospitalData.getHospitalDataId());
 				userDetails.put("emailId", hospitalData.getEmailId());
 				userDetails.put("phoneNumber", hospitalData.getPhoneNumber());
+				userDetails.put("countryCode", hospitalData.getCountryCode());
 				userDetails.put("userIsActive", hospitalData.getUserIsActive());
 				userDetails.put("currentAddress", hospitalData.getCurrentAddress());
 				userDetails.put("createdBy", hospitalData.getCreatedBy());
@@ -609,6 +613,10 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 			}
 			if (userWebModel.getPhoneNumber() != null) {
 				existingHospitalData.setPhoneNumber(userWebModel.getPhoneNumber());
+			}
+			
+			if (userWebModel.getCountryCode() != null) {
+				existingHospitalData.setCountryCode(userWebModel.getCountryCode());
 			}
 			if (userWebModel.getCurrentAddress() != null) {
 				existingHospitalData.setCurrentAddress(userWebModel.getCurrentAddress());
@@ -805,6 +813,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            hospitalData.put("id", user.getHospitalDataId());
 	            hospitalData.put("emailId", user.getEmailId());
 	            hospitalData.put("phoneNumber", user.getPhoneNumber());
+	            hospitalData.put("countryCode", user.getCountryCode());
 	            hospitalData.put("currentAddress", user.getCurrentAddress());
 	            hospitalData.put("isActive", user.getUserIsActive());
 	            hospitalData.put("hospitalName", user.getHospitalName());
