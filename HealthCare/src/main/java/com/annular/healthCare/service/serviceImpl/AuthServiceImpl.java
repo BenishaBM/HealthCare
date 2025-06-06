@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -651,32 +652,23 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	public ResponseEntity<Response> getUserDetailsByUserType(String userType, Integer pageNo, Integer pageSize) {
 	    logger.info("Fetching user details for userType: {}, pageNo: {}, pageSize: {}", userType, pageNo, pageSize);
 
-	    List<User> usersList = userRepository.findByUserType(userType);
-
-	    if (usersList.isEmpty()) {
-	        logger.warn("No users found for userType: {}", userType);
-	        return ResponseEntity.ok(new Response(0, "No user found for given userType", new ArrayList<>()));
+	    if (pageNo == null || pageNo < 1) {
+	        return ResponseEntity.ok(new Response(0, "Page number must be at least 1", new ArrayList<>()));
 	    }
 
-	    // Step 1: Sort by createdOn descending
-	    List<User> sortedList = usersList.stream()
-	        .sorted(Comparator.comparing(User::getUserCreatedOn).reversed())
-	        .collect(Collectors.toList());
-
-	    // Step 2: Manual pagination
-	    int totalElements = sortedList.size();
-	    int totalPages = (int) Math.ceil((double) totalElements / pageSize);
-	    int fromIndex = pageNo * pageSize;
-	    int toIndex = Math.min(fromIndex + pageSize, totalElements);
-
-	    if (fromIndex >= totalElements) {
-	        return ResponseEntity.ok(new Response(0, "Page number out of range", new ArrayList<>()));
+	    if (pageSize == null || pageSize < 1) {
+	        return ResponseEntity.ok(new Response(0, "Page size must be at least 1", new ArrayList<>()));
 	    }
 
-	    List<User> paginatedList = sortedList.subList(fromIndex, toIndex);
+	    PageRequest pageRequest = PageRequest.of(pageNo - 1, pageSize, Sort.by("userCreatedOn").descending());
+	    Page<User> usersPage = userRepository.findByUserType(userType, pageRequest);
 
-	    // Step 3: Map to response format
-	    List<Map<String, Object>> usersResponseList = paginatedList.stream().map(user -> {
+	    // Even if page is empty, don't return "out of range" unless total is zero
+	    if (usersPage.getTotalElements() == 0) {
+	        return ResponseEntity.ok(new Response(0, "No users found for given userType", new ArrayList<>()));
+	    }
+
+	    List<Map<String, Object>> usersResponseList = usersPage.getContent().stream().map(user -> {
 	        Map<String, Object> userMap = new HashMap<>();
 	        userMap.put("userId", user.getUserId());
 	        userMap.put("userName", user.getUserName());
@@ -692,15 +684,17 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	        return userMap;
 	    }).collect(Collectors.toList());
 
-	    // Step 4: Prepare response
 	    Map<String, Object> responseMap = new HashMap<>();
 	    responseMap.put("users", usersResponseList);
 	    responseMap.put("currentPage", pageNo);
 	    responseMap.put("pageSize", pageSize);
-	    responseMap.put("totalPages", totalPages);
-	    responseMap.put("totalElements", totalElements);
+	    responseMap.put("totalPages", usersPage.getTotalPages());
+	    responseMap.put("totalElements", usersPage.getTotalElements());
+	    responseMap.put("isFirst", usersPage.isFirst());
+	    responseMap.put("isLast", usersPage.isLast());
+	    responseMap.put("hasNext", usersPage.hasNext());
+	    responseMap.put("hasPrevious", usersPage.hasPrevious());
 
-	    logger.info("Users retrieved successfully for userType: {}", userType);
 	    return ResponseEntity.ok(new Response(1, "Users retrieved successfully", responseMap));
 	}
 

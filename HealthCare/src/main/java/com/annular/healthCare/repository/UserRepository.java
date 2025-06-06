@@ -1,8 +1,11 @@
 package com.annular.healthCare.repository;
 
 import java.util.List;
+
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import com.annular.healthCare.model.HospitalDataList;
 import com.annular.healthCare.model.User;
+
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {
@@ -51,6 +55,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
 
 	List<User> findByHospitalIdAndUserTypeIn(Integer hospitalDataId, List<String> userTypes);
+
+	Page<User> findByUserType(String userType, PageRequest pageRequest);
 	
 	
 
