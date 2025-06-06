@@ -395,21 +395,20 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            return ResponseEntity.ok(new Response(1, "No hospital data found for the given userType and hospitalId", new ArrayList<>()));
 	        }
 
-	        // Sort data
+	        // Sort by created date DESC
 	        List<User> sortedList = hospitalDataList.stream()
 	                .sorted(Comparator.comparing(User::getUserCreatedOn).reversed())
 	                .collect(Collectors.toList());
 
-	        // Progressive Pagination
+	        // Validate pagination input
+	        if (pageNo == null || pageNo < 0) pageNo = 0;
+	        if (pageSize == null || pageSize <= 0) pageSize = 10;
+
 	        int totalElements = sortedList.size();
 	        int fetchLimit = (pageNo + 1) * pageSize;
 	        int toIndex = Math.min(fetchLimit, totalElements);
 
-	        if (fetchLimit <= 0 || fetchLimit > totalElements) {
-	            return ResponseEntity.ok(new Response(0, "Page number out of range", new ArrayList<>()));
-	        }
-
-	        List<User> paginatedList = sortedList.subList(0, toIndex); // This is the key change!
+	        List<User> paginatedList = sortedList.subList(0, toIndex); // progressive fetch logic
 
 	        List<HashMap<String, Object>> dataList = new ArrayList<>();
 	        for (User hospitalData : paginatedList) {
@@ -433,7 +432,7 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            List<Map<String, Object>> roleDetails = new ArrayList<>();
 	            if (hospitalData.getDoctorRoles() != null) {
 	                for (DoctorRole doctorRole : hospitalData.getDoctorRoles()) {
-	                    if (doctorRole.getUserIsActive()) {
+	                    if (Boolean.TRUE.equals(doctorRole.getUserIsActive())) {
 	                        Map<String, Object> roleMap = new HashMap<>();
 	                        roleMap.put("roleId", doctorRole.getRoleId());
 	                        roleMap.put("doctorRoleId", doctorRole.getDoctorRoleId());
@@ -452,13 +451,12 @@ public class HospitalDataListServiceImpl implements HospitalDataListService {
 	            dataList.add(data);
 	        }
 
-	        // Optional: add pagination info
 	        Map<String, Object> finalResponse = new HashMap<>();
 	        finalResponse.put("data", dataList);
 	        finalResponse.put("totalElements", totalElements);
 	        finalResponse.put("pageNo", pageNo);
 	        finalResponse.put("pageSize", pageSize);
-	        finalResponse.put("fetchedRecords", toIndex);
+	        finalResponse.put("fetchedRecords", dataList.size());
 
 	        return ResponseEntity.ok(new Response(1, "Success", finalResponse));
 
