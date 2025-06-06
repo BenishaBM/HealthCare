@@ -111,11 +111,6 @@ public class AuthenticationController {
 	        if (checkUser.isPresent()) {
 	            User user = checkUser.get();
 
-	            // ✅ Check if userType matches
-	            if (!user.getUserType().equalsIgnoreCase(userWebModel.getUserType())) {
-	                return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Invalid user type"));
-	            }
-
 	            // Authenticate user with email and password
 	            Authentication authentication = authenticationManager.authenticate(
 	                    new UsernamePasswordAuthenticationToken(userWebModel.getEmailId(), userWebModel.getPassword()));
@@ -163,7 +158,7 @@ public class AuthenticationController {
 
 	            logger.info("Login successful for user: {}", user.getEmailId());
 
-	            // Return response
+	            // Return response with JWT, refresh token, and logo
 	            return ResponseEntity.ok(new JwtResponse(
 	                    jwt,
 	                    userDetails.getId(),
@@ -175,6 +170,7 @@ public class AuthenticationController {
 	                    hospitalName,
 	                    filesInputWebModel,
 	                    hospitalCode
+	                    
 	            ));
 	        } else {
 	            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Invalid email or password"));
