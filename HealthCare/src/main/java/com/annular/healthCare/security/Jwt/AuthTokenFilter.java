@@ -36,27 +36,22 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 			String jwt = parseJwt(request);
 			logger.info("JWT from request :- {}", jwt);
 			if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-				logger.info("JWT available...");
+			    logger.info("JWT available...");
 
-				// Old one
-				// String username = jwtUtils.getUserNameFromJwtToken(jwt);
-				// UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+			    // Use the correct claim keys that exist in your token
+			    String userName = jwtUtils.getDataFromJwtToken(jwt, "userEmailId");
+			    String userType = jwtUtils.getDataFromJwtToken(jwt, "userType");
+			    StringBuilder userNamewithUserType = new StringBuilder().append(userName).append("^").append(userType);
+			    System.out.println("Username with UserType : " + userNamewithUserType.toString());
 
-				// New one Username and usertype based login
-				// New one Username and usertype based login
-				String userName = jwtUtils.getDataFromJwtToken(jwt, "userName");
-				String userType = jwtUtils.getDataFromJwtToken(jwt, "userType");
-				StringBuilder userNamewithUserType = new StringBuilder().append(userName).append("^").append(userType);
-				System.out.println("Username with UserType : " + userNamewithUserType.toString());
+			    UserDetails userDetails = userDetailsService.loadUserByUsername(userNamewithUserType.toString());
 
-				UserDetails userDetails = userDetailsService.loadUserByUsername(userNamewithUserType.toString());
-
-				UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-						userDetails, null, userDetails.getAuthorities());
-				authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-				SecurityContextHolder.getContext().setAuthentication(authentication);
-
-			} else {
+			    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+			            userDetails, null, userDetails.getAuthorities());
+			    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+			    SecurityContextHolder.getContext().setAuthentication(authentication);
+			}
+ else {
 				logger.info("JWT not available...");
 			}
 		} catch (Exception e) {
