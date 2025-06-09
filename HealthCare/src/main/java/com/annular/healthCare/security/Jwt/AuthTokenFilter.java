@@ -43,13 +43,13 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 				// UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
 				// New one Username and usertype based login
-				String userEmailId = jwtUtils.getDataFromJwtToken(jwt, "userEmailId");
+				// New one Username and usertype based login
+				String userName = jwtUtils.getDataFromJwtToken(jwt, "userName");
 				String userType = jwtUtils.getDataFromJwtToken(jwt, "userType");
-				StringBuilder userNameWithUserType = new StringBuilder().append(userEmailId).append("^")
-						.append(userType);
-				logger.info("Username with UserType : {}", userNameWithUserType);
+				StringBuilder userNamewithUserType = new StringBuilder().append(userName).append("^").append(userType);
+				System.out.println("Username with UserType : " + userNamewithUserType.toString());
 
-				UserDetails userDetails = userDetailsService.loadUserByUsername(userNameWithUserType.toString());
+				UserDetails userDetails = userDetailsService.loadUserByUsername(userNamewithUserType.toString());
 
 				UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
 						userDetails, null, userDetails.getAuthorities());

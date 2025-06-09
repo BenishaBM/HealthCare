@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import javax.persistence.NonUniqueResultException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +44,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         logger.info("Username: {}, UserType from LoginConstants: {}", username, loginConstants.getUserType());
         
         String email;
-        String userType = null;
+        String userType = null; // Initialize as null instead of uninitialized
         
         // Check if username contains the caret separator
         if (username.contains(CARET)) {
@@ -54,14 +56,14 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             logger.info("Split username - Email: {}, UserType: {}", email, userType);
         } else {
             email = username;
+            logger.info("No caret found - Email: {}, UserType: {}", email, userType);
         }
         
         // If userType is PATIENT, try to load a patient
         if ("PATIENT".equals(userType)) {
             logger.info("Attempting to load a patient with email: {}", email);
             Optional<PatientDetails> optionalPatient = patientDetailsRepository.findByEmailIdIgnoreCase(email);
-           // logger.info("Attempting to load a patient with email: {}", identifier);
-           // Optional<PatientDetails> optionalPatient = patientDetailsRepository.findByEmailIdIgnoreCase(identifier);
+            
             if (optionalPatient.isPresent()) {
                 PatientDetails patient = optionalPatient.get();
                 logger.info("Patient found: ID={}, Email={}", patient.getPatientDetailsId(), patient.getEmailId());
@@ -83,20 +85,75 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             }
         } else {
             // Default behavior for regular users
-            logger.info("Attempting to load a regular user with email: {}", email);
-            Optional<User> optionalUser = userRepo.findByEmailIds(email);
+            logger.info("Attempting to load a regular user with email: {}, userType: {}", email, userType);
             
-            if (optionalUser.isPresent()) {
-                User user = optionalUser.get();
-                logger.info("User from DB --> {} -- {} -- {}", user.getUserId(), user.getEmailId(), user.getUserType());
-                return UserDetailsImpl.build(user);
+            // Handle the case where userType might be null
+            if (userType == null) {
+                logger.warn("UserType is null - this might cause NonUniqueResultException if multiple users exist with same email");
+                
+                // Option 1: Try to get all users and handle multiple results
+                try {
+                    List<User> users = userRepo.findAllByEmailIdIgnoreCaseAndUserIsActive(email, true);
+                    
+                    if (users.isEmpty()) {
+                        logger.error("No users found with email: {}", email);
+                        throw new UsernameNotFoundException("User not found with email: " + email);
+                    } else if (users.size() == 1) {
+                        User user = users.get(0);
+                        logger.info("Single user found - ID: {}, Email: {}, UserType: {}", 
+                                   user.getUserId(), user.getEmailId(), user.getUserType());
+                        return UserDetailsImpl.build(user);
+                    } else {
+                        // Multiple users found
+                        logger.error("Multiple users found with email: {}. Count: {}", email, users.size());
+                        for (User user : users) {
+                            logger.info("Available user - ID: {}, UserType: {}", user.getUserId(), user.getUserType());
+                        }
+                        throw new UsernameNotFoundException(
+                            "Multiple users found with email: " + email + 
+                            ". Please specify userType in format: email^userType"
+                        );
+                    }
+                } catch (Exception e) {
+                    if (e instanceof UsernameNotFoundException) {
+                        throw e;
+                    }
+                    logger.error("Error finding users by email only: {}", e.getMessage());
+                    
+                    // Fallback: try the original method (this might throw NonUniqueResultException)
+                    try {
+                        Optional<User> optionalUser = userRepo.findByEmailIdss(email, userType);
+                        if (optionalUser.isPresent()) {
+                            User user = optionalUser.get();
+                            logger.info("User from DB --> {} -- {} -- {}", user.getUserId(), user.getEmailId(), user.getUserType());
+                            return UserDetailsImpl.build(user);
+                        } else {
+                            logger.error("User not found with email: {}", email);
+                            throw new UsernameNotFoundException("User not found with email: " + email);
+                        }
+                    } catch (NonUniqueResultException nure) {
+                        logger.error("Multiple users found with email: {} - {}", email, nure.getMessage());
+                        throw new UsernameNotFoundException(
+                            "Multiple users found with email: " + email + 
+                            ". Please specify userType in format: email^userType"
+                        );
+                    }
+                }
             } else {
-                logger.error("User not found with email: {}", email);
-                throw new UsernameNotFoundException("User not found with email: " + email);
+                // UserType is provided - use the original method
+                Optional<User> optionalUser = userRepo.findByEmailIdss(email, userType);
+                
+                if (optionalUser.isPresent()) {
+                    User user = optionalUser.get();
+                    logger.info("User from DB --> {} -- {} -- {}", user.getUserId(), user.getEmailId(), user.getUserType());
+                    return UserDetailsImpl.build(user);
+                } else {
+                    logger.error("User not found with email: {} and userType: {}", email, userType);
+                    throw new UsernameNotFoundException("User not found with email: " + email + " and userType: " + userType);
+                }
             }
         }
     }
-    
     private UserDetails buildPatientUserDetails(PatientDetails patient) {
         List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("ROLE_PATIENT"));

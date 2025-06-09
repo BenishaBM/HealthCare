@@ -106,14 +106,24 @@ public class AuthenticationController {
 	@PostMapping("login")
 	public ResponseEntity<?> login(@RequestBody UserWebModel userWebModel) {
 	    try {
-	        Optional<User> checkUser = userRepository.findByEmailIds(userWebModel.getEmailId());
+	        Optional<User> checkUser = userRepository.findByEmailIds(userWebModel.getEmailId(),userWebModel.getUserType());
 
 	        if (checkUser.isPresent()) {
 	            User user = checkUser.get();
 
-	            // Authenticate user with email and password
+	            // ✅ Validate userType
+	            if (userWebModel.getUserType() != null && 
+	                !userWebModel.getUserType().equalsIgnoreCase(user.getUserType())) {
+	                return ResponseEntity.badRequest().body(new Response(-1, "Fail", "User type mismatch"));
+	            }
+
+	            String loginKey = userWebModel.getEmailId();
+	            if (userWebModel.getUserType() != null) {
+	                loginKey = loginKey + "^" + userWebModel.getUserType(); // Format: email^userType
+	            }
+
 	            Authentication authentication = authenticationManager.authenticate(
-	                    new UsernamePasswordAuthenticationToken(userWebModel.getEmailId(), userWebModel.getPassword()));
+	                new UsernamePasswordAuthenticationToken(loginKey, userWebModel.getPassword()));
 
 	            SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -156,9 +166,8 @@ public class AuthenticationController {
 	            String jwt = jwtUtils.generateJwtToken(authentication);
 	            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-	            logger.info("Login successful for user: {}", user.getEmailId());
+	            logger.info("Login successful for user: {}, userType: {}", user.getEmailId(), user.getUserType());
 
-	            // Return response with JWT, refresh token, and logo
 	            return ResponseEntity.ok(new JwtResponse(
 	                    jwt,
 	                    userDetails.getId(),
@@ -170,7 +179,6 @@ public class AuthenticationController {
 	                    hospitalName,
 	                    filesInputWebModel,
 	                    hospitalCode
-	                    
 	            ));
 	        } else {
 	            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Invalid email or password"));
@@ -185,6 +193,7 @@ public class AuthenticationController {
 	                .body(new Response(-1, "Fail", "An error occurred during login"));
 	    }
 	}
+
 
 	@PostMapping("refreshToken")
 	public ResponseEntity<?> refreshToken(@RequestBody UserWebModel userWebModel) {
