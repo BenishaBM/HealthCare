@@ -242,6 +242,19 @@ public class DoctorAppointmentController {
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+	
+	@PostMapping("cancelAppointmentOnlineAndOffline")
+	public ResponseEntity<?> cancelAppointmentOnlineAndOffline(@RequestBody HospitalDataListWebModel userWebModel) {
+	    try {
+	        // Call the service to perform the update
+	        return doctorAppoitmentService.cancelAppointmentOnlineAndOffline(userWebModel);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("cancelAppointmentOnlineAndOffline Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 }
 
 

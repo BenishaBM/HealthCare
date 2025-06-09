@@ -1252,6 +1252,32 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                .body(new Response(0, "Failure", "An error occurred while fetching doctor data"));
 	    }
 	}
+	@Override
+	public ResponseEntity<?> cancelAppointmentOnlineAndOffline(HospitalDataListWebModel userWebModel) {
+	    try {
+	        Optional<PatientAppointmentTable> optionalAppointment = patientAppointmentRepository.findById(userWebModel.getId());
+
+	        if (!optionalAppointment.isPresent()) {
+	            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Appointment not found"));
+	        }
+
+	        PatientAppointmentTable appointment = optionalAppointment.get();
+
+	        // Cancel the appointment
+	        appointment.setAppointmentStatus("CANCELLED");
+	        appointment.setIsActive(true);
+	        appointment.setUpdatedOn(new Date());
+	        appointment.setUpdatedBy(userWebModel.getUserUpdatedBy()); // assuming this field exists in the input
+
+	        patientAppointmentRepository.save(appointment);
+
+	        return ResponseEntity.ok(new Response(1, "Success", "Appointment cancelled successfully"));
+	    } catch (Exception e) {
+	     //   logger.error("Error at cancelAppointmentOnlineAndOffline() -> {}", e.getMessage(), e);
+	        return ResponseEntity.internalServerError().body(new Response(-1, "Fail", "Error occurred while cancelling appointment"));
+	    }
+	}
+
 
 
 

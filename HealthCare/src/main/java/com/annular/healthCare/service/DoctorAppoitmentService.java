@@ -38,4 +38,6 @@ public interface DoctorAppoitmentService {
 
 	ResponseEntity<?> getAllDoctorFilterByLocation(String location);
 
+	ResponseEntity<?> cancelAppointmentOnlineAndOffline(HospitalDataListWebModel userWebModel);
+
 }
