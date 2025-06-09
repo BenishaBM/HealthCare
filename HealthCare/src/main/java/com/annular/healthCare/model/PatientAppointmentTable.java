@@ -45,6 +45,9 @@ public class PatientAppointmentTable {
     private String appointmentDate;
 
 
+    @Column(name = "doctorSlotSpiltTimeId")
+    private Integer doctorSlotSpiltTimeId;
+    
     @Column(name = "slot_start_time")
     private String slotStartTime;
 
