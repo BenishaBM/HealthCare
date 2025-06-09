@@ -76,6 +76,7 @@ public class HospitalDataListWebModel {
     private Integer morningAF;
     private Integer afternoonBF;
     private Integer afternoonAF;
+    private Integer id;
     private Integer nightBF;
     private Integer nightAF;
     private Boolean every6Hours;
