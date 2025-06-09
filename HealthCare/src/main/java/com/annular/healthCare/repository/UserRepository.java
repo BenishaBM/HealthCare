@@ -56,6 +56,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
 	List<User> findByHospitalIdAndUserTypeIn(Integer hospitalDataId, List<String> userTypes);
 
+	@Query("SELECT u FROM User u WHERE u.userType = :userType AND u.userIsActive = true")
 	Page<User> findByUserType(String userType, PageRequest pageRequest);
 
 	@Query("SELECT u FROM User u WHERE u.emailId = :emailId AND u.userIsActive = true AND u.userType = :userType")
