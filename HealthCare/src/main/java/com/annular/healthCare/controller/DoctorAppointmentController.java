@@ -255,6 +255,18 @@ public class DoctorAppointmentController {
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+	@PostMapping("rescheduleAppointmentOnlineAndOffline")
+	public ResponseEntity<?> rescheduleAppointmentOnlineAndOffline(@RequestBody HospitalDataListWebModel userWebModel) {
+	    try {
+	        // Call the service to perform the update
+	        return doctorAppoitmentService.rescheduleAppointmentOnlineAndOffline(userWebModel);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("rescheduleAppointmentOnlineAndOffline Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 }
 
 

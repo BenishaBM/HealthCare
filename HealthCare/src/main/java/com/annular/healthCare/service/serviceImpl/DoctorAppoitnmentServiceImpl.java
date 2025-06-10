@@ -1288,6 +1288,42 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	        return ResponseEntity.internalServerError().body(new Response(-1, "Fail", "Error occurred while cancelling appointment"));
 	    }
 	}
+	@Override
+	public ResponseEntity<?> rescheduleAppointmentOnlineAndOffline(HospitalDataListWebModel userWebModel) {
+		 try {
+		        Optional<PatientAppointmentTable> optionalAppointment = patientAppointmentRepository.findById(userWebModel.getId());
+		        Optional<DoctorSlotSpiltTime> optionalSlot = doctorSlotSpiltTimeRepository.findById(userWebModel.getDoctorSlotSpiltTimeId());
+
+		        if (!optionalAppointment.isPresent()) {
+		            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Appointment not found"));
+		        }
+
+		        if (!optionalSlot.isPresent()) {
+		            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Slot not found"));
+		        }
+
+		        // Cancel the appointment
+		        PatientAppointmentTable appointment = optionalAppointment.get();
+		        appointment.setAppointmentStatus("RESCHEDULED");
+		        appointment.setIsActive(true);
+		        appointment.setUpdatedOn(new Date());
+		        appointment.setUpdatedBy(userWebModel.getUserUpdatedBy());
+
+		        patientAppointmentRepository.save(appointment);
+
+		        // Update slot status to "Available"
+		        DoctorSlotSpiltTime slot = optionalSlot.get();
+		        slot.setSlotStatus("Available");
+		        slot.setUpdatedBy(userWebModel.getUserUpdatedBy());
+		        slot.setUpdatedOn(new Date());
+
+		        doctorSlotSpiltTimeRepository.save(slot);
+
+		        return ResponseEntity.ok(new Response(1, "Success", "Appointment cancelled and slot marked as Available"));
+		    } catch (Exception e) {
+		        return ResponseEntity.internalServerError().body(new Response(-1, "Fail", "Error occurred while cancelling appointment"));
+		    }
+	}
 
 
 

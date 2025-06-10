@@ -40,4 +40,6 @@ public interface DoctorAppoitmentService {
 
 	ResponseEntity<?> cancelAppointmentOnlineAndOffline(HospitalDataListWebModel userWebModel);
 
+	ResponseEntity<?> rescheduleAppointmentOnlineAndOffline(HospitalDataListWebModel userWebModel);
+
 }
