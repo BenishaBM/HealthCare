@@ -1256,27 +1256,39 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	public ResponseEntity<?> cancelAppointmentOnlineAndOffline(HospitalDataListWebModel userWebModel) {
 	    try {
 	        Optional<PatientAppointmentTable> optionalAppointment = patientAppointmentRepository.findById(userWebModel.getId());
+	        Optional<DoctorSlotSpiltTime> optionalSlot = doctorSlotSpiltTimeRepository.findById(userWebModel.getDoctorSlotSpiltTimeId());
 
 	        if (!optionalAppointment.isPresent()) {
 	            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Appointment not found"));
 	        }
 
-	        PatientAppointmentTable appointment = optionalAppointment.get();
+	        if (!optionalSlot.isPresent()) {
+	            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Slot not found"));
+	        }
 
 	        // Cancel the appointment
+	        PatientAppointmentTable appointment = optionalAppointment.get();
 	        appointment.setAppointmentStatus("CANCELLED");
 	        appointment.setIsActive(true);
 	        appointment.setUpdatedOn(new Date());
-	        appointment.setUpdatedBy(userWebModel.getUserUpdatedBy()); // assuming this field exists in the input
+	        appointment.setUpdatedBy(userWebModel.getUserUpdatedBy());
 
 	        patientAppointmentRepository.save(appointment);
 
-	        return ResponseEntity.ok(new Response(1, "Success", "Appointment cancelled successfully"));
+	        // Update slot status to "Available"
+	        DoctorSlotSpiltTime slot = optionalSlot.get();
+	        slot.setSlotStatus("Available");
+	        slot.setUpdatedBy(userWebModel.getUserUpdatedBy());
+	        slot.setUpdatedOn(new Date());
+
+	        doctorSlotSpiltTimeRepository.save(slot);
+
+	        return ResponseEntity.ok(new Response(1, "Success", "Appointment cancelled and slot marked as Available"));
 	    } catch (Exception e) {
-	     //   logger.error("Error at cancelAppointmentOnlineAndOffline() -> {}", e.getMessage(), e);
 	        return ResponseEntity.internalServerError().body(new Response(-1, "Fail", "Error occurred while cancelling appointment"));
 	    }
 	}
+
 
 
 
