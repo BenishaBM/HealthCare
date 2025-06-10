@@ -1186,6 +1186,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 				appointmentData.put("doctorId", appointment.getDoctor().getUserId());
 				appointmentData.put("doctorSlotId", appointment.getDoctorSlotId());
 				appointmentData.put("daySlotId", appointment.getDaySlotId());
+				appointmentData.put("doctorSlotSpiltTimeId", appointment.getDoctorSlotSpiltTimeId());
 				appointmentData.put("timeSlotId", appointment.getTimeSlotId());
 				appointmentData.put("appointmentDate", appointment.getAppointmentDate());
 				appointmentData.put("slotStartTime", appointment.getSlotStartTime());
