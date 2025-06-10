@@ -97,6 +97,7 @@ public class HospitalDataListWebModel {
 	private Integer supportStaffId;
 	private Integer labMasterDataId;
 	private String followUpDate;
+	private Integer doctorSlotSpiltTimeId;
     // Medicine Schedule
     private List<MedicineScheduleWebModel> schedules;
     

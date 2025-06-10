@@ -54,6 +54,7 @@ public class UserWebModel {
 	private Integer supportStaffId;
 	private Integer labMasterDataId;
 	private String dob;
+	private Integer doctorSlotSpiltTimeId;
 	
 
 	
