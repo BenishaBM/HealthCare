@@ -161,9 +161,11 @@ public class AuthServiceImpl implements AuthService {
 	    try {
 	        logger.info("Register method start");
 
-	        // Check if a user with the same emailId, userType, and hospitalId already exists
-	        Optional<User> existingUser = userRepository.findByEmailIdAndUserTypeAndHospitalId(
-	                userWebModel.getEmailId(), userWebModel.getUserType(), userWebModel.getHospitalId());
+//	        // Check if a user with the same emailId, userType, and hospitalId already exists
+//	        Optional<User> existingUser = userRepository.findByEmailIdAndUserTypeAndHospitalId(
+//	                userWebModel.getEmailId(), userWebModel.getUserType(), userWebModel.getHospitalId());
+	        Optional<User> existingUser = userRepository.findByEmailIdss(userWebModel.getEmailId());
+	        
 
 	        if (existingUser.isPresent()) {
 	            response.put("message", "User with this email, user type, and hospital ID already exists");
