@@ -67,6 +67,20 @@ public class HospitalDataListWebModel {
     private Integer appointmentId;
     private List<Integer> medicineIds;
 	private String hospitalLink;
+
+   
+    private Integer doctorId;
+
+    private Integer daySlotId;
+   
+
+    private String appointmentDate;
+    private String slotStartTime;
+    private String slotEndTime;
+
+
+
+    
 	private Boolean linkstatus;
     private List<Integer> medicalTestIds;
     private List<AppointmentMedicalTestWebModel> medicalTests;

@@ -70,7 +70,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
 	List<User> findAllByEmailIdIgnoreCaseAndUserIsActive(String email, boolean b);
 
-	@Query("SELECT u FROM User u WHERE u.emailId = :email AND u.userIsActive = true")
+	@Query("SELECT u FROM User u WHERE u.emailId = :emailId AND u.userIsActive = true")
 	Optional<User> findByEmailIdss(String emailId);
 	
 	

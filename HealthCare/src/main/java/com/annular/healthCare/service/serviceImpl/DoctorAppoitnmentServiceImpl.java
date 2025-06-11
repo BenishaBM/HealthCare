@@ -116,6 +116,9 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	@Autowired
 	UserRepository userRepository;
 	
+	@Autowired
+	DoctorSlotSpiltTimeRepository doctorSlotSplitTimeRepository;
+	
 	@Value("${annular.app.imageLocation}")
 	private String imageLocation;
 
@@ -1291,39 +1294,60 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	}
 	@Override
 	public ResponseEntity<?> rescheduleAppointmentOnlineAndOffline(HospitalDataListWebModel userWebModel) {
-		 try {
-		        Optional<PatientAppointmentTable> optionalAppointment = patientAppointmentRepository.findById(userWebModel.getId());
-		        Optional<DoctorSlotSpiltTime> optionalSlot = doctorSlotSpiltTimeRepository.findById(userWebModel.getDoctorSlotSpiltTimeId());
+	    try {
+	        Optional<PatientAppointmentTable> optionalAppointment = patientAppointmentRepository.findById(userWebModel.getId());
 
-		        if (!optionalAppointment.isPresent()) {
-		            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Appointment not found"));
-		        }
+	        if (!optionalAppointment.isPresent()) {
+	            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Appointment not found"));
+	        }
 
-		        if (!optionalSlot.isPresent()) {
-		            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Slot not found"));
-		        }
+	        // Get the existing appointment
+	        PatientAppointmentTable appointment = optionalAppointment.get();
 
-		        // Cancel the appointment
-		        PatientAppointmentTable appointment = optionalAppointment.get();
-		        appointment.setAppointmentStatus("RESCHEDULED");
-		        appointment.setIsActive(true);
-		        appointment.setUpdatedOn(new Date());
-		        appointment.setUpdatedBy(userWebModel.getUserUpdatedBy());
+	        // Step 1: Free the old slot
+	        Integer oldSlotId = appointment.getDoctorSlotSpiltTimeId();
+	        if (oldSlotId != null) {
+	            Optional<DoctorSlotSpiltTime> oldSlotOpt = doctorSlotSplitTimeRepository.findById(oldSlotId);
+	            if (oldSlotOpt.isPresent()) {
+	                DoctorSlotSpiltTime oldSlot = oldSlotOpt.get();
+	                oldSlot.setSlotStatus("Available");
+	                oldSlot.setUpdatedBy(userWebModel.getUserUpdatedBy());
+	                oldSlot.setUpdatedOn(new Date());
+	                doctorSlotSplitTimeRepository.save(oldSlot);
+	            }
+	        }
 
-		        patientAppointmentRepository.save(appointment);
+	        // Step 2: Update appointment with new details
+	        appointment.setAppointmentStatus("RESCHEDULED");
+	        Optional<User> db  = userRepository.findById(userWebModel.getUserId());
+	        appointment.setDoctor(db.get());
+	        appointment.setDoctorSlotId(userWebModel.getDoctorSlotId());
+	        appointment.setDaySlotId(userWebModel.getDaySlotId());
+	        appointment.setDoctorSlotSpiltTimeId(userWebModel.getDoctorSlotSpiltTimeId());
+	        appointment.setAppointmentDate(userWebModel.getAppointmentDate());
+	        appointment.setSlotStartTime(userWebModel.getSlotStartTime());
+	        appointment.setSlotEndTime(userWebModel.getSlotEndTime());
+	        appointment.setUpdatedOn(new Date());
+	        appointment.setUpdatedBy(userWebModel.getUserUpdatedBy());
+	        appointment.setIsActive(true);
 
-		        // Update slot status to "Available"
-		        DoctorSlotSpiltTime slot = optionalSlot.get();
-		        slot.setSlotStatus("Available");
-		        slot.setUpdatedBy(userWebModel.getUserUpdatedBy());
-		        slot.setUpdatedOn(new Date());
+	        patientAppointmentRepository.save(appointment);
 
-		        doctorSlotSpiltTimeRepository.save(slot);
+	        // Step 3: Mark new slot as booked
+	        Optional<DoctorSlotSpiltTime> newSlotOpt = doctorSlotSplitTimeRepository.findById(userWebModel.getDoctorSlotSpiltTimeId());
+	        if (newSlotOpt.isPresent()) {
+	            DoctorSlotSpiltTime newSlot = newSlotOpt.get();
+	            newSlot.setSlotStatus("Booked");
+	            newSlot.setUpdatedBy(userWebModel.getUserUpdatedBy());
+	            newSlot.setUpdatedOn(new Date());
+	            doctorSlotSplitTimeRepository.save(newSlot);
+	        }
 
-		        return ResponseEntity.ok(new Response(1, "Success", "Appointment cancelled and slot marked as Available"));
-		    } catch (Exception e) {
-		        return ResponseEntity.internalServerError().body(new Response(-1, "Fail", "Error occurred while cancelling appointment"));
-		    }
+	        return ResponseEntity.ok(new Response(1, "Success", "Appointment rescheduled successfully"));
+
+	    } catch (Exception e) {
+	        return ResponseEntity.internalServerError().body(new Response(-1, "Fail", "Error occurred while rescheduling appointment"));
+	    }
 	}
 
 
