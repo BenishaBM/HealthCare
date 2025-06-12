@@ -36,6 +36,12 @@ public class PatientDetails {
 	@Column(name = "patientDetailsId")
 	private Integer patientDetailsId;
 	
+	@Column(name = "firstName")
+	private String firstName;
+	
+	@Column(name = "lastName")
+	private String lastName;
+	
 	@Column(name = "patientName")
 	private String patientName;
 	
