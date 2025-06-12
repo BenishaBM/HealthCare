@@ -138,7 +138,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 	        logger.info("Registering patient: {}", userWebModel.getPatientName());
 
 	        // Validate required fields
-	        if (userWebModel.getPatientName() == null || userWebModel.getMobileNumber() == null) {
+	        if (userWebModel.getMobileNumber() == null) {
 	            return ResponseEntity.badRequest()
 	                    .body(new Response(0, "Fail", "Patient name and mobile number are required"));
 	        }
