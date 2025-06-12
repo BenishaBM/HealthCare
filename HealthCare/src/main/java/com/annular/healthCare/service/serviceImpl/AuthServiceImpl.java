@@ -752,6 +752,8 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 			if (userWebModel.getPassword() != null && !userWebModel.getPassword().isEmpty()) {
 				existingUser.setPassword(passwordEncoder.encode(userWebModel.getPassword()));
 			}
+			if(userWebModel.getEmpId() != null)
+				existingUser.setEmpId(userWebModel.getEmpId());
 			if (userWebModel.getLastName() != null)
 				existingUser.setLastName(userWebModel.getLastName());
 			if (userWebModel.getPhoneNumber() != null)

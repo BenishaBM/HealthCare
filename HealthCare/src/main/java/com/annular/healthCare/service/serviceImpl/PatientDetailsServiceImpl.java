@@ -331,7 +331,9 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 
 		// Save patient details first
 		PatientDetails savedPatient = patientDetailsRepository.save(PatientDetails.builder()
-				.patientName(userWebModel.getPatientName()).dob(userWebModel.getDob()).age(userWebModel.getAge())
+				.firstName(userWebModel.getFirstName()).lastName(userWebModel.getLastNmae())
+				.patientName((userWebModel.getFirstName() + " " + userWebModel.getLastNmae()).trim())
+                .dob(userWebModel.getDob()).age(userWebModel.getAge())
 				.otp(100).gender(userWebModel.getGender()).bloodGroup(userWebModel.getBloodGroup())
 				.countryCode(userWebModel.getCountryCode())
 				.emerCountryCode(userWebModel.getEmerCountryCode())
@@ -601,6 +603,8 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 	        for (PatientDetails patient : paginatedList) {
 	            Map<String, Object> patientData = new HashMap<>();
 	            patientData.put("patientDetailsId", patient.getPatientDetailsId());
+	            patientData.put("firstName", patient.getFirstName());
+	            patientData.put("lastName", patient.getLastName());
 	            patientData.put("patientName", patient.getPatientName());
 	            patientData.put("dob", patient.getDob());
 	            patientData.put("gender", patient.getGender());
@@ -668,8 +672,18 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 			PatientDetails patient = optionalPatient.get();
 
 			// Only update fields if they are non-null
-			if (userWebModel.getPatientName() != null)
-				patient.setPatientName(userWebModel.getPatientName());
+			if (userWebModel.getFirstName() != null)
+				patient.setFirstName(userWebModel.getFirstName());
+			if (userWebModel.getLastNmae() != null)
+				patient.setLastName(userWebModel.getLastNmae());
+			// Always combine firstName and lastName into patientName
+			String firstName = Optional.ofNullable(userWebModel.getFirstName()).orElse("");
+			String lastName = Optional.ofNullable(userWebModel.getLastNmae()).orElse("");
+			String fullName = (firstName + " " + lastName).trim();
+
+			if (!fullName.isBlank()) {
+			    patient.setPatientName(fullName);
+			}
 			if (userWebModel.getDob() != null)
 				patient.setDob(userWebModel.getDob());
 			if (userWebModel.getAge() != null)

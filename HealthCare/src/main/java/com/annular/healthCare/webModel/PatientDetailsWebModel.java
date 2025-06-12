@@ -25,6 +25,8 @@ public class PatientDetailsWebModel {
 
 	private Integer patientDetailsId;
 	private String patientName;
+	private String firstName;
+	private String lastNmae;
 	private String dob;
 	private String gender;
 	private String bloodGroup;
