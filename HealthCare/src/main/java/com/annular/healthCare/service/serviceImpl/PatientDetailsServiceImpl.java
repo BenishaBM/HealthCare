@@ -140,7 +140,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 	        // Validate required fields
 	        if (userWebModel.getMobileNumber() == null) {
 	            return ResponseEntity.badRequest()
-	                    .body(new Response(0, "Fail", "Patient name and mobile number are required"));
+	                    .body(new Response(0, "Fail", "mobile number are required"));
 	        }
 
 	        // Check if email already exists in the database
@@ -968,9 +968,9 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 		try {
 			logger.info("Registering patient: {}", userWebModel.getPatientName());
 
-			if (userWebModel.getPatientName() == null || userWebModel.getMobileNumber() == null) {
+			if (userWebModel.getMobileNumber() == null) {
 				return ResponseEntity.badRequest()
-						.body(new Response(0, "Fail", "Patient name and mobile number are required"));
+						.body(new Response(0, "Fail","mobile number are required"));
 			}
 			// Check if the patient already exists
 			Optional<PatientDetails> existingUser = patientDetailsRepository
@@ -979,9 +979,12 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 				return ResponseEntity.badRequest()
 						.body(new Response(0, "Fail", "Mobile number is already registered for this hospital."));
 			}
-
-			PatientDetails newPatient = PatientDetails.builder().patientName(userWebModel.getPatientName())
+			String firstName = Optional.ofNullable(userWebModel.getFirstName()).orElse("");
+			String lastName = Optional.ofNullable(userWebModel.getLastNmae()).orElse("");
+			String fullName = (firstName + " " + lastName).trim();
+			PatientDetails newPatient = PatientDetails.builder().firstName(userWebModel.getFirstName()).lastName(userWebModel.getLastNmae())
 					.dob(userWebModel.getDob()).age(userWebModel.getAge()).otp(100).gender(userWebModel.getGender())
+					.patientName(fullName)
 					.bloodGroup(userWebModel.getBloodGroup()).mobileNumber(userWebModel.getMobileNumber())
 					.emailId(userWebModel.getEmailId()).address(userWebModel.getAddress())
 					.currentAddress(userWebModel.getCurrentAddress())
