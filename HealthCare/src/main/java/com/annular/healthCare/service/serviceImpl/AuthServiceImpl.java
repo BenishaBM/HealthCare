@@ -991,6 +991,7 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	        data.put("userType", user.getUserType());
 	        data.put("firstName", user.getFirstName());
 	        data.put("lastName", user.getLastName());
+	        data.put("empId", user.getEmpId());
 	        data.put("address", user.getCurrentAddress());
 	        data.put("doctorFees", user.getDoctorFees());
 	        data.put("phoneNumber", user.getPhoneNumber());
