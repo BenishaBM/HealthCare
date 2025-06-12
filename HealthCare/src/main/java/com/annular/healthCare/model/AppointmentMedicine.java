@@ -104,4 +104,7 @@ public class AppointmentMedicine {
     
     @Column(name = "totalTabletCount")
     private Integer totalTabletCount;
+    
+    @Column(name = "prescribedTotalAmount")
+    private Integer prescribedTotalAmount;
 }

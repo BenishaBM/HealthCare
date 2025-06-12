@@ -122,6 +122,7 @@ public class HospitalDataListWebModel {
         private Boolean patientStatus;
         private Integer patientMedicineDays;
         private float amount;
+        private Integer prescribedTotalAmount;
         
         
     }

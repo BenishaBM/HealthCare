@@ -553,6 +553,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                             medMap.put("nightAF", med.getNightAF());
 	                             medMap.put("every6Hours", med.getEvery6Hours());
 	                             medMap.put("amount", med.getAmount());
+	                             medMap.put("prescribedTotalAmount", med.getPrescribedTotalAmount());
 	                             medMap.put("every8Hours", med.getEvery8Hours());
 	                             medMap.put("days", med.getDays());
 	                             medMap.put("patientMedicineDays", med.getPatientMedicineDays());
@@ -621,7 +622,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                 existing.setPatientStatus(detail.getPatientStatus());
 	                 existing.setCustomizeDays(detail.getPatientMedicineDays());
 	                 existing.setUpdatedBy(appointment.getCreatedBy()); // or session user
-
+                     existing.setPrescribedTotalAmount(detail.getPrescribedTotalAmount());
 	                 // Use wrapper Float to safely handle null
 	                 Float amount = detail.getAmount();
 	                 existing.setAmount(amount != null ? amount : 0f); // default to 0f if null
