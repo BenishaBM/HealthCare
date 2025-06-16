@@ -1047,25 +1047,28 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	        }
 
 	        data.put("userIsActive", user.getUserIsActive());
-
-	        // Roles
+	     // Roles
 	        List<Map<String, Object>> roleDetails = new ArrayList<>();
 	        if (user.getDoctorRoles() != null) {
 	            for (DoctorRole doctorRole : user.getDoctorRoles()) {
-	                Map<String, Object> roleMap = new HashMap<>();
-	                roleMap.put("roleId", doctorRole.getRoleId());
-	                roleMap.put("isActive", doctorRole.getUserIsActive());
-	                try {
-	                    String specialtyName = doctorSpecialtyRepository
-	                            .findSpecialtyNameByRoleId(doctorRole.getRoleId());
-	                    roleMap.put("specialtyName", specialtyName != null ? specialtyName : "N/A");
-	                } catch (Exception e) {
-	                    logger.error("Error fetching specialty name for roleId {}: {}", doctorRole.getRoleId(), e.getMessage());
-	                    roleMap.put("specialtyName", "Error retrieving");
+	                // Only include active roles
+	                if (Boolean.TRUE.equals(doctorRole.getUserIsActive())) {
+	                    Map<String, Object> roleMap = new HashMap<>();
+	                    roleMap.put("roleId", doctorRole.getRoleId());
+	                    roleMap.put("isActive", doctorRole.getUserIsActive());
+	                    try {
+	                        String specialtyName = doctorSpecialtyRepository
+	                                .findSpecialtyNameByRoleId(doctorRole.getRoleId());
+	                        roleMap.put("specialtyName", specialtyName != null ? specialtyName : "N/A");
+	                    } catch (Exception e) {
+	                        logger.error("Error fetching specialty name for roleId {}: {}", doctorRole.getRoleId(), e.getMessage());
+	                        roleMap.put("specialtyName", "Error retrieving");
+	                    }
+	                    roleDetails.add(roleMap);
 	                }
-	                roleDetails.add(roleMap);
 	            }
 	        }
+
 	        data.put("roles", roleDetails);
 
 
