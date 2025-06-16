@@ -1026,6 +1026,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                        medMap.put("every6Hours", med.getEvery6Hours());
 	                        medMap.put("every8Hours", med.getEvery8Hours());
                             medMap.put("amount", med.getAmount());
+                            medMap.put("prescribedAmount", med.getPrescribedTotalAmount());
                             medMap.put("totalTabletCount", med.getTotalTabletCount());
 	                        // Audit fields
 	                        medMap.put("isActive", med.getIsActive());
