@@ -42,4 +42,6 @@ public interface MedicalTestConfigService {
 
 	ResponseEntity<?> getResultByAppoitmentId(MedicalTestConfigWebModel medicalTestConfigWebModel);
 
+	ResponseEntity<?> getAllPatientAppointmentByReceptionistLogin(Integer doctorId);
+
 }

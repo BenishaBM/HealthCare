@@ -261,4 +261,20 @@ public class MedicalTestConfigController {
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+	
+	@GetMapping("getAllPatientAppointmentByReceptionistLogin") // Corrected spelling in endpoint
+	public ResponseEntity<?> getAllPatientAppointmentByReceptionistLogin(
+	        @RequestParam("hospitalId") Integer  hospitalId) {
+	    try {
+	        logger.info("getAllPatientAppointmentByReceptionistLogin request for createdOn: {}, hospitalId");
+	        
+	       
+	        return medicalTestConfigService.getAllPatientAppointmentByReceptionistLogin(hospitalId);
+	    } catch (Exception e) {
+	        logger.error("getAllPatientAppointmentByReceptionistLogin Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+	
 }

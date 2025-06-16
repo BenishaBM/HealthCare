@@ -2,12 +2,14 @@ package com.annular.healthCare.repository;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.annular.healthCare.model.Department;
 import com.annular.healthCare.model.PatientAppointmentTable;
 
 @Repository
@@ -94,6 +96,10 @@ public interface PatientAppoitmentTablerepository extends JpaRepository<PatientA
 		       "ORDER BY p.appointmentId ASC")
 	List<PatientAppointmentTable> findByHospitalAndAppointmentDateOrderByIdAsc(Integer hospital,
 			String appointmentDate);
+
+
+	@Query("SELECT p FROM PatientAppointmentTable p  WHERE p.doctor.hospitalId = :hospitalId " )
+	    List<PatientAppointmentTable> findAppointmentsByDoctorHospitalId(@Param("hospitalId") Integer hospitalId);
 
 	
 
