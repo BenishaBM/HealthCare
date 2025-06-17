@@ -791,27 +791,36 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 			// Step 3: Save updated user
 			User updatedUser = userRepository.save(existingUser);
 
-//			// Step 4: Always delete old media files (if any)
-//			List<MediaFile> oldMediaFiles = mediaFileRepository.findByUserId(HealthCareConstant.ProfilePhoto,
-//					updatedUser.getUserId());
-//			if (!oldMediaFiles.isEmpty()) {
-//				for (MediaFile oldMediaFile : oldMediaFiles) {
-//					Base64FileUpload.deleteFile(imageLocation + "/profilePhoto", oldMediaFile.getFileName());
-//					mediaFileRepository.deleteById(oldMediaFile.getFileId());
-//				}
-//			}
-//
 //			// Step 5: Upload new media file (if provided)
 //			if (userWebModel.getFilesInputWebModel() != null && !userWebModel.getFilesInputWebModel().isEmpty()) {
-//				handleFileUploads(updatedUser, userWebModel.getFilesInputWebModel());
+//			    // Only delete old media if new media is being uploaded
+//			    List<MediaFile> oldMediaFiles = mediaFileRepository.findByUserId(HealthCareConstant.ProfilePhoto,
+//			            updatedUser.getUserId());
+//			    if (!oldMediaFiles.isEmpty()) {
+//			        for (MediaFile oldMediaFile : oldMediaFiles) {
+//			            Base64FileUpload.deleteFile(imageLocation + "/profilePhoto", oldMediaFile.getFileName());
+//			            mediaFileRepository.deleteById(oldMediaFile.getFileId());
+//			        }
+//			    }
+//
+//			    // Then upload the new files
+//			    handleFileUploads(updatedUser, userWebModel.getFilesInputWebModel());
 //			}
-			
-			// Step 4: Always delete old media files (if any)
-			// Step 5: Upload new media file (if provided)
-			if (userWebModel.getFilesInputWebModel() != null && !userWebModel.getFilesInputWebModel().isEmpty()) {
-			    // Only delete old media if new media is being uploaded
-			    List<MediaFile> oldMediaFiles = mediaFileRepository.findByUserId(HealthCareConstant.ProfilePhoto,
-			            updatedUser.getUserId());
+
+			// Step 5: Handle profile photo update/removal
+			List<MediaFile> oldMediaFiles = mediaFileRepository.findByUserId(
+			        HealthCareConstant.ProfilePhoto, updatedUser.getUserId());
+
+			// If filesInputWebModel is null or empty → only delete old files
+			if (userWebModel.getFilesInputWebModel() == null || userWebModel.getFilesInputWebModel().isEmpty()) {
+			    if (!oldMediaFiles.isEmpty()) {
+			        for (MediaFile oldMediaFile : oldMediaFiles) {
+			            Base64FileUpload.deleteFile(imageLocation + "/profilePhoto", oldMediaFile.getFileName());
+			            mediaFileRepository.deleteById(oldMediaFile.getFileId());
+			        }
+			    }
+			} else {
+			    // If new files are provided → delete old and upload new
 			    if (!oldMediaFiles.isEmpty()) {
 			        for (MediaFile oldMediaFile : oldMediaFiles) {
 			            Base64FileUpload.deleteFile(imageLocation + "/profilePhoto", oldMediaFile.getFileName());
@@ -819,10 +828,9 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 			        }
 			    }
 
-			    // Then upload the new files
+			    // Upload new profile photo(s)
 			    handleFileUploads(updatedUser, userWebModel.getFilesInputWebModel());
 			}
-
 
 			// Step 6: Update User Roles (remove all and reassign if provided)
 			doctorRoleRepository.deactivateUser(updatedUser.getUserId()); // always remove all existing roles
