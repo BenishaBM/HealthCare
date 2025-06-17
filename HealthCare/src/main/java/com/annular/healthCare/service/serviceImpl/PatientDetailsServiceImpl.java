@@ -937,11 +937,15 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 																													// defining
 																													// type
 						.collect(Collectors.toList());
-
-				List<String> specialties = roleIds.stream().map((Integer roleId) -> {
-					DoctorSpecialty specialty = doctorSpecialtyRepository.findById(roleId).orElse(null);
-					return (specialty != null) ? specialty.getSpecialtyName() : null;
-				}).filter(Objects::nonNull).collect(Collectors.toList());
+				List<String> specialties = doctor.getDoctorRoles().stream()
+					    .map(DoctorRole::getRoleId)
+					    .filter(Objects::nonNull) // <- ignore null roleIds
+					    .map(roleId -> {
+					        DoctorSpecialty specialty = doctorSpecialtyRepository.findById(roleId).orElse(null);
+					        return (specialty != null) ? specialty.getSpecialtyName() : null;
+					    })
+					    .filter(Objects::nonNull)
+					    .collect(Collectors.toList());
 
 				map.put("specialties", specialties);
 				return map;
