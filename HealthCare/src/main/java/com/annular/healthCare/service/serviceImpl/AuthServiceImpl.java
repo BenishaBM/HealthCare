@@ -824,18 +824,22 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 			}
 
 
-			// Step 6: Update User Roles (if provided)
-			if (userWebModel.getRoleIds() != null && !userWebModel.getRoleIds().isEmpty()) {
-				// Remove existing roles
-				doctorRoleRepository.deactivateUser(updatedUser.getUserId());
+			// Step 6: Update User Roles (remove all and reassign if provided)
+			doctorRoleRepository.deactivateUser(updatedUser.getUserId()); // always remove all existing roles
 
-				// Assign new roles
-				for (Integer roleId : userWebModel.getRoleIds()) {
-					DoctorRole doctorRole = DoctorRole.builder().user(updatedUser).roleId(roleId)
-							.createdBy(updatedUser.getCreatedBy()).userIsActive(true).build();
-					doctorRoleRepository.save(doctorRole);
-				}
+			// Reassign only if new roles are provided
+			if (userWebModel.getRoleIds() != null && !userWebModel.getRoleIds().isEmpty()) {
+			    for (Integer roleId : userWebModel.getRoleIds()) {
+			        DoctorRole doctorRole = DoctorRole.builder()
+			                .user(updatedUser)
+			                .roleId(roleId)
+			                .createdBy(updatedUser.getCreatedBy())
+			                .userIsActive(true)
+			                .build();
+			        doctorRoleRepository.save(doctorRole);
+			    }
 			}
+
 //			// Save doctor leaves if provided
 //			if (userWebModel.getDoctorLeaveList() != null) {
 //				for (DoctorLeaveListWebModel leaveModel : userWebModel.getDoctorLeaveList()) {
