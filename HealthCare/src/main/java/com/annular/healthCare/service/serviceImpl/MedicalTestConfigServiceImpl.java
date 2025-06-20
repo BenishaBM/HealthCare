@@ -1688,6 +1688,7 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 			                details.put("appointmentStatus", appointment.getAppointmentStatus());
 			                details.put("slotStartTime", appointment.getSlotStartTime());
 			                details.put("slotEndTime", appointment.getSlotEndTime());
+			                details.put("doctorSlotSpiltTimeId", appointment.getDoctorSlotSpiltTimeId());
 			                details.put("slotTime", appointment.getSlotTime());
 			                details.put("isActive", appointment.getIsActive());
 			                details.put("createdBy", appointment.getCreatedBy());
