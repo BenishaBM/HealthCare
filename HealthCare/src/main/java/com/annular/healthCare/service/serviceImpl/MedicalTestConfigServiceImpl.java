@@ -689,6 +689,7 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 	            startCal.add(Calendar.DATE, 7); // Move to next week
 	        }
 	        
+	        
 	        log.debug("Generated {} dates for day {}", dates.size(), dayOfWeekStr);
 	        
 	    } catch (Exception e) {
