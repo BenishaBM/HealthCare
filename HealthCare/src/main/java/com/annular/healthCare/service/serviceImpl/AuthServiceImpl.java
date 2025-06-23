@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -155,28 +156,487 @@ public class AuthServiceImpl implements AuthService {
 
 	@Value("${annular.app.imageLocation}")
 	private String imageLocation;
+//	@Override
+//	public ResponseEntity<?> register(UserWebModel userWebModel) {
+//	    HashMap<String, Object> response = new HashMap<>();
+//	    try {
+//	        logger.info("Register method start");
+//
+////	        // Check if a user with the same emailId, userType, and hospitalId already exists
+////	        Optional<User> existingUser = userRepository.findByEmailIdAndUserTypeAndHospitalId(
+////	                userWebModel.getEmailId(), userWebModel.getUserType(), userWebModel.getHospitalId());
+//	        Optional<User> existingUser = userRepository.findByEmailIdss(userWebModel.getEmailId());
+//	        
+//
+//	        if (existingUser.isPresent()) {
+//	            response.put("message", "User with this email, user type, and hospital ID already exists");
+//	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+//	        }
+//
+//	        // Validate doctor slots if user is a doctor
+//	        if (userWebModel.getUserType().equalsIgnoreCase("DOCTOR") && userWebModel.getDoctorDaySlots() != null) {
+//	            // Check for slot time overlaps
+//	            if (!validateDoctorSlots(userWebModel.getDoctorDaySlots())) {
+//	                response.put("message", "Doctor slot times overlap. Please ensure slot times don't conflict.");
+//	                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+//	            }
+//	        }
+//
+//	        // Create new user entity
+//	        User savedUser = createAndSaveUser(userWebModel);
+//
+//	        // Handle file uploads (e.g., hospital logo)
+//	        if (userWebModel.getFilesInputWebModel() != null) {
+//	            handleFileUploads(savedUser, userWebModel.getFilesInputWebModel());
+//	        }
+//
+//	        // Save user roles if provided
+//	        saveUserRoles(savedUser, userWebModel.getRoleIds());
+//
+//	        // Process doctor-specific data if user is a doctor
+//	        if (userWebModel.getUserType().equalsIgnoreCase("DOCTOR")) {
+//	            processDoctorData(savedUser, userWebModel);
+//	        }
+//
+//	        // Send SMS based on userType
+//	        boolean smsSent = true;
+//	        if (userWebModel.getPhoneNumber() != null) {
+//	            String smsMessage;
+//	            if (userWebModel.getUserType().equalsIgnoreCase("ADMIN")) {
+//	                smsMessage = "Welcome to Aegle Healthcare Application. Wishing you all the very best!";
+//	            } else {
+//	                smsMessage = "Hi " + userWebModel.getFirstName() + ", you have been successfully registered!";
+//	            }
+//
+//	            try {
+//	                smsService.sendSms(userWebModel.getPhoneNumber(), smsMessage);
+//	            } catch (Exception smsEx) {
+//	                smsSent = false;
+//	                logger.error("SMS could not be sent to user: " + userWebModel.getPhoneNumber(), smsEx);
+//	            }
+//	        }
+//
+//	        if (!smsSent) {
+//	            return ResponseEntity.ok(new Response(1, "success", "User registered successfully, but SMS not sent"));
+//	        }
+//
+//	        return ResponseEntity.ok(new Response(1, "success", "User registered successfully"));
+//	       // return ResponseEntity.ok(new Response(1, "success", "User registered successfully"));
+//	    } catch (Exception e) {
+//	        logger.error("Error registering user: " + e.getMessage(), e);
+//	        response.put("message", "Registration failed");
+//	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+//	    }
+//	}
+//
+//	/**
+//	 * Creates and saves a new user based on the provided web model
+//	 */
+//	private User createAndSaveUser(UserWebModel userWebModel) {
+//	    User newUser = User.builder()
+//	            .emailId(userWebModel.getEmailId())
+//	            .firstName(userWebModel.getFirstName())
+//	            .lastName(userWebModel.getLastName())
+//	            .password(passwordEncoder.encode(userWebModel.getPassword()))
+//	            .yearOfExperiences(userWebModel.getYearOfExperiences())
+//	            .userType(userWebModel.getUserType())
+//	            .countryCode(userWebModel.getCountryCode())
+//	            .dob(userWebModel.getDob())
+//	            .supportStaffId(userWebModel.getSupportStaffId())
+//	            .labMasterDataId(userWebModel.getLabMasterDataId())
+//	            .phoneNumber(userWebModel.getPhoneNumber())
+//	            .doctorFees(userWebModel.getDoctorfees())
+//	            .userIsActive(true) // Default active
+//	            .currentAddress(userWebModel.getCurrentAddress())
+//	            .empId(userWebModel.getEmpId())
+//	            .gender(userWebModel.getGender())
+//	            .createdBy(userWebModel.getCreatedBy())
+//	            .userName(userWebModel.getFirstName() + " " + userWebModel.getLastName())
+//	            .hospitalId(userWebModel.getHospitalId())
+//	            .build();
+//
+//	    return userRepository.save(newUser);
+//	}
+//
+//	/**
+//	 * Saves user roles if provided
+//	 */
+//	private void saveUserRoles(User savedUser, List<Integer> roleIds) {
+//	    if (roleIds != null && !roleIds.isEmpty()) {
+//	        for (Integer roleId : roleIds) {
+//	            DoctorRole doctorRole = DoctorRole.builder()
+//	                    .user(savedUser)
+//	                    .roleId(roleId)
+//	                    .createdBy(savedUser.getCreatedBy())
+//	                    .userIsActive(true)
+//	                    .build();
+//	            doctorRoleRepository.save(doctorRole);
+//	        }
+//	    }
+//	}
+//
+//	/**
+//	 * Processes doctor-specific data including slots and leaves
+//	 */
+//	private void processDoctorData(User savedUser, UserWebModel userWebModel) {
+//	    // Create and save doctor slot
+//	    DoctorSlot doctorSlot = createAndSaveDoctorSlot(savedUser);
+//	    
+//	    // Process doctor day slots if provided
+//	    if (userWebModel.getDoctorDaySlots() != null) {
+//	        processDoctorDaySlots(savedUser, doctorSlot, userWebModel.getDoctorDaySlots());
+//	    }
+//	    
+//	    // Save doctor leaves if provided
+//	    saveDoctorLeaves(savedUser, userWebModel.getDoctorLeaveList());
+//	}
+//
+//	/**
+//	 * Creates and saves a doctor slot
+//	 */
+//	private DoctorSlot createAndSaveDoctorSlot(User savedUser) {
+//	    DoctorSlot doctorSlot = DoctorSlot.builder()
+//	            .user(savedUser)
+//	            .createdBy(savedUser.getCreatedBy())
+//	            .isActive(true)
+//	            .build();
+//	    return doctorSlotRepository.save(doctorSlot);
+//	}
+//
+//	/**
+//	 * Processes doctor day slots
+//	 */
+//	private void processDoctorDaySlots(User savedUser, DoctorSlot doctorSlot, List<DoctorDaySlotWebModel> doctorDaySlots) {
+//	    for (DoctorDaySlotWebModel daySlotModel : doctorDaySlots) {
+//	        // Create and save doctor day slot
+//	        DoctorDaySlot doctorDaySlot = createAndSaveDoctorDaySlot(doctorSlot, savedUser, daySlotModel);
+//	        
+//	        // Process slot times if provided
+//	        if (daySlotModel.getDoctorSlotTimes() != null) {
+//	            processDoctorSlotTimes(savedUser, doctorSlot, doctorDaySlot, daySlotModel);
+//	        }
+//	    }
+//	}
+//
+//	/**
+//	 * Creates and saves a doctor day slot
+//	 */
+//	private DoctorDaySlot createAndSaveDoctorDaySlot(DoctorSlot doctorSlot, User savedUser, DoctorDaySlotWebModel daySlotModel) {
+//	    DoctorDaySlot doctorDaySlot = DoctorDaySlot.builder()
+//	            .doctorSlot(doctorSlot)
+//	            .day(daySlotModel.getDay())
+//	            .startSlotDate(daySlotModel.getStartSlotDate())
+//	            .endSlotDate(daySlotModel.getEndSlotDate())
+//	            .createdBy(savedUser.getCreatedBy())
+//	            .isActive(true)
+//	            .build();
+//	    return doctorDaySlotRepository.save(doctorDaySlot);
+//	}
+//
+//	/**
+//	 * Processes doctor slot times
+//	 */
+//	private void processDoctorSlotTimes(User savedUser, DoctorSlot doctorSlot, DoctorDaySlot doctorDaySlot, DoctorDaySlotWebModel daySlotModel) {
+//	    for (DoctorSlotTimeWebModel slotTimeModel : daySlotModel.getDoctorSlotTimes()) {
+//	        // Create and save doctor slot time
+//	        DoctorSlotTime doctorSlotTime = createAndSaveDoctorSlotTime(doctorDaySlot, savedUser, slotTimeModel);
+//	        
+//	        // Get matching dates for the selected day
+//	        List<LocalDate> matchingDates = getMatchingDatesByDay(
+//	                daySlotModel.getStartSlotDate(),
+//	                daySlotModel.getEndSlotDate(),
+//	                daySlotModel.getDay()
+//	        );
+//	        
+//	        // Process each matching date
+//	        processMatchingDates(savedUser, doctorSlot, doctorDaySlot, doctorSlotTime, matchingDates, slotTimeModel);
+//	    }
+//	}
+//
+//	/**
+//	 * Creates and saves a doctor slot time
+//	 */
+//	private DoctorSlotTime createAndSaveDoctorSlotTime(DoctorDaySlot doctorDaySlot, User savedUser, DoctorSlotTimeWebModel slotTimeModel) {
+//	    DoctorSlotTime doctorSlotTime = DoctorSlotTime.builder()
+//	            .doctorDaySlot(doctorDaySlot)
+//	            .slotStartTime(slotTimeModel.getSlotStartTime())
+//	            .slotEndTime(slotTimeModel.getSlotEndTime())
+//	            .slotTime(slotTimeModel.getSlotTime())
+//	            .createdBy(savedUser.getCreatedBy())
+//	            .isActive(true)
+//	            .build();
+//	    return doctorSlotTimeRepository.save(doctorSlotTime);
+//	}
+//
+//	/**
+//	 * Processes matching dates for doctor slots
+//	 */
+//	private void processMatchingDates(User savedUser, DoctorSlot doctorSlot, DoctorDaySlot doctorDaySlot,
+//	                                  DoctorSlotTime doctorSlotTime, List<LocalDate> matchingDates,
+//	                                  DoctorSlotTimeWebModel slotTimeModel) {
+//	    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH);
+//	    
+//	    for (LocalDate date : matchingDates) {
+//	        // Save DoctorSlotDate
+//	        DoctorSlotDate doctorSlotDate = createAndSaveDoctorSlotDate(savedUser, doctorSlot, doctorDaySlot, doctorSlotTime, date);
+//	        
+//	        // Split slot into intervals and save
+//	        createDoctorSlotSplitTimes(savedUser, doctorSlotDate, slotTimeModel, timeFormatter);
+//	    }
+//	}
+//
+//	/**
+//	 * Creates and saves a doctor slot date
+//	 */
+//	private DoctorSlotDate createAndSaveDoctorSlotDate(User savedUser, DoctorSlot doctorSlot, DoctorDaySlot doctorDaySlot,
+//	                                                   DoctorSlotTime doctorSlotTime, LocalDate date) {
+//	    DoctorSlotDate doctorSlotDate = DoctorSlotDate.builder()
+//	            .doctorSlotId(doctorSlot.getDoctorSlotId())
+//	            .doctorDaySlotId(doctorDaySlot.getDoctorDaySlotId())
+//	            .doctorSlotTimeId(doctorSlotTime.getDoctorSlotTimeId())
+//	            .date(date.toString())
+//	            .createdBy(savedUser.getCreatedBy())
+//	            .isActive(true)
+//	            .build();
+//	    return doctorSlotDateRepository.save(doctorSlotDate);
+//	}
+//
+//	/**
+//	 * Creates doctor slot split times for a specific slot date
+//	 */
+//	/**
+//	 * Creates doctor slot split times for a specific slot date with improved error handling
+//	 */
+//	private void createDoctorSlotSplitTimes(User savedUser, DoctorSlotDate doctorSlotDate,
+//            DoctorSlotTimeWebModel slotTimeModel, DateTimeFormatter timeFormatter) {
+//try {
+//// Parse start and end times
+//LocalTime start = LocalTime.parse(slotTimeModel.getSlotStartTime(), timeFormatter);
+//LocalTime end = LocalTime.parse(slotTimeModel.getSlotEndTime(), timeFormatter);
+//
+//// Parse duration (remove non-digit characters like "min" or "minutes")
+//String durationStr = slotTimeModel.getSlotTime().replaceAll("[^0-9]", "").trim();
+//int duration = Integer.parseInt(durationStr);
+//
+//logger.info("Creating split times from {} to {} with {} minute intervals for date {}",
+//slotTimeModel.getSlotStartTime(), slotTimeModel.getSlotEndTime(),
+//duration, doctorSlotDate.getDate());
+//
+//// Initialize counter
+//int slotCount = 0;
+//LocalTime currentStart = start;
+//
+//while (currentStart.plusMinutes(duration).compareTo(end) <= 0) {
+//LocalTime currentEnd = currentStart.plusMinutes(duration); // Now defined before use
+//
+//// Check if the slot already exists
+//boolean exists = doctorSlotSplitTimeRepository
+//		.existsBySlotStartTimeAndSlotEndTimeAndDoctorSlotDateId(
+//currentStart.format(timeFormatter),
+//currentEnd.format(timeFormatter),
+//doctorSlotDate.getDoctorSlotDateId());
+//
+//if (!exists) {
+//DoctorSlotSpiltTime splitTime = DoctorSlotSpiltTime.builder()
+//.slotStartTime(currentStart.format(timeFormatter))
+//.slotEndTime(currentEnd.format(timeFormatter))
+//.slotStatus("Available")
+//.createdBy(savedUser.getCreatedBy())
+//.doctorSlotDateId(doctorSlotDate.getDoctorSlotDateId())
+//.isActive(true)
+//.build();
+//
+//doctorSlotSplitTimeRepository.save(splitTime);
+//slotCount++;
+//}
+//
+//currentStart = currentEnd;
+//}
+//
+//logger.info("Created {} split time slots for doctor slot date ID: {}",
+//slotCount, doctorSlotDate.getDoctorSlotDateId());
+//
+//} catch (Exception e) {
+//logger.error("Error creating doctor slot split times: {}", e.getMessage(), e);
+//throw new RuntimeException("Failed to create doctor slot split times", e);
+//}
+//}
+//
+//	/**
+//	 * Saves doctor leaves if provided
+//	 */
+//	private void saveDoctorLeaves(User savedUser, List<DoctorLeaveListWebModel> doctorLeaveList) {
+//	    if (doctorLeaveList != null) {
+//	        for (DoctorLeaveListWebModel leaveModel : doctorLeaveList) {
+//	            DoctorLeaveList doctorLeave = DoctorLeaveList.builder()
+//	                    .user(savedUser)
+//	                    .doctorLeaveDate(leaveModel.getDoctorLeaveDate())
+//	                    .createdBy(savedUser.getCreatedBy())
+//	                    .userIsActive(true)
+//	                    .build();
+//	            doctorLeaveListRepository.save(doctorLeave);
+//	        }
+//	    }
+//	}
+//
+//	/**
+//	 * Returns a list of dates that match the specified day of week within the date range
+//	 * 
+//	 * @param startDate The start date of the range
+//	 * @param endDate The end date of the range
+//	 * @param dayOfWeek The day of week to match
+//	 * @return List of matching dates
+//	 */
+//	private List<LocalDate> getMatchingDatesByDay(Date startDate, Date endDate, String dayOfWeek) {
+//	    DayOfWeek targetDay = DayOfWeek.valueOf(dayOfWeek.toUpperCase());
+//	    LocalDate start = startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+//	    LocalDate end = endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+//
+//	    List<LocalDate> dates = new ArrayList<>();
+//	    while (!start.isAfter(end)) {
+//	        if (start.getDayOfWeek() == targetDay) {
+//	            dates.add(start);
+//	        }
+//	        start = start.plusDays(1);
+//	    }
+//	    return dates;
+//	}
+//
+//	/**
+//	 * Validates that doctor time slots do not overlap within the same day
+//	 * 
+//	 * @param doctorDaySlots List of day slots to validate
+//	 * @return true if valid (no overlaps), false otherwise
+//	 */
+//	private boolean validateDoctorSlots(List<DoctorDaySlotWebModel> doctorDaySlots) {
+//	    if (doctorDaySlots == null || doctorDaySlots.isEmpty()) {
+//	        return true; // No slots to validate
+//	    }
+//
+//	    // Group slots by day
+//	    Map<String, List<DoctorDaySlotWebModel>> slotsByDay = doctorDaySlots.stream()
+//	            .collect(Collectors.groupingBy(DoctorDaySlotWebModel::getDay));
+//
+//	    // Check each day's slots for overlaps
+//	    for (Map.Entry<String, List<DoctorDaySlotWebModel>> entry : slotsByDay.entrySet()) {
+//	        List<DoctorDaySlotWebModel> daySlots = entry.getValue();
+//
+//	        for (DoctorDaySlotWebModel daySlot : daySlots) {
+//	            List<DoctorSlotTimeWebModel> timeSlots = daySlot.getDoctorSlotTimes();
+//	            if (timeSlots == null || timeSlots.isEmpty()) {
+//	                continue;
+//	            }
+//
+//	            // Sort slots by start time for easier comparison
+//	            List<DoctorSlotTimeWebModel> sortedTimeSlots = new ArrayList<>(timeSlots);
+//	            sortedTimeSlots.sort(Comparator.comparing(slot -> parseTime(slot.getSlotStartTime())));
+//
+//	            // Check for overlaps
+//	            for (int i = 0; i < sortedTimeSlots.size() - 1; i++) {
+//	                LocalTime currentEnd = parseTime(sortedTimeSlots.get(i).getSlotEndTime());
+//	                LocalTime nextStart = parseTime(sortedTimeSlots.get(i + 1).getSlotStartTime());
+//
+//	                if (currentEnd.isAfter(nextStart)) {
+//	                    logger.warn("Slot overlap detected for day: " + entry.getKey() + " between "
+//	                            + sortedTimeSlots.get(i).getSlotStartTime() + "-"
+//	                            + sortedTimeSlots.get(i).getSlotEndTime() + " and "
+//	                            + sortedTimeSlots.get(i + 1).getSlotStartTime() + "-"
+//	                            + sortedTimeSlots.get(i + 1).getSlotEndTime());
+//	                    return false;
+//	                }
+//	            }
+//	        }
+//	    }
+//	    return true;
+//	}
+//
+//	/**
+//	 * Parses a time string into a LocalTime object
+//	 * 
+//	 * @param timeString The time string to parse
+//	 * @return The parsed LocalTime
+//	 */
+//	private LocalTime parseTime(String timeString) {
+//	    try {
+//	        // Trim and ensure correct format
+//	        timeString = timeString.trim();
+//	        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH);
+//	        return LocalTime.parse(timeString, formatter);
+//	    } catch (Exception e) {
+//	        logger.error("Time parsing failed for input: '" + timeString + "'", e);
+//	        throw e; // Rethrow to see the exact issue
+//	    }
+//	}
+//
+//	/**
+//	 * Helper method to handle file uploads (hospital logo)
+//	 * 
+//	 * @param user The user to associate the files with
+//	 * @param filesInputWebModel The list of files to upload
+//	 * @throws IOException If an I/O error occurs
+//	 */
+//	public void handleFileUploads(User user, List<FileInputWebModel> filesInputWebModel) throws IOException {
+//	    if (filesInputWebModel == null || filesInputWebModel.isEmpty()) {
+//	        return; // No files to upload
+//	    }
+//
+//	    List<MediaFile> filesList = new ArrayList<>();
+//	    for (FileInputWebModel fileInput : filesInputWebModel) {
+//	        if (fileInput.getFileData() != null) {
+//	            // Create a new MediaFile instance for each file
+//	            MediaFile mediaFile = new MediaFile();
+//	            String fileName = UUID.randomUUID().toString(); // Generate a unique file name for each file
+//
+//	            // Set properties of the media file
+//	            mediaFile.setFileName(fileName);
+//	            User hospitalUser = userRepository.findById(user.getUserId())
+//	                    .orElseThrow(() -> new RuntimeException("User not found"));
+//	            mediaFile.setUser(hospitalUser);
+//
+//	            mediaFile.setFileOriginalName(fileInput.getFileName());
+//	            mediaFile.setFileSize(fileInput.getFileSize());
+//	            mediaFile.setFileType(fileInput.getFileType());
+//	            mediaFile.setCategory(MediaFileCategory.profilePic); // Define a suitable enum value
+//	            mediaFile.setFileDomainId(HealthCareConstant.ProfilePhoto); // This constant can be changed to represent logo files
+//	            mediaFile.setFileDomainReferenceId(user.getUserId()); // Set the hospital ID reference
+//	            mediaFile.setFileIsActive(true);
+//	            mediaFile.setFileCreatedBy(user.getCreatedBy());
+//
+//	            // Save media file to the database
+//	            mediaFile = mediaFileRepository.save(mediaFile);
+//	            filesList.add(mediaFile);
+//
+//	            // Save the file to the file system
+//	            Base64FileUpload.saveFile(imageLocation + "/profilePhoto", fileInput.getFileData(), fileName);
+//	        }
+//	    }
+//	}
 	@Override
 	public ResponseEntity<?> register(UserWebModel userWebModel) {
 	    HashMap<String, Object> response = new HashMap<>();
 	    try {
 	        logger.info("Register method start");
 
-//	        // Check if a user with the same emailId, userType, and hospitalId already exists
-//	        Optional<User> existingUser = userRepository.findByEmailIdAndUserTypeAndHospitalId(
-//	                userWebModel.getEmailId(), userWebModel.getUserType(), userWebModel.getHospitalId());
+	        // Check if a user with the same emailId already exists
 	        Optional<User> existingUser = userRepository.findByEmailIdss(userWebModel.getEmailId());
 	        
-
 	        if (existingUser.isPresent()) {
-	            response.put("message", "User with this email, user type, and hospital ID already exists");
+	            response.put("message", "User with this email already exists");
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+	        }
+
+	        // Validate phone number format if provided
+	        if (userWebModel.getPhoneNumber() != null && !isValidPhoneNumber(userWebModel.getPhoneNumber())) {
+	            response.put("message", "Invalid phone number format");
 	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 	        }
 
 	        // Validate doctor slots if user is a doctor
 	        if (userWebModel.getUserType().equalsIgnoreCase("DOCTOR") && userWebModel.getDoctorDaySlots() != null) {
-	            // Check for slot time overlaps
-	            if (!validateDoctorSlots(userWebModel.getDoctorDaySlots())) {
-	                response.put("message", "Doctor slot times overlap. Please ensure slot times don't conflict.");
+	            // Check for slot time overlaps and validity
+	            String validationError = validateDoctorSlots(userWebModel.getDoctorDaySlots());
+	            if (validationError != null) {
+	                response.put("message", validationError);
 	                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 	            }
 	        }
@@ -184,8 +644,8 @@ public class AuthServiceImpl implements AuthService {
 	        // Create new user entity
 	        User savedUser = createAndSaveUser(userWebModel);
 
-	        // Handle file uploads (e.g., hospital logo)
-	        if (userWebModel.getFilesInputWebModel() != null) {
+	        // Handle file uploads (e.g., profile photos)
+	        if (userWebModel.getFilesInputWebModel() != null && !userWebModel.getFilesInputWebModel().isEmpty()) {
 	            handleFileUploads(savedUser, userWebModel.getFilesInputWebModel());
 	        }
 
@@ -198,33 +658,54 @@ public class AuthServiceImpl implements AuthService {
 	        }
 
 	        // Send SMS based on userType
-	        boolean smsSent = true;
-	        if (userWebModel.getPhoneNumber() != null) {
-	            String smsMessage;
-	            if (userWebModel.getUserType().equalsIgnoreCase("ADMIN")) {
-	                smsMessage = "Welcome to Aegle Healthcare Application. Wishing you all the very best!";
-	            } else {
-	                smsMessage = "Hi " + userWebModel.getFirstName() + ", you have been successfully registered!";
-	            }
+	        boolean smsSent = sendRegistrationSMS(userWebModel);
 
-	            try {
-	                smsService.sendSms(userWebModel.getPhoneNumber(), smsMessage);
-	            } catch (Exception smsEx) {
-	                smsSent = false;
-	                logger.error("SMS could not be sent to user: " + userWebModel.getPhoneNumber(), smsEx);
-	            }
-	        }
-
-	        if (!smsSent) {
-	            return ResponseEntity.ok(new Response(1, "success", "User registered successfully, but SMS not sent"));
-	        }
-
-	        return ResponseEntity.ok(new Response(1, "success", "User registered successfully"));
-	       // return ResponseEntity.ok(new Response(1, "success", "User registered successfully"));
+	        String message = smsSent ? "User registered successfully" : "User registered successfully, but SMS not sent";
+	        return ResponseEntity.ok(new Response(1, "success", message));
+	        
+	    } catch (IllegalArgumentException e) {
+	        logger.error("Validation error during registration: " + e.getMessage(), e);
+	        response.put("message", e.getMessage());
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 	    } catch (Exception e) {
 	        logger.error("Error registering user: " + e.getMessage(), e);
-	        response.put("message", "Registration failed");
+	        response.put("message", "Registration failed: " + e.getMessage());
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
+	}
+
+	/**
+	 * Validates phone number format
+	 */
+	private boolean isValidPhoneNumber(String phoneNumber) {
+	    if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+	        return false;
+	    }
+	    // Basic validation: should be 10 digits for Indian numbers
+	    return phoneNumber.matches("^[0-9]{10}$");
+	}
+
+	/**
+	 * Sends registration SMS to user
+	 */
+	private boolean sendRegistrationSMS(UserWebModel userWebModel) {
+	    if (userWebModel.getPhoneNumber() == null || userWebModel.getPhoneNumber().trim().isEmpty()) {
+	        return true; // No phone number provided, consider it successful
+	    }
+
+	    String smsMessage;
+	    if (userWebModel.getUserType().equalsIgnoreCase("ADMIN")) {
+	        smsMessage = "Welcome to Aegle Healthcare Application. Wishing you all the very best!";
+	    } else {
+	        smsMessage = "Hi " + userWebModel.getFirstName() + ", you have been successfully registered!";
+	    }
+
+	    try {
+	        smsService.sendSms(userWebModel.getPhoneNumber(), smsMessage);
+	        return true;
+	    } catch (Exception smsEx) {
+	        logger.error("SMS could not be sent to user: " + userWebModel.getPhoneNumber(), smsEx);
+	        return false;
 	    }
 	}
 
@@ -232,10 +713,21 @@ public class AuthServiceImpl implements AuthService {
 	 * Creates and saves a new user based on the provided web model
 	 */
 	private User createAndSaveUser(UserWebModel userWebModel) {
+	    // Validate required fields
+	    if (userWebModel.getEmailId() == null || userWebModel.getEmailId().trim().isEmpty()) {
+	        throw new IllegalArgumentException("Email ID is required");
+	    }
+	    if (userWebModel.getFirstName() == null || userWebModel.getFirstName().trim().isEmpty()) {
+	        throw new IllegalArgumentException("First name is required");
+	    }
+	    if (userWebModel.getPassword() == null || userWebModel.getPassword().trim().isEmpty()) {
+	        throw new IllegalArgumentException("Password is required");
+	    }
+
 	    User newUser = User.builder()
-	            .emailId(userWebModel.getEmailId())
-	            .firstName(userWebModel.getFirstName())
-	            .lastName(userWebModel.getLastName())
+	            .emailId(userWebModel.getEmailId().trim())
+	            .firstName(userWebModel.getFirstName().trim())
+	            .lastName(userWebModel.getLastName() != null ? userWebModel.getLastName().trim() : "")
 	            .password(passwordEncoder.encode(userWebModel.getPassword()))
 	            .yearOfExperiences(userWebModel.getYearOfExperiences())
 	            .userType(userWebModel.getUserType())
@@ -245,12 +737,13 @@ public class AuthServiceImpl implements AuthService {
 	            .labMasterDataId(userWebModel.getLabMasterDataId())
 	            .phoneNumber(userWebModel.getPhoneNumber())
 	            .doctorFees(userWebModel.getDoctorfees())
-	            .userIsActive(true) // Default active
+	            .userIsActive(true)
 	            .currentAddress(userWebModel.getCurrentAddress())
 	            .empId(userWebModel.getEmpId())
 	            .gender(userWebModel.getGender())
-	            .createdBy(userWebModel.getCreatedBy())
-	            .userName(userWebModel.getFirstName() + " " + userWebModel.getLastName())
+	            .createdBy(userWebModel.getCreatedBy() != null ? userWebModel.getCreatedBy() : 1)
+	            .userName((userWebModel.getFirstName() + " " + 
+	                     (userWebModel.getLastName() != null ? userWebModel.getLastName() : "")).trim())
 	            .hospitalId(userWebModel.getHospitalId())
 	            .build();
 
@@ -263,13 +756,15 @@ public class AuthServiceImpl implements AuthService {
 	private void saveUserRoles(User savedUser, List<Integer> roleIds) {
 	    if (roleIds != null && !roleIds.isEmpty()) {
 	        for (Integer roleId : roleIds) {
-	            DoctorRole doctorRole = DoctorRole.builder()
-	                    .user(savedUser)
-	                    .roleId(roleId)
-	                    .createdBy(savedUser.getCreatedBy())
-	                    .userIsActive(true)
-	                    .build();
-	            doctorRoleRepository.save(doctorRole);
+	            if (roleId != null) {
+	                DoctorRole doctorRole = DoctorRole.builder()
+	                        .user(savedUser)
+	                        .roleId(roleId)
+	                        .createdBy(savedUser.getCreatedBy())
+	                        .userIsActive(true)
+	                        .build();
+	                doctorRoleRepository.save(doctorRole);
+	            }
 	        }
 	    }
 	}
@@ -278,16 +773,22 @@ public class AuthServiceImpl implements AuthService {
 	 * Processes doctor-specific data including slots and leaves
 	 */
 	private void processDoctorData(User savedUser, UserWebModel userWebModel) {
-	    // Create and save doctor slot
-	    DoctorSlot doctorSlot = createAndSaveDoctorSlot(savedUser);
-	    
-	    // Process doctor day slots if provided
-	    if (userWebModel.getDoctorDaySlots() != null) {
-	        processDoctorDaySlots(savedUser, doctorSlot, userWebModel.getDoctorDaySlots());
+	    try {
+	        // Create and save doctor slot
+	        DoctorSlot doctorSlot = createAndSaveDoctorSlot(savedUser);
+	        
+	        // Process doctor day slots if provided
+	        if (userWebModel.getDoctorDaySlots() != null && !userWebModel.getDoctorDaySlots().isEmpty()) {
+	            processDoctorDaySlots(savedUser, doctorSlot, userWebModel.getDoctorDaySlots());
+	        }
+	        
+	        // Save doctor leaves if provided
+	        saveDoctorLeaves(savedUser, userWebModel.getDoctorLeaveList());
+	        
+	    } catch (Exception e) {
+	        logger.error("Error processing doctor data for user: " + savedUser.getEmailId(), e);
+	        throw new RuntimeException("Failed to process doctor data: " + e.getMessage(), e);
 	    }
-	    
-	    // Save doctor leaves if provided
-	    saveDoctorLeaves(savedUser, userWebModel.getDoctorLeaveList());
 	}
 
 	/**
@@ -303,16 +804,28 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	/**
-	 * Processes doctor day slots
+	 * Processes doctor day slots with improved error handling
 	 */
 	private void processDoctorDaySlots(User savedUser, DoctorSlot doctorSlot, List<DoctorDaySlotWebModel> doctorDaySlots) {
 	    for (DoctorDaySlotWebModel daySlotModel : doctorDaySlots) {
-	        // Create and save doctor day slot
-	        DoctorDaySlot doctorDaySlot = createAndSaveDoctorDaySlot(doctorSlot, savedUser, daySlotModel);
-	        
-	        // Process slot times if provided
-	        if (daySlotModel.getDoctorSlotTimes() != null) {
-	            processDoctorSlotTimes(savedUser, doctorSlot, doctorDaySlot, daySlotModel);
+	        try {
+	            // Validate day slot dates
+	            if (daySlotModel.getStartSlotDate() == null || daySlotModel.getEndSlotDate() == null) {
+	                logger.warn("Skipping day slot with null dates for day: " + daySlotModel.getDay());
+	                continue;
+	            }
+
+	            // Create and save doctor day slot
+	            DoctorDaySlot doctorDaySlot = createAndSaveDoctorDaySlot(doctorSlot, savedUser, daySlotModel);
+	            
+	            // Process slot times if provided
+	            if (daySlotModel.getDoctorSlotTimes() != null && !daySlotModel.getDoctorSlotTimes().isEmpty()) {
+	                processDoctorSlotTimes(savedUser, doctorSlot, doctorDaySlot, daySlotModel);
+	            }
+	            
+	        } catch (Exception e) {
+	            logger.error("Error processing day slot for day: " + daySlotModel.getDay(), e);
+	            throw new RuntimeException("Failed to process day slot for " + daySlotModel.getDay() + ": " + e.getMessage(), e);
 	        }
 	    }
 	}
@@ -333,22 +846,39 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	/**
-	 * Processes doctor slot times
+	 * Processes doctor slot times with improved validation
 	 */
 	private void processDoctorSlotTimes(User savedUser, DoctorSlot doctorSlot, DoctorDaySlot doctorDaySlot, DoctorDaySlotWebModel daySlotModel) {
 	    for (DoctorSlotTimeWebModel slotTimeModel : daySlotModel.getDoctorSlotTimes()) {
-	        // Create and save doctor slot time
-	        DoctorSlotTime doctorSlotTime = createAndSaveDoctorSlotTime(doctorDaySlot, savedUser, slotTimeModel);
-	        
-	        // Get matching dates for the selected day
-	        List<LocalDate> matchingDates = getMatchingDatesByDay(
-	                daySlotModel.getStartSlotDate(),
-	                daySlotModel.getEndSlotDate(),
-	                daySlotModel.getDay()
-	        );
-	        
-	        // Process each matching date
-	        processMatchingDates(savedUser, doctorSlot, doctorDaySlot, doctorSlotTime, matchingDates, slotTimeModel);
+	        try {
+	            // Validate slot times
+	            if (slotTimeModel.getSlotStartTime() == null || slotTimeModel.getSlotEndTime() == null) {
+	                logger.warn("Skipping slot time with null values for day: " + daySlotModel.getDay());
+	                continue;
+	            }
+
+	            // Create and save doctor slot time
+	            DoctorSlotTime doctorSlotTime = createAndSaveDoctorSlotTime(doctorDaySlot, savedUser, slotTimeModel);
+	            
+	            // Get matching dates for the selected day
+	            List<LocalDate> matchingDates = getMatchingDatesByDay(
+	                    daySlotModel.getStartSlotDate(),
+	                    daySlotModel.getEndSlotDate(),
+	                    daySlotModel.getDay()
+	            );
+	            
+	            // Process each matching date
+	            if (!matchingDates.isEmpty()) {
+	                processMatchingDates(savedUser, doctorSlot, doctorDaySlot, doctorSlotTime, matchingDates, slotTimeModel);
+	            } else {
+	                logger.warn("No matching dates found for day: " + daySlotModel.getDay() + 
+	                           " between " + daySlotModel.getStartSlotDate() + " and " + daySlotModel.getEndSlotDate());
+	            }
+	            
+	        } catch (Exception e) {
+	            logger.error("Error processing slot time for day: " + daySlotModel.getDay(), e);
+	            throw new RuntimeException("Failed to process slot time: " + e.getMessage(), e);
+	        }
 	    }
 	}
 
@@ -376,11 +906,17 @@ public class AuthServiceImpl implements AuthService {
 	    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH);
 	    
 	    for (LocalDate date : matchingDates) {
-	        // Save DoctorSlotDate
-	        DoctorSlotDate doctorSlotDate = createAndSaveDoctorSlotDate(savedUser, doctorSlot, doctorDaySlot, doctorSlotTime, date);
-	        
-	        // Split slot into intervals and save
-	        createDoctorSlotSplitTimes(savedUser, doctorSlotDate, slotTimeModel, timeFormatter);
+	        try {
+	            // Save DoctorSlotDate
+	            DoctorSlotDate doctorSlotDate = createAndSaveDoctorSlotDate(savedUser, doctorSlot, doctorDaySlot, doctorSlotTime, date);
+	            
+	            // Split slot into intervals and save
+	            createDoctorSlotSplitTimes(savedUser, doctorSlotDate, slotTimeModel, timeFormatter);
+	            
+	        } catch (Exception e) {
+	            logger.error("Error processing date: " + date + " for slot time", e);
+	            throw new RuntimeException("Failed to process date " + date + ": " + e.getMessage(), e);
+	        }
 	    }
 	}
 
@@ -401,178 +937,285 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	/**
-	 * Creates doctor slot split times for a specific slot date
-	 */
-	/**
-	 * Creates doctor slot split times for a specific slot date with improved error handling
+	 * Creates doctor slot split times with improved error handling and validation
 	 */
 	private void createDoctorSlotSplitTimes(User savedUser, DoctorSlotDate doctorSlotDate,
-            DoctorSlotTimeWebModel slotTimeModel, DateTimeFormatter timeFormatter) {
-try {
-// Parse start and end times
-LocalTime start = LocalTime.parse(slotTimeModel.getSlotStartTime(), timeFormatter);
-LocalTime end = LocalTime.parse(slotTimeModel.getSlotEndTime(), timeFormatter);
+	                                        DoctorSlotTimeWebModel slotTimeModel, DateTimeFormatter timeFormatter) {
+	    try {
+	        // Parse start and end times with better error handling
+	        LocalTime start = parseTimeWithValidation(slotTimeModel.getSlotStartTime(), timeFormatter);
+	        LocalTime end = parseTimeWithValidation(slotTimeModel.getSlotEndTime(), timeFormatter);
 
-// Parse duration (remove non-digit characters like "min" or "minutes")
-String durationStr = slotTimeModel.getSlotTime().replaceAll("[^0-9]", "").trim();
-int duration = Integer.parseInt(durationStr);
+	        // Validate that start time is before end time
+	        if (!start.isBefore(end)) {
+	            throw new IllegalArgumentException("Start time (" + slotTimeModel.getSlotStartTime() + 
+	                                             ") must be before end time (" + slotTimeModel.getSlotEndTime() + ")");
+	        }
 
-logger.info("Creating split times from {} to {} with {} minute intervals for date {}",
-slotTimeModel.getSlotStartTime(), slotTimeModel.getSlotEndTime(),
-duration, doctorSlotDate.getDate());
+	        // Parse duration with validation
+	        int duration = parseDurationWithValidation(slotTimeModel.getSlotTime());
 
-// Initialize counter
-int slotCount = 0;
-LocalTime currentStart = start;
+	        logger.info("Creating split times from {} to {} with {} minute intervals for date {}",
+	                   slotTimeModel.getSlotStartTime(), slotTimeModel.getSlotEndTime(),
+	                   duration, doctorSlotDate.getDate());
 
-while (currentStart.plusMinutes(duration).compareTo(end) <= 0) {
-LocalTime currentEnd = currentStart.plusMinutes(duration); // Now defined before use
+	        // Create split times
+	        int slotCount = 0;
+	        LocalTime currentStart = start;
 
-// Check if the slot already exists
-boolean exists = doctorSlotSplitTimeRepository
-		.existsBySlotStartTimeAndSlotEndTimeAndDoctorSlotDateId(
-currentStart.format(timeFormatter),
-currentEnd.format(timeFormatter),
-doctorSlotDate.getDoctorSlotDateId());
+	        while (currentStart.plusMinutes(duration).compareTo(end) <= 0) {
+	            LocalTime currentEnd = currentStart.plusMinutes(duration);
 
-if (!exists) {
-DoctorSlotSpiltTime splitTime = DoctorSlotSpiltTime.builder()
-.slotStartTime(currentStart.format(timeFormatter))
-.slotEndTime(currentEnd.format(timeFormatter))
-.slotStatus("Available")
-.createdBy(savedUser.getCreatedBy())
-.doctorSlotDateId(doctorSlotDate.getDoctorSlotDateId())
-.isActive(true)
-.build();
+	            // Check if the slot already exists to avoid duplicates
+	            boolean exists = doctorSlotSplitTimeRepository
+	                    .existsBySlotStartTimeAndSlotEndTimeAndDoctorSlotDateId(
+	                            currentStart.format(timeFormatter),
+	                            currentEnd.format(timeFormatter),
+	                            doctorSlotDate.getDoctorSlotDateId());
 
-doctorSlotSplitTimeRepository.save(splitTime);
-slotCount++;
-}
+	            if (!exists) {
+	                DoctorSlotSpiltTime splitTime = DoctorSlotSpiltTime.builder()
+	                        .slotStartTime(currentStart.format(timeFormatter))
+	                        .slotEndTime(currentEnd.format(timeFormatter))
+	                        .slotStatus("Available")
+	                        .createdBy(savedUser.getCreatedBy())
+	                        .doctorSlotDateId(doctorSlotDate.getDoctorSlotDateId())
+	                        .isActive(true)
+	                        .build();
 
-currentStart = currentEnd;
-}
+	                doctorSlotSplitTimeRepository.save(splitTime);
+	                slotCount++;
+	            }
 
-logger.info("Created {} split time slots for doctor slot date ID: {}",
-slotCount, doctorSlotDate.getDoctorSlotDateId());
+	            currentStart = currentEnd;
+	        }
 
-} catch (Exception e) {
-logger.error("Error creating doctor slot split times: {}", e.getMessage(), e);
-throw new RuntimeException("Failed to create doctor slot split times", e);
-}
-}
+	        logger.info("Created {} split time slots for doctor slot date ID: {}",
+	                   slotCount, doctorSlotDate.getDoctorSlotDateId());
+
+	    } catch (Exception e) {
+	        logger.error("Error creating doctor slot split times: {}", e.getMessage(), e);
+	        throw new RuntimeException("Failed to create doctor slot split times: " + e.getMessage(), e);
+	    }
+	}
+
+	/**
+	 * Parses time string with better validation
+	 */
+	private LocalTime parseTimeWithValidation(String timeString, DateTimeFormatter timeFormatter) {
+	    if (timeString == null || timeString.trim().isEmpty()) {
+	        throw new IllegalArgumentException("Time string cannot be null or empty");
+	    }
+	    
+	    try {
+	        timeString = timeString.trim();
+	        return LocalTime.parse(timeString, timeFormatter);
+	    } catch (DateTimeParseException e) {
+	        logger.error("Failed to parse time: '" + timeString + "'", e);
+	        throw new IllegalArgumentException("Invalid time format: '" + timeString + "'. Expected format: 'h:mm AM/PM'", e);
+	    }
+	}
+
+	/**
+	 * Parses duration string with validation
+	 */
+	private int parseDurationWithValidation(String durationString) {
+	    if (durationString == null || durationString.trim().isEmpty()) {
+	        throw new IllegalArgumentException("Duration string cannot be null or empty");
+	    }
+	    
+	    try {
+	        // Extract numeric part from duration string
+	        String durationStr = durationString.replaceAll("[^0-9]", "").trim();
+	        if (durationStr.isEmpty()) {
+	            throw new IllegalArgumentException("No numeric value found in duration: " + durationString);
+	        }
+	        
+	        int duration = Integer.parseInt(durationStr);
+	        if (duration <= 0) {
+	            throw new IllegalArgumentException("Duration must be positive: " + duration);
+	        }
+	        
+	        return duration;
+	    } catch (NumberFormatException e) {
+	        throw new IllegalArgumentException("Invalid duration format: " + durationString, e);
+	    }
+	}
 
 	/**
 	 * Saves doctor leaves if provided
 	 */
 	private void saveDoctorLeaves(User savedUser, List<DoctorLeaveListWebModel> doctorLeaveList) {
-	    if (doctorLeaveList != null) {
+	    if (doctorLeaveList != null && !doctorLeaveList.isEmpty()) {
 	        for (DoctorLeaveListWebModel leaveModel : doctorLeaveList) {
-	            DoctorLeaveList doctorLeave = DoctorLeaveList.builder()
-	                    .user(savedUser)
-	                    .doctorLeaveDate(leaveModel.getDoctorLeaveDate())
-	                    .createdBy(savedUser.getCreatedBy())
-	                    .userIsActive(true)
-	                    .build();
-	            doctorLeaveListRepository.save(doctorLeave);
+	            if (leaveModel.getDoctorLeaveDate() != null) {
+	                try {
+	                    DoctorLeaveList doctorLeave = DoctorLeaveList.builder()
+	                            .user(savedUser)
+	                            .doctorLeaveDate(leaveModel.getDoctorLeaveDate())
+	                            .createdBy(savedUser.getCreatedBy())
+	                            .userIsActive(true)
+	                            .build();
+	                    doctorLeaveListRepository.save(doctorLeave);
+	                } catch (Exception e) {
+	                    logger.error("Error saving doctor leave for date: " + leaveModel.getDoctorLeaveDate(), e);
+	                    // Continue with other leaves instead of failing completely
+	                }
+	            }
 	        }
 	    }
 	}
 
 	/**
 	 * Returns a list of dates that match the specified day of week within the date range
-	 * 
-	 * @param startDate The start date of the range
-	 * @param endDate The end date of the range
-	 * @param dayOfWeek The day of week to match
-	 * @return List of matching dates
 	 */
 	private List<LocalDate> getMatchingDatesByDay(Date startDate, Date endDate, String dayOfWeek) {
-	    DayOfWeek targetDay = DayOfWeek.valueOf(dayOfWeek.toUpperCase());
-	    LocalDate start = startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-	    LocalDate end = endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-
-	    List<LocalDate> dates = new ArrayList<>();
-	    while (!start.isAfter(end)) {
-	        if (start.getDayOfWeek() == targetDay) {
-	            dates.add(start);
+	    try {
+	        if (startDate == null || endDate == null || dayOfWeek == null) {
+	            logger.warn("Null parameters provided to getMatchingDatesByDay");
+	            return new ArrayList<>();
 	        }
-	        start = start.plusDays(1);
+
+	        DayOfWeek targetDay = DayOfWeek.valueOf(dayOfWeek.toUpperCase());
+	        LocalDate start = startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+	        LocalDate end = endDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+	        if (start.isAfter(end)) {
+	            logger.warn("Start date {} is after end date {}", start, end);
+	            return new ArrayList<>();
+	        }
+
+	        List<LocalDate> dates = new ArrayList<>();
+	        LocalDate current = start;
+	        
+	        while (!current.isAfter(end)) {
+	            if (current.getDayOfWeek() == targetDay) {
+	                dates.add(current);
+	            }
+	            current = current.plusDays(1);
+	        }
+	        
+	        return dates;
+	    } catch (Exception e) {
+	        logger.error("Error getting matching dates for day: " + dayOfWeek, e);
+	        return new ArrayList<>();
 	    }
-	    return dates;
 	}
 
 	/**
-	 * Validates that doctor time slots do not overlap within the same day
-	 * 
-	 * @param doctorDaySlots List of day slots to validate
-	 * @return true if valid (no overlaps), false otherwise
+	 * Enhanced validation for doctor time slots
 	 */
-	private boolean validateDoctorSlots(List<DoctorDaySlotWebModel> doctorDaySlots) {
+	private String validateDoctorSlots(List<DoctorDaySlotWebModel> doctorDaySlots) {
 	    if (doctorDaySlots == null || doctorDaySlots.isEmpty()) {
-	        return true; // No slots to validate
+	        return null; // No slots to validate
 	    }
+
+	    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH);
 
 	    // Group slots by day
 	    Map<String, List<DoctorDaySlotWebModel>> slotsByDay = doctorDaySlots.stream()
 	            .collect(Collectors.groupingBy(DoctorDaySlotWebModel::getDay));
 
-	    // Check each day's slots for overlaps
+	    // Check each day's slots for overlaps and validity
 	    for (Map.Entry<String, List<DoctorDaySlotWebModel>> entry : slotsByDay.entrySet()) {
+	        String day = entry.getKey();
 	        List<DoctorDaySlotWebModel> daySlots = entry.getValue();
 
 	        for (DoctorDaySlotWebModel daySlot : daySlots) {
+	            // Validate dates
+	            if (daySlot.getStartSlotDate() == null || daySlot.getEndSlotDate() == null) {
+	                return "Start date and end date are required for day: " + day;
+	            }
+
+	            // Validate that start date is not after end date
+	            if (daySlot.getStartSlotDate().after(daySlot.getEndSlotDate())) {
+	                return "Start date cannot be after end date for day: " + day;
+	            }
+
 	            List<DoctorSlotTimeWebModel> timeSlots = daySlot.getDoctorSlotTimes();
 	            if (timeSlots == null || timeSlots.isEmpty()) {
 	                continue;
 	            }
 
-	            // Sort slots by start time for easier comparison
-	            List<DoctorSlotTimeWebModel> sortedTimeSlots = new ArrayList<>(timeSlots);
-	            sortedTimeSlots.sort(Comparator.comparing(slot -> parseTime(slot.getSlotStartTime())));
-
-	            // Check for overlaps
-	            for (int i = 0; i < sortedTimeSlots.size() - 1; i++) {
-	                LocalTime currentEnd = parseTime(sortedTimeSlots.get(i).getSlotEndTime());
-	                LocalTime nextStart = parseTime(sortedTimeSlots.get(i + 1).getSlotStartTime());
-
-	                if (currentEnd.isAfter(nextStart)) {
-	                    logger.warn("Slot overlap detected for day: " + entry.getKey() + " between "
-	                            + sortedTimeSlots.get(i).getSlotStartTime() + "-"
-	                            + sortedTimeSlots.get(i).getSlotEndTime() + " and "
-	                            + sortedTimeSlots.get(i + 1).getSlotStartTime() + "-"
-	                            + sortedTimeSlots.get(i + 1).getSlotEndTime());
-	                    return false;
+	            // Validate individual time slots
+	            for (DoctorSlotTimeWebModel timeSlot : timeSlots) {
+	                if (timeSlot.getSlotStartTime() == null || timeSlot.getSlotEndTime() == null) {
+	                    return "Start time and end time are required for all slots on day: " + day;
 	                }
+
+	                // Validate time format and logic
+	                try {
+	                    LocalTime start = parseTimeWithValidation(timeSlot.getSlotStartTime(), timeFormatter);
+	                    LocalTime end = parseTimeWithValidation(timeSlot.getSlotEndTime(), timeFormatter);
+	                    
+	                    if (!start.isBefore(end)) {
+	                        return "Start time must be before end time for day: " + day + 
+	                               " (Start: " + timeSlot.getSlotStartTime() + ", End: " + timeSlot.getSlotEndTime() + ")";
+	                    }
+	                } catch (Exception e) {
+	                    return "Invalid time format for day: " + day + " - " + e.getMessage();
+	                }
+
+	                // Validate duration
+	                if (timeSlot.getSlotTime() == null || timeSlot.getSlotTime().trim().isEmpty()) {
+	                    return "Slot duration is required for day: " + day;
+	                }
+
+	                try {
+	                    parseDurationWithValidation(timeSlot.getSlotTime());
+	                } catch (Exception e) {
+	                    return "Invalid duration format for day: " + day + " - " + e.getMessage();
+	                }
+	            }
+
+	            // Check for overlaps within the same day
+	            String overlapError = checkTimeSlotOverlaps(timeSlots, day, timeFormatter);
+	            if (overlapError != null) {
+	                return overlapError;
 	            }
 	        }
 	    }
-	    return true;
+	    
+	    return null; // All validations passed
 	}
 
 	/**
-	 * Parses a time string into a LocalTime object
-	 * 
-	 * @param timeString The time string to parse
-	 * @return The parsed LocalTime
+	 * Checks for time slot overlaps within a day
 	 */
-	private LocalTime parseTime(String timeString) {
-	    try {
-	        // Trim and ensure correct format
-	        timeString = timeString.trim();
-	        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.ENGLISH);
-	        return LocalTime.parse(timeString, formatter);
-	    } catch (Exception e) {
-	        logger.error("Time parsing failed for input: '" + timeString + "'", e);
-	        throw e; // Rethrow to see the exact issue
+	private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, String day, DateTimeFormatter timeFormatter) {
+	    if (timeSlots.size() < 2) {
+	        return null; // No overlaps possible with less than 2 slots
 	    }
+
+	    // Sort slots by start time for easier comparison
+	    List<DoctorSlotTimeWebModel> sortedTimeSlots = new ArrayList<>(timeSlots);
+	    try {
+	        sortedTimeSlots.sort(Comparator.comparing(slot -> parseTimeWithValidation(slot.getSlotStartTime(), timeFormatter)));
+	    } catch (Exception e) {
+	        return "Error sorting time slots for day: " + day + " - " + e.getMessage();
+	    }
+
+	    // Check for overlaps
+	    for (int i = 0; i < sortedTimeSlots.size() - 1; i++) {
+	        try {
+	            LocalTime currentEnd = parseTimeWithValidation(sortedTimeSlots.get(i).getSlotEndTime(), timeFormatter);
+	            LocalTime nextStart = parseTimeWithValidation(sortedTimeSlots.get(i + 1).getSlotStartTime(), timeFormatter);
+
+	            if (currentEnd.isAfter(nextStart)) {
+	                return "Slot overlap detected for day: " + day + " between " +
+	                       sortedTimeSlots.get(i).getSlotStartTime() + "-" + sortedTimeSlots.get(i).getSlotEndTime() +
+	                       " and " + sortedTimeSlots.get(i + 1).getSlotStartTime() + "-" + sortedTimeSlots.get(i + 1).getSlotEndTime();
+	            }
+	        } catch (Exception e) {
+	            return "Error validating slot times for day: " + day + " - " + e.getMessage();
+	        }
+	    }
+	    
+	    return null; // No overlaps found
 	}
 
 	/**
-	 * Helper method to handle file uploads (hospital logo)
-	 * 
-	 * @param user The user to associate the files with
-	 * @param filesInputWebModel The list of files to upload
-	 * @throws IOException If an I/O error occurs
+	 * Enhanced file upload handling with better error management
 	 */
 	public void handleFileUploads(User user, List<FileInputWebModel> filesInputWebModel) throws IOException {
 	    if (filesInputWebModel == null || filesInputWebModel.isEmpty()) {
@@ -580,33 +1223,45 @@ throw new RuntimeException("Failed to create doctor slot split times", e);
 	    }
 
 	    List<MediaFile> filesList = new ArrayList<>();
+	    
 	    for (FileInputWebModel fileInput : filesInputWebModel) {
-	        if (fileInput.getFileData() != null) {
-	            // Create a new MediaFile instance for each file
-	            MediaFile mediaFile = new MediaFile();
-	            String fileName = UUID.randomUUID().toString(); // Generate a unique file name for each file
+	        if (fileInput.getFileData() != null && !fileInput.getFileData().trim().isEmpty()) {
+	            try {
+	                // Validate file input
+	                if (fileInput.getFileName() == null || fileInput.getFileName().trim().isEmpty()) {
+	                    logger.warn("Skipping file upload due to missing filename");
+	                    continue;
+	                }
 
-	            // Set properties of the media file
-	            mediaFile.setFileName(fileName);
-	            User hospitalUser = userRepository.findById(user.getUserId())
-	                    .orElseThrow(() -> new RuntimeException("User not found"));
-	            mediaFile.setUser(hospitalUser);
+	                // Create a new MediaFile instance for each file
+	                MediaFile mediaFile = new MediaFile();
+	                String fileName = UUID.randomUUID().toString();
 
-	            mediaFile.setFileOriginalName(fileInput.getFileName());
-	            mediaFile.setFileSize(fileInput.getFileSize());
-	            mediaFile.setFileType(fileInput.getFileType());
-	            mediaFile.setCategory(MediaFileCategory.profilePic); // Define a suitable enum value
-	            mediaFile.setFileDomainId(HealthCareConstant.ProfilePhoto); // This constant can be changed to represent logo files
-	            mediaFile.setFileDomainReferenceId(user.getUserId()); // Set the hospital ID reference
-	            mediaFile.setFileIsActive(true);
-	            mediaFile.setFileCreatedBy(user.getCreatedBy());
+	                // Set properties of the media file
+	                mediaFile.setFileName(fileName);
+	                mediaFile.setUser(user);
+	                mediaFile.setFileOriginalName(fileInput.getFileName());
+	                mediaFile.setFileSize(fileInput.getFileSize());
+	                mediaFile.setFileType(fileInput.getFileType());
+	                mediaFile.setCategory(MediaFileCategory.profilePic);
+	                mediaFile.setFileDomainId(HealthCareConstant.ProfilePhoto);
+	                mediaFile.setFileDomainReferenceId(user.getUserId());
+	                mediaFile.setFileIsActive(true);
+	                mediaFile.setFileCreatedBy(user.getCreatedBy());
 
-	            // Save media file to the database
-	            mediaFile = mediaFileRepository.save(mediaFile);
-	            filesList.add(mediaFile);
+	                // Save media file to the database
+	                mediaFile = mediaFileRepository.save(mediaFile);
+	                filesList.add(mediaFile);
 
-	            // Save the file to the file system
-	            Base64FileUpload.saveFile(imageLocation + "/profilePhoto", fileInput.getFileData(), fileName);
+	                // Save the file to the file system
+	                Base64FileUpload.saveFile(imageLocation + "/profilePhoto", fileInput.getFileData(), fileName);
+	                
+	                logger.info("Successfully uploaded file: {} for user: {}", fileInput.getFileName(), user.getEmailId());
+	                
+	            } catch (Exception e) {
+	                logger.error("Error uploading file: " + fileInput.getFileName() + " for user: " + user.getEmailId(), e);
+	                // Continue with other files instead of failing completely
+	            }
 	        }
 	    }
 	}
