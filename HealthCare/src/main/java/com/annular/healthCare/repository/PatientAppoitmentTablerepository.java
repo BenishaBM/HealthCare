@@ -39,7 +39,7 @@ public interface PatientAppoitmentTablerepository extends JpaRepository<PatientA
 		       "(:doctorId IS NULL OR p.doctor.userId = :doctorId) AND " +
 		       "(:appointmentDate IS NULL OR FUNCTION('DATE', p.appointmentDate) = FUNCTION('DATE', :appointmentDate)) AND " +
 		       "(:appointmentType IS NULL OR p.appointmentType = :appointmentType) AND " +
-		       "p.appointmentStatus = 'SCHEDULED'")
+		       "p.appointmentStatus IN ('SCHEDULED', 'RESCHEDULED')")
 	List<PatientAppointmentTable> findAppointmentsByFilter(String appointmentDate, String appointmentType,
 			Integer doctorId);
 
