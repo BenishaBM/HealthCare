@@ -1,6 +1,7 @@
 package com.annular.healthCare.service.serviceImpl;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -15,11 +16,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -157,6 +160,7 @@ public class AuthServiceImpl implements AuthService {
 
 	@Value("${annular.app.imageLocation}")
 	private String imageLocation;
+	
 @Override
 public ResponseEntity<?> register(UserWebModel userWebModel) {
     HashMap<String, Object> response = new HashMap<>();
@@ -1242,6 +1246,228 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 					.body(new Response(0, "Fail", "Error soft deleting admin"));
 		}
 	}
+//	@Override
+//	public ResponseEntity<?> getUserDetailsByUserId(Integer userId) {
+//	    try {
+//	        Optional<User> userData = userRepository.findById(userId);
+//
+//	        if (!userData.isPresent()) {
+//	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//	                    .body(Collections.singletonMap("message", "User not found"));
+//	        }
+//
+//	        User user = userData.get();
+//	        Map<String, Object> data = new HashMap<>();
+//	        data.put("userId", user.getUserId());
+//	        data.put("userName", user.getUserName());
+//	        data.put("emailId", user.getEmailId());
+//	        data.put("userType", user.getUserType());
+//	        data.put("firstName", user.getFirstName());
+//	        data.put("lastName", user.getLastName());
+//	        data.put("empId", user.getEmpId());
+//	        data.put("address", user.getCurrentAddress());
+//	        data.put("doctorFees", user.getDoctorFees());
+//	        data.put("phoneNumber", user.getPhoneNumber());
+//	        data.put("gender", user.getGender());
+//	        data.put("countryCode", user.getCountryCode());
+//	        data.put("dob", user.getDob());
+//	        data.put("yearOfExperience", user.getYearOfExperiences());
+//	        Integer hospitalId = user.getHospitalId();
+//	        data.put("hospitalId", hospitalId);
+//	        Integer supportStaffId = user.getSupportStaffId(); // assuming this exists in the User entity
+//	        data.put("supportStaffId", supportStaffId);
+//
+//	        if (supportStaffId != null) {
+//	            try {
+//	                Optional<SupportStaffMasterData> staffDataOpt = supportStaffMasterDataRepository.findById(supportStaffId);
+//	                String staffName = staffDataOpt.map(SupportStaffMasterData::getName).orElse("N/A");
+//	                data.put("supportStaffName", staffName);
+//	            } catch (Exception e) {
+//	                logger.error("Error retrieving support staff name for supportStaffId {}: {}", supportStaffId, e.getMessage());
+//	                data.put("supportStaffName", "Error retrieving");
+//	            }
+//	        } else {
+//	            data.put("supportStaffName", "N/A");
+//	        }
+//	        Integer labMasterDataId= user.getLabMasterDataId(); // assuming this exists in the User entity
+//	        data.put("labMasterDataId", labMasterDataId);
+//
+//	        if (labMasterDataId != null) {
+//	            try {
+//	                Optional<LabMasterData> staffDataOpt = labMasterDataRepository.findById(labMasterDataId);
+//	                String labStaffName = staffDataOpt.map(LabMasterData::getName).orElse("N/A");
+//	                data.put("LabMasterDataName", labStaffName);
+//	            } catch (Exception e) {
+//	                logger.error("Error retrieving LabMasterDataname for labMasterDataId {}: {}", labMasterDataId, e.getMessage());
+//	                data.put("LabMasterDataName", "Error retrieving");
+//	            }
+//	        } else {
+//	            data.put("LabMasterDataName", "N/A");
+//	        }
+//
+//
+//	        
+//	        if (hospitalId != null) {
+//	            try {
+//	                Optional<HospitalDataList> hospitalData = hospitalDataListRepository.findByHospitalId(hospitalId);
+//	                data.put("hospitalName", hospitalData.map(HospitalDataList::getHospitalName).orElse("N/A"));
+//	            } catch (Exception e) {
+//	                logger.error("Error retrieving hospital name for hospitalId {}: {}", hospitalId, e.getMessage());
+//	                data.put("hospitalName", "Error retrieving");
+//	            }
+//	        } else {
+//	            data.put("hospitalName", "N/A");
+//	        }
+//
+//	        data.put("userIsActive", user.getUserIsActive());
+//	     // Roles
+//	        List<Map<String, Object>> roleDetails = new ArrayList<>();
+//	        if (user.getDoctorRoles() != null) {
+//	            for (DoctorRole doctorRole : user.getDoctorRoles()) {
+//	                // Only include active roles
+//	                if (Boolean.TRUE.equals(doctorRole.getUserIsActive())) {
+//	                    Map<String, Object> roleMap = new HashMap<>();
+//	                    roleMap.put("roleId", doctorRole.getRoleId());
+//	                    roleMap.put("isActive", doctorRole.getUserIsActive());
+//	                    try {
+//	                        String specialtyName = doctorSpecialtyRepository
+//	                                .findSpecialtyNameByRoleId(doctorRole.getRoleId());
+//	                        roleMap.put("specialtyName", specialtyName != null ? specialtyName : "N/A");
+//	                    } catch (Exception e) {
+//	                        logger.error("Error fetching specialty name for roleId {}: {}", doctorRole.getRoleId(), e.getMessage());
+//	                        roleMap.put("specialtyName", "Error retrieving");
+//	                    }
+//	                    roleDetails.add(roleMap);
+//	                }
+//	            }
+//	        }
+//
+//	        data.put("roles", roleDetails);
+//
+//
+//	    	// Retrieve media files associated with the hospital data (Profile Photo)
+//			List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
+//					HealthCareConstant.ProfilePhoto, user.getUserId());
+//
+//			// Prepare the list of FileInputWebModel from retrieved media files
+//			ArrayList<FileInputWebModel> filesInputWebModel = new ArrayList<>();
+//
+//			for (MediaFile mediaFile : files) {
+//				FileInputWebModel filesInput = new FileInputWebModel();
+//				filesInput.setFileName(mediaFile.getFileOriginalName());
+//				filesInput.setFileId(mediaFile.getFileId());
+//				filesInput.setFileSize(mediaFile.getFileSize());
+//				filesInput.setFileType(mediaFile.getFileType());
+//
+//				String fileData = Base64FileUpload.encodeToBase64String(imageLocation + "/profilePhoto",
+//						mediaFile.getFileName());
+//				filesInput.setFileData(fileData);
+//
+//				filesInputWebModel.add(filesInput);
+//			}
+//
+//	        data.put("profilePhotos", filesInputWebModel);
+//
+//	        // Doctor-specific data
+//	        if ("DOCTOR".equalsIgnoreCase(user.getUserType())) {
+//	            // Doctor Slots
+//	            List<Map<String, Object>> doctorSlotList = new ArrayList<>();
+//	            List<DoctorSlot> doctorSlots = doctorSlotRepository.findByUser(user);
+//	            for (DoctorSlot doctorSlot : doctorSlots) {
+//	                Map<String, Object> slotData = new HashMap<>();
+//	                slotData.put("slotId", doctorSlot.getDoctorSlotId());
+//	                slotData.put("isActive", doctorSlot.getIsActive());
+//
+//	                // Day Slots
+//	                List<Map<String, Object>> daySlotList = new ArrayList<>();
+//	                List<DoctorDaySlot> doctorDaySlots = doctorDaySlotRepository.findByDoctorSlot(doctorSlot);
+//	                for (DoctorDaySlot daySlot : doctorDaySlots) {
+//	                    Map<String, Object> daySlotData = new HashMap<>();
+//	                    daySlotData.put("daySlotId", daySlot.getDoctorDaySlotId());
+//	                    daySlotData.put("day", daySlot.getDay());
+//	                    daySlotData.put("startSlotDate", daySlot.getStartSlotDate());
+//	                    daySlotData.put("endSlotDate", daySlot.getEndSlotDate());
+//	                    daySlotData.put("isActive", daySlot.getIsActive());
+//
+//	                    // Time Slots
+//	                    List<Map<String, Object>> timeSlotList = new ArrayList<>();
+//	                    List<DoctorSlotTime> doctorSlotTimes = doctorSlotTimeRepository.findByDoctorDaySlot(daySlot);
+//	                    for (DoctorSlotTime slotTime : doctorSlotTimes) {
+//	                        Map<String, Object> timeSlotData = new HashMap<>();
+//	                        timeSlotData.put("timeSlotId", slotTime.getDoctorSlotTimeId());
+//	                        timeSlotData.put("slotStartTime", slotTime.getSlotStartTime());
+//	                        timeSlotData.put("slotEndTime", slotTime.getSlotEndTime());
+//	                        timeSlotData.put("slotTime", slotTime.getSlotTime());
+//	                        timeSlotData.put("isActive", slotTime.getIsActive());
+//
+//	                        // Slot Dates
+//	                        List<DoctorSlotDate> slotDates = doctorSlotDateRepository
+//	                                .findByDoctorSlotIdAndDoctorDaySlotIdAndDoctorSlotTimeId(
+//	                                        doctorSlot.getDoctorSlotId(),
+//	                                        daySlot.getDoctorDaySlotId(),
+//	                                        slotTime.getDoctorSlotTimeId());
+//
+//	                        List<Map<String, Object>> slotDatesWithSplit = new ArrayList<>();
+//	                        for (DoctorSlotDate slotDate : slotDates) {
+//	                            Map<String, Object> slotDateMap = new HashMap<>();
+//	                            slotDateMap.put("date", slotDate.getDate());
+//	                            slotDateMap.put("isActive", slotDate.getIsActive());
+//
+//	                            // Split Times
+//	                            List<DoctorSlotSpiltTime> splitTimes = doctorSlotSplitTimeRepository
+//	                                    .findByDoctorSlotDateId(slotDate.getDoctorSlotDateId());
+//
+//	                            List<Map<String, Object>> splitTimeList = new ArrayList<>();
+//	                            for (DoctorSlotSpiltTime splitTime : splitTimes) {
+//	                                Map<String, Object> splitMap = new HashMap<>();
+//	                                splitMap.put("slotStartTime", splitTime.getSlotStartTime());
+//	                                splitMap.put("slotEndTime", splitTime.getSlotEndTime());
+//	                                splitMap.put("slotStatus", splitTime.getSlotStatus());
+//	                                splitMap.put("isActive", splitTime.getIsActive());
+//	                                splitMap.put("id", splitTime.getDoctorSlotSpiltTimeId());
+//	                                splitTimeList.add(splitMap);
+//	                            }
+//
+//	                            slotDateMap.put("splitTimes", splitTimeList);
+//	                            slotDatesWithSplit.add(slotDateMap);
+//	                        }
+//
+//	                        timeSlotData.put("dates", slotDatesWithSplit);
+//	                        timeSlotList.add(timeSlotData);
+//	                    }
+//
+//	                    daySlotData.put("timeSlots", timeSlotList);
+//	                    daySlotList.add(daySlotData);
+//	                }
+//
+//	                slotData.put("daySlots", daySlotList);
+//	                doctorSlotList.add(slotData);
+//	            }
+//	            data.put("doctorSlots", doctorSlotList);
+//
+//	            // Doctor Leaves
+//	            List<Map<String, Object>> doctorLeaveList = new ArrayList<>();
+//	            List<DoctorLeaveList> doctorLeaves = doctorLeaveListRepository.findByUser(user);
+//	            for (DoctorLeaveList doctorLeave : doctorLeaves) {
+//	                Map<String, Object> leaveData = new HashMap<>();
+//	                leaveData.put("leaveId", doctorLeave.getDoctorLeaveListId());
+//	                leaveData.put("doctorLeaveDate", doctorLeave.getDoctorLeaveDate());
+//	                leaveData.put("userIsActive", doctorLeave.getUserIsActive());
+//	                doctorLeaveList.add(leaveData);
+//	            }
+//	            data.put("doctorLeaveList", doctorLeaveList);
+//	        }
+//
+//	        return ResponseEntity.ok(data);
+//	    } catch (Exception e) {
+//	        logger.error("Exception while retrieving user details: ", e);
+//	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//	                .body(Collections.singletonMap("message", "Error retrieving user details"));
+//	    }
+//	}
+
+	//checking
+	
 	@Override
 	public ResponseEntity<?> getUserDetailsByUserId(Integer userId) {
 	    try {
@@ -1270,7 +1496,7 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	        data.put("yearOfExperience", user.getYearOfExperiences());
 	        Integer hospitalId = user.getHospitalId();
 	        data.put("hospitalId", hospitalId);
-	        Integer supportStaffId = user.getSupportStaffId(); // assuming this exists in the User entity
+	        Integer supportStaffId = user.getSupportStaffId();
 	        data.put("supportStaffId", supportStaffId);
 
 	        if (supportStaffId != null) {
@@ -1285,7 +1511,8 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	        } else {
 	            data.put("supportStaffName", "N/A");
 	        }
-	        Integer labMasterDataId= user.getLabMasterDataId(); // assuming this exists in the User entity
+	        
+	        Integer labMasterDataId = user.getLabMasterDataId();
 	        data.put("labMasterDataId", labMasterDataId);
 
 	        if (labMasterDataId != null) {
@@ -1301,8 +1528,6 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	            data.put("LabMasterDataName", "N/A");
 	        }
 
-
-	        
 	        if (hospitalId != null) {
 	            try {
 	                Optional<HospitalDataList> hospitalData = hospitalDataListRepository.findByHospitalId(hospitalId);
@@ -1316,11 +1541,11 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	        }
 
 	        data.put("userIsActive", user.getUserIsActive());
-	     // Roles
+	        
+	        // Roles
 	        List<Map<String, Object>> roleDetails = new ArrayList<>();
 	        if (user.getDoctorRoles() != null) {
 	            for (DoctorRole doctorRole : user.getDoctorRoles()) {
-	                // Only include active roles
 	                if (Boolean.TRUE.equals(doctorRole.getUserIsActive())) {
 	                    Map<String, Object> roleMap = new HashMap<>();
 	                    roleMap.put("roleId", doctorRole.getRoleId());
@@ -1337,35 +1562,46 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	                }
 	            }
 	        }
-
 	        data.put("roles", roleDetails);
 
+	        // Retrieve media files associated with the hospital data (Profile Photo)
+	        List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
+	                HealthCareConstant.ProfilePhoto, user.getUserId());
 
-	    	// Retrieve media files associated with the hospital data (Profile Photo)
-			List<MediaFile> files = mediaFileRepository.findByFileDomainIdAndFileDomainReferenceId(
-					HealthCareConstant.ProfilePhoto, user.getUserId());
+	        // Prepare the list of FileInputWebModel from retrieved media files
+	        ArrayList<FileInputWebModel> filesInputWebModel = new ArrayList<>();
 
-			// Prepare the list of FileInputWebModel from retrieved media files
-			ArrayList<FileInputWebModel> filesInputWebModel = new ArrayList<>();
+	        for (MediaFile mediaFile : files) {
+	            FileInputWebModel filesInput = new FileInputWebModel();
+	            filesInput.setFileName(mediaFile.getFileOriginalName());
+	            filesInput.setFileId(mediaFile.getFileId());
+	            filesInput.setFileSize(mediaFile.getFileSize());
+	            filesInput.setFileType(mediaFile.getFileType());
 
-			for (MediaFile mediaFile : files) {
-				FileInputWebModel filesInput = new FileInputWebModel();
-				filesInput.setFileName(mediaFile.getFileOriginalName());
-				filesInput.setFileId(mediaFile.getFileId());
-				filesInput.setFileSize(mediaFile.getFileSize());
-				filesInput.setFileType(mediaFile.getFileType());
+	            String fileData = Base64FileUpload.encodeToBase64String(imageLocation + "/profilePhoto",
+	                    mediaFile.getFileName());
+	            filesInput.setFileData(fileData);
 
-				String fileData = Base64FileUpload.encodeToBase64String(imageLocation + "/profilePhoto",
-						mediaFile.getFileName());
-				filesInput.setFileData(fileData);
-
-				filesInputWebModel.add(filesInput);
-			}
+	            filesInputWebModel.add(filesInput);
+	        }
 
 	        data.put("profilePhotos", filesInputWebModel);
 
 	        // Doctor-specific data
 	        if ("DOCTOR".equalsIgnoreCase(user.getUserType())) {
+	            // Get doctor leaves and create a set of leave dates for quick lookup
+	            List<DoctorLeaveList> doctorLeaves = doctorLeaveListRepository.findByUser(user);
+	            Set<String> leaveDatesAsStrings = new HashSet<>();
+	            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+	            
+	            for (DoctorLeaveList doctorLeave : doctorLeaves) {
+	                if (Boolean.TRUE.equals(doctorLeave.getUserIsActive())) {
+	                    // Convert Date to string format for comparison
+	                    String leaveDateStr = dateFormat.format(doctorLeave.getDoctorLeaveDate());
+	                    leaveDatesAsStrings.add(leaveDateStr);
+	                }
+	            }
+
 	            // Doctor Slots
 	            List<Map<String, Object>> doctorSlotList = new ArrayList<>();
 	            List<DoctorSlot> doctorSlots = doctorSlotRepository.findByUser(user);
@@ -1409,22 +1645,39 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	                            slotDateMap.put("date", slotDate.getDate());
 	                            slotDateMap.put("isActive", slotDate.getIsActive());
 
-	                            // Split Times
-	                            List<DoctorSlotSpiltTime> splitTimes = doctorSlotSplitTimeRepository
-	                                    .findByDoctorSlotDateId(slotDate.getDoctorSlotDateId());
+	                            // Check if doctor is on leave for this date
+	                            String slotDateStr;
+	                            if (slotDate.getDate() instanceof String) {
+	                                slotDateStr = (String) slotDate.getDate();
+	                            } else {
+	                                slotDateStr = dateFormat.format(slotDate.getDate());
+	                            }
+	                            boolean isOnLeave = leaveDatesAsStrings.contains(slotDateStr);
+	                            if (isOnLeave) {
+	                                slotDateMap.put("leaveMessage", "Doctor is on Leave");
+	                                slotDateMap.put("isOnLeave", true);
+	                                // You might want to set splitTimes to empty or add a leave indicator
+	                                slotDateMap.put("splitTimes", new ArrayList<>());
+	                            } else {
+	                                slotDateMap.put("isOnLeave", false);
+	                                
+	                                // Split Times - only process if not on leave
+	                                List<DoctorSlotSpiltTime> splitTimes = doctorSlotSplitTimeRepository
+	                                        .findByDoctorSlotDateId(slotDate.getDoctorSlotDateId());
 
-	                            List<Map<String, Object>> splitTimeList = new ArrayList<>();
-	                            for (DoctorSlotSpiltTime splitTime : splitTimes) {
-	                                Map<String, Object> splitMap = new HashMap<>();
-	                                splitMap.put("slotStartTime", splitTime.getSlotStartTime());
-	                                splitMap.put("slotEndTime", splitTime.getSlotEndTime());
-	                                splitMap.put("slotStatus", splitTime.getSlotStatus());
-	                                splitMap.put("isActive", splitTime.getIsActive());
-	                                splitMap.put("id", splitTime.getDoctorSlotSpiltTimeId());
-	                                splitTimeList.add(splitMap);
+	                                List<Map<String, Object>> splitTimeList = new ArrayList<>();
+	                                for (DoctorSlotSpiltTime splitTime : splitTimes) {
+	                                    Map<String, Object> splitMap = new HashMap<>();
+	                                    splitMap.put("slotStartTime", splitTime.getSlotStartTime());
+	                                    splitMap.put("slotEndTime", splitTime.getSlotEndTime());
+	                                    splitMap.put("slotStatus", splitTime.getSlotStatus());
+	                                    splitMap.put("isActive", splitTime.getIsActive());
+	                                    splitMap.put("id", splitTime.getDoctorSlotSpiltTimeId());
+	                                    splitTimeList.add(splitMap);
+	                                }
+	                                slotDateMap.put("splitTimes", splitTimeList);
 	                            }
 
-	                            slotDateMap.put("splitTimes", splitTimeList);
 	                            slotDatesWithSplit.add(slotDateMap);
 	                        }
 
@@ -1441,9 +1694,8 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	            }
 	            data.put("doctorSlots", doctorSlotList);
 
-	            // Doctor Leaves
+	            // Doctor Leaves (keeping the original structure as well)
 	            List<Map<String, Object>> doctorLeaveList = new ArrayList<>();
-	            List<DoctorLeaveList> doctorLeaves = doctorLeaveListRepository.findByUser(user);
 	            for (DoctorLeaveList doctorLeave : doctorLeaves) {
 	                Map<String, Object> leaveData = new HashMap<>();
 	                leaveData.put("leaveId", doctorLeave.getDoctorLeaveListId());
@@ -1461,7 +1713,6 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	                .body(Collections.singletonMap("message", "Error retrieving user details"));
 	    }
 	}
-
 	@Override
 	public ResponseEntity<?> deleteDoctorRoleById(Integer doctorRoleId) {
 		try {
