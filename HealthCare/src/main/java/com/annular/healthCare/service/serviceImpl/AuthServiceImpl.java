@@ -23,6 +23,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -1467,7 +1468,6 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 //	}
 
 	//checking
-	
 	@Override
 	public ResponseEntity<?> getUserDetailsByUserId(Integer userId) {
 	    try {
@@ -1592,11 +1592,14 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	            // Get doctor leaves and create a set of leave dates for quick lookup
 	            List<DoctorLeaveList> doctorLeaves = doctorLeaveListRepository.findByUser(user);
 	            Set<String> leaveDatesAsStrings = new HashSet<>();
+	            
+	            // FIX: Set timezone to IST for consistent date formatting
 	            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+	            dateFormat.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata")); // IST timezone
 	            
 	            for (DoctorLeaveList doctorLeave : doctorLeaves) {
 	                if (Boolean.TRUE.equals(doctorLeave.getUserIsActive())) {
-	                    // Convert Date to string format for comparison
+	                    // Convert Date to string format for comparison with IST timezone
 	                    String leaveDateStr = dateFormat.format(doctorLeave.getDoctorLeaveDate());
 	                    leaveDatesAsStrings.add(leaveDateStr);
 	                }
@@ -1650,8 +1653,10 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	                            if (slotDate.getDate() instanceof String) {
 	                                slotDateStr = (String) slotDate.getDate();
 	                            } else {
+	                                // FIX: Use IST timezone for slot date formatting as well
 	                                slotDateStr = dateFormat.format(slotDate.getDate());
 	                            }
+	                            
 	                            boolean isOnLeave = leaveDatesAsStrings.contains(slotDateStr);
 	                            if (isOnLeave) {
 	                                slotDateMap.put("leaveMessage", "Doctor is on Leave");
