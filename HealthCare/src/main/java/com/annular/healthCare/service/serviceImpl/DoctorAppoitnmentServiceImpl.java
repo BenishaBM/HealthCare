@@ -172,7 +172,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	            if (patientDetailsOpt.isPresent()) {
 	                PatientDetails patient = patientDetailsOpt.get();
 	                details.put("patientId", patient.getPatientDetailsId());
-	                details.put("patientName", patient.getPatientName());
+	             //   details.put("patientName", patient.getPatientName());
 	                details.put("patientAge", patient.getAge());
 	                details.put("patientDOB", patient.getDob());
 	                details.put("gender", patient.getGender());
