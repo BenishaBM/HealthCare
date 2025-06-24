@@ -674,7 +674,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 		         List<Map<String, Object>> filteredData = appointments.stream()
 		        		    .filter(app -> app.getPatient() != null
 		        		                && patientIds.contains(app.getPatient().getPatientDetailsId())
-		        		                && appointmentMedicineRepository.existsByAppointment(app))
+		        		                && appointmentMedicalTestRepository.existsByAppointment(app))
 		        		    .sorted(Comparator.comparing(PatientAppointmentTable::getCreatedOn).reversed()) // Sort by createdOn descending
 		        		    .map(app -> {
 	                 PatientDetails patient = app.getPatient();

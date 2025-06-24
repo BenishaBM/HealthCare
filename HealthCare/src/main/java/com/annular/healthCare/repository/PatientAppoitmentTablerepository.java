@@ -59,7 +59,9 @@ public interface PatientAppoitmentTablerepository extends JpaRepository<PatientA
 		    @Param("slotEndTime") String slotEndTime
 		);
 
-	List<PatientAppointmentTable> findByAppointmentDate(String currentDate);
+	 @Query("SELECT a FROM PatientAppointmentTable a LEFT JOIN FETCH a.appointmentMedicalTests WHERE a.appointmentDate = :currentDate")
+	 List<PatientAppointmentTable> findByAppointmentDate(@Param("currentDate") String currentDate);
+
 
 	List<PatientAppointmentTable> findByPatient_PatientDetailsIdAndAppointmentDate(Integer patientId, String appointmentDate);
 
