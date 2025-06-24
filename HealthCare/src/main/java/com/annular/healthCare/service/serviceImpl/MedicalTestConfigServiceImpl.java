@@ -915,9 +915,19 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 	        }
 
 	        MedicalTestSlotTime slot = doctorSlotTimeOpt.get();
-	        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH);
-	        LocalTime originalStart = LocalTime.parse(slot.getSlotStartTime(), formatter);
-	        LocalTime originalEnd = LocalTime.parse(slot.getSlotEndTime(), formatter);
+	        
+	        // Create multiple formatters to handle different time formats
+	        DateTimeFormatter formatter12Hour = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH);
+	        DateTimeFormatter formatter24Hour = DateTimeFormatter.ofPattern("H:mm");
+	        DateTimeFormatter formatter24HourWithColon = DateTimeFormatter.ofPattern("HH:mm");
+	        
+	        // Parse original slot times with flexible formatting
+	        LocalTime originalStart = parseTimeFlexibly(slot.getSlotStartTime(), formatter12Hour, formatter24Hour, formatter24HourWithColon);
+	        LocalTime originalEnd = parseTimeFlexibly(slot.getSlotEndTime(), formatter12Hour, formatter24Hour, formatter24HourWithColon);
+	        
+	        if (originalStart == null || originalEnd == null) {
+	            return ResponseEntity.badRequest().body(new Response(0, "error", "Invalid original slot time format"));
+	        }
 
 	        int durationMinutes = extractDurationInMinutes(webModel.getNewSlotTime());
 	        if (durationMinutes <= 0) {
@@ -967,7 +977,13 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 	                // Update only future split times
 	                int overriddenSlots = 0;
 	                for (MedicalTestSlotSpiltTime splitTime : existingSplitTimes) {
-	                    LocalTime slotStart = LocalTime.parse(splitTime.getSlotStartTime(), formatter);
+	                    // Parse split time start with flexible formatting
+	                    LocalTime slotStart = parseTimeFlexibly(splitTime.getSlotStartTime(), formatter12Hour, formatter24Hour, formatter24HourWithColon);
+	                    LocalTime slotEnd = parseTimeFlexibly(splitTime.getSlotEndTime(), formatter12Hour, formatter24Hour, formatter24HourWithColon);
+	                    
+	                    if (slotStart == null || slotEnd == null) {
+	                        continue; // Skip invalid time entries
+	                    }
 
 	                    boolean shouldOverride = true;
 
@@ -984,11 +1000,12 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 
 	                        // Calculate new start/end with override offset
 	                        LocalTime newStart = slotStart.plusMinutes(durationMinutes);
-	                        LocalTime newEnd = LocalTime.parse(splitTime.getSlotEndTime(), formatter).plusMinutes(durationMinutes);
+	                        LocalTime newEnd = slotEnd.plusMinutes(durationMinutes);
 
+	                        // Format back to 12-hour format for consistency
 	                        MedicalTestSlotSpiltTime newSplit = MedicalTestSlotSpiltTime.builder()
-	                                .slotStartTime(newStart.format(formatter))
-	                                .slotEndTime(newEnd.format(formatter))
+	                                .slotStartTime(newStart.format(formatter12Hour))
+	                                .slotEndTime(newEnd.format(formatter12Hour))
 	                                .slotStatus(splitTime.getSlotStatus())
 	                                .ovverridenStatus("OVERRIDDEN")
 	                                .medicalTestSlotDate(slotDate)
@@ -1004,43 +1021,8 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 	            }
 	        }
 
-	        // Commented out appointment handling code remains as-is
-	        /*
-	        // Update appointments
-	        List<PatientAppointmentTable> appointments = patientAppoinmentRepository
-	                .findByAppointmentDateAndDoctorSlotTimeId(dateString, slot.getDoctorSlotTimeId());
-
-	        LocalDate today = LocalDate.now();
-	        LocalTime now = LocalTime.now();
-	        LocalDate overrideDate = webModel.getOverrideDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-
-	        int updatedAppointments = 0;
-
-	        for (PatientAppointmentTable appointment : appointments) {
-	            LocalTime apptStart = LocalTime.parse(appointment.getSlotStartTime(), formatter);
-	            LocalTime apptEnd = LocalTime.parse(appointment.getSlotEndTime(), formatter);
-
-	            boolean shouldUpdate = true;
-
-	            if (overrideDate.isEqual(today)) {
-	                if (!apptStart.isAfter(now)) {
-	                    shouldUpdate = false;
-	                }
-	            }
-
-	            if (shouldUpdate) {
-	                appointment.setSlotStartTime(apptStart.plusMinutes(durationMinutes).format(formatter));
-	                appointment.setSlotEndTime(apptEnd.plusMinutes(durationMinutes).format(formatter));
-	                updatedAppointments++;
-	            }
-	        }
-
-	        patientAppoinmentRepository.saveAll(appointments);
-	        */
-
 	        return ResponseEntity.ok(new Response(1, "success",
-	                "Override saved. Updated " + " appointments and " +
-	                        "overridden future slots."));
+	                "Override saved. Updated appointments and overridden future slots."));
 
 	    } catch (DateTimeParseException e) {
 	        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -1051,12 +1033,33 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 	    }
 	}
 
+	// Helper method to parse time with multiple formats
+	private LocalTime parseTimeFlexibly(String timeString, DateTimeFormatter... formatters) {
+	    if (timeString == null || timeString.trim().isEmpty()) {
+	        return null;
+	    }
+	    
+	    String trimmedTime = timeString.trim();
+	    
+	    for (DateTimeFormatter formatter : formatters) {
+	        try {
+	            return LocalTime.parse(trimmedTime, formatter);
+	        } catch (DateTimeParseException e) {
+	            // Try next formatter
+	        }
+	    }
+	    
+	    // If none of the formatters work, return null
+	    return null;
+	}
+
 	private int extractDurationInMinutes(String newSlotTime) {
 	    try {
 	        return Integer.parseInt(newSlotTime.trim().split(" ")[0]);
 	    } catch (Exception e) {
 	        return 0;
 	    }
+	
 	}
 		@Override
 		public ResponseEntity<?> addTimeSlotByMedicalTest(MedicalTestConfigWebModel medicalTestConfigWebModel) {
