@@ -1,6 +1,7 @@
 package com.annular.healthCare.model;
 
 import java.util.Date;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -11,6 +12,7 @@ import javax.persistence.Table;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -109,5 +111,7 @@ public class PatientSubChildDetails {
 	
 	@Column(name = "relationshipType")
 	private String relationshipType;
+
+
 
 }

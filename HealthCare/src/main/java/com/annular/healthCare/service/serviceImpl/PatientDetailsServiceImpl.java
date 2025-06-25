@@ -25,8 +25,10 @@ import javax.persistence.Column;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -651,168 +653,176 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 	    }
 	}
-
+	@Transactional
 	@Override
 	public ResponseEntity<?> updatePatientDetails(PatientDetailsWebModel userWebModel) {
-		try {
-			logger.info("Updating patient details for ID: {}", userWebModel.getPatientDetailsId());
+	    try {
+	        logger.info("Updating patient details for ID: {}", userWebModel.getPatientDetailsId());
 
-			if (userWebModel.getPatientDetailsId() == null) {
-				return ResponseEntity.badRequest().body(new Response(0, "Fail", "Patient ID is required for update"));
-			}
+	        if (userWebModel.getPatientDetailsId() == null) {
+	            return ResponseEntity.badRequest().body(new Response(0, "Fail", "Patient ID is required for update"));
+	        }
 
-			Optional<PatientDetails> optionalPatient = patientDetailsRepository
-					.findById(userWebModel.getPatientDetailsId());
+	        Optional<PatientDetails> optionalPatient = patientDetailsRepository.findById(userWebModel.getPatientDetailsId());
+	        if (optionalPatient.isEmpty()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body(new Response(0, "Fail", "Patient not found with ID: " + userWebModel.getPatientDetailsId()));
+	        }
 
-			if (optionalPatient.isEmpty()) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-						new Response(0, "Fail", "Patient not found with ID: " + userWebModel.getPatientDetailsId()));
-			}
+	        PatientDetails patient = optionalPatient.get();
 
-			PatientDetails patient = optionalPatient.get();
+	        // Update patient fields
+	        Optional.ofNullable(userWebModel.getFirstName()).ifPresent(patient::setFirstName);
+	        Optional.ofNullable(userWebModel.getLastNmae()).ifPresent(patient::setLastName);
 
-			// Only update fields if they are non-null
-			if (userWebModel.getFirstName() != null)
-				patient.setFirstName(userWebModel.getFirstName());
-			if (userWebModel.getLastNmae() != null)
-				patient.setLastName(userWebModel.getLastNmae());
-			// Always combine firstName and lastName into patientName
-			String firstName = Optional.ofNullable(userWebModel.getFirstName()).orElse("");
-			String lastName = Optional.ofNullable(userWebModel.getLastNmae()).orElse("");
-			String fullName = (firstName + " " + lastName).trim();
+	        String fullName = (Optional.ofNullable(userWebModel.getFirstName()).orElse("") + " " +
+	                Optional.ofNullable(userWebModel.getLastNmae()).orElse("")).trim();
+	        if (!fullName.isBlank()) patient.setPatientName(fullName);
 
-			if (!fullName.isBlank()) {
-			    patient.setPatientName(fullName);
-			}
-			if (userWebModel.getDob() != null)
-				patient.setDob(userWebModel.getDob());
-			if (userWebModel.getAge() != null)
-				patient.setAge(userWebModel.getAge());
-			if (userWebModel.getGender() != null)
-				patient.setGender(userWebModel.getGender());
-			if (userWebModel.getBloodGroup() != null)
-				patient.setBloodGroup(userWebModel.getBloodGroup());
-			if (userWebModel.getMobileNumber() != null)
-				patient.setMobileNumber(userWebModel.getMobileNumber());
-			if (userWebModel.getEmailId() != null)
-				patient.setEmailId(userWebModel.getEmailId());
-			if (userWebModel.getAddress() != null)
-				patient.setAddress(userWebModel.getAddress());
-			if (userWebModel.getCurrentAddress() != null)
-				patient.setCurrentAddress(userWebModel.getCurrentAddress());
-			if (userWebModel.getEmergencyContact() != null)
-				patient.setEmergencyContact(userWebModel.getEmergencyContact());
-			if (userWebModel.getEmergencyName() != null)
-				patient.setEmergencyName(userWebModel.getEmergencyName());
-			if (userWebModel.getEmergencyRelationship() != null)
-				patient.setEmergencyRelationship(userWebModel.getEmergencyRelationship());
-			if (userWebModel.getPurposeOfVisit() != null)
-				patient.setPurposeOfVisit(userWebModel.getPurposeOfVisit());
-			if (userWebModel.getDoctorId() != null)
-				patient.setDoctorId(userWebModel.getDoctorId());
-			if (userWebModel.getPreviousMedicalHistory() != null)
-				patient.setPreviousMedicalHistory(userWebModel.getPreviousMedicalHistory());
-			if (userWebModel.getInsuranceDetails() != null)
-				patient.setInsuranceDetails(userWebModel.getInsuranceDetails());
-			if (userWebModel.getInsurerName() != null)
-				patient.setInsurerName(userWebModel.getInsurerName());
-			if (userWebModel.getInsuranceProvider() != null)
-				patient.setInsuranceProvider(userWebModel.getInsuranceProvider());
-			if (userWebModel.getPolicyNumber() != null)
-				patient.setPolicyNumber(userWebModel.getPolicyNumber());
-			if (userWebModel.getDisability() != null)
-				patient.setDisability(userWebModel.getDisability());
-			
-			if (userWebModel.getCountryCode() != null)
-				patient.setCountryCode(userWebModel.getCountryCode());
-			
-			if (userWebModel.getEmerCountryCode() != null)
-				patient.setEmerCountryCode(userWebModel.getEmerCountryCode());
+	        Optional.ofNullable(userWebModel.getDob()).ifPresent(patient::setDob);
+	        Optional.ofNullable(userWebModel.getAge()).ifPresent(patient::setAge);
+	        Optional.ofNullable(userWebModel.getGender()).ifPresent(patient::setGender);
+	        Optional.ofNullable(userWebModel.getBloodGroup()).ifPresent(patient::setBloodGroup);
+	        Optional.ofNullable(userWebModel.getMobileNumber()).ifPresent(patient::setMobileNumber);
+	        Optional.ofNullable(userWebModel.getEmailId()).ifPresent(patient::setEmailId);
+	        Optional.ofNullable(userWebModel.getAddress()).ifPresent(patient::setAddress);
+	        Optional.ofNullable(userWebModel.getCurrentAddress()).ifPresent(patient::setCurrentAddress);
+	        Optional.ofNullable(userWebModel.getEmergencyContact()).ifPresent(patient::setEmergencyContact);
+	        Optional.ofNullable(userWebModel.getEmergencyName()).ifPresent(patient::setEmergencyName);
+	        Optional.ofNullable(userWebModel.getEmergencyRelationship()).ifPresent(patient::setEmergencyRelationship);
+	        Optional.ofNullable(userWebModel.getPurposeOfVisit()).ifPresent(patient::setPurposeOfVisit);
+	        Optional.ofNullable(userWebModel.getDoctorId()).ifPresent(patient::setDoctorId);
+	        Optional.ofNullable(userWebModel.getPreviousMedicalHistory()).ifPresent(patient::setPreviousMedicalHistory);
+	        Optional.ofNullable(userWebModel.getInsuranceDetails()).ifPresent(patient::setInsuranceDetails);
+	        Optional.ofNullable(userWebModel.getInsurerName()).ifPresent(patient::setInsurerName);
+	        Optional.ofNullable(userWebModel.getInsuranceProvider()).ifPresent(patient::setInsuranceProvider);
+	        Optional.ofNullable(userWebModel.getPolicyNumber()).ifPresent(patient::setPolicyNumber);
+	        Optional.ofNullable(userWebModel.getDisability()).ifPresent(patient::setDisability);
+	        Optional.ofNullable(userWebModel.getCountryCode()).ifPresent(patient::setCountryCode);
+	        Optional.ofNullable(userWebModel.getEmerCountryCode()).ifPresent(patient::setEmerCountryCode);
 
+	        patient.setUserUpdatedOn(new Date());
+	        if (userWebModel.getUserUpdatedBy() != null) {
+	            patient.setUserUpdatedBy(userWebModel.getUserUpdatedBy());
+	        }
 
-			patient.setUserUpdatedOn(new Date());
-			if (userWebModel.getUserUpdatedBy() != null)
-				patient.setUserUpdatedBy(userWebModel.getUserUpdatedBy());
+	        patientDetailsRepository.save(patient);
 
-			// Save updated patient
-			patientDetailsRepository.save(patient);
+	        // Handle parent files
+	        if (!Utility.isNullOrEmptyList(userWebModel.getFiles())) {
+	            mediaFileRepository.markFilesInactiveByCategoryAndRefId(
+	                    MediaFileCategory.patientDocument,
+	                    patient.getPatientDetailsId()
+	            );
+	            savePatientMediaFiless(userWebModel, patient, MediaFileCategory.patientDocument, patient.getPatientDetailsId());
+	        }
 
-			// Save or update media files (if passed)
-			if (!Utility.isNullOrEmptyList(userWebModel.getFiles())) {
-				FileInputWebModel fileInput = FileInputWebModel.builder().category(MediaFileCategory.patientDocument)
-						.categoryRefId(patient.getPatientDetailsId()).files(userWebModel.getFiles()).build();
+	        // Update sub-child details
+	        if (!Utility.isNullOrEmptyList(userWebModel.getChildDetailsList())) {
+	            for (PatientSubChildDetails child : userWebModel.getChildDetailsList()) {
+	                PatientSubChildDetailsWebModel childWebModel = new PatientSubChildDetailsWebModel();
+	                BeanUtils.copyProperties(child, childWebModel);
 
-				User userFromDB = userRepository.findById(userWebModel.getUserUpdatedBy()).orElse(null);
-				//mediaFilesService.saveMediaFiles(fileInput, userFromDB);
-			}
-			if (userWebModel.getChildDetailsList() != null && !userWebModel.getChildDetailsList().isEmpty()) {
-			    for (PatientSubChildDetails child : userWebModel.getChildDetailsList()) {
-			        
-			        // Only update if child ID is provided
-			        if (child.getPatientSubChildDetailsId() != null) {
-			            Optional<PatientSubChildDetails> existingChildOpt = patientSubChildDetailsRepository
-			                    .findById(child.getPatientSubChildDetailsId());
+	                if (child.getPatientSubChildDetailsId() != null) {
+	                    Optional<PatientSubChildDetails> existingChildOpt =
+	                            patientSubChildDetailsRepository.findById(child.getPatientSubChildDetailsId());
 
-			            if (existingChildOpt.isPresent()) {
-			                PatientSubChildDetails existingChild = existingChildOpt.get();
+	                    if (existingChildOpt.isPresent()) {
+	                        PatientSubChildDetails existingChild = existingChildOpt.get();
 
-			                // Update only provided fields
-			                if (child.getPatientName() != null)
-			                    existingChild.setPatientName(child.getPatientName());
-			                if (child.getDob() != null)
-			                    existingChild.setDob(child.getDob());
-			                if (child.getGender() != null)
-			                    existingChild.setGender(child.getGender());
-			                if (child.getBloodGroup() != null)
-			                    existingChild.setBloodGroup(child.getBloodGroup());
-			                if (child.getAddress() != null)
-			                    existingChild.setAddress(child.getAddress());
-			                if (child.getEmergencyContact() != null)
-			                    existingChild.setEmergencyContact(child.getEmergencyContact());
-			                if (child.getPurposeOfVisit() != null)
-			                    existingChild.setPurposeOfVisit(child.getPurposeOfVisit());
-			                if (child.getDoctorId() != null)
-			                    existingChild.setDoctorId(child.getDoctorId());
-			                if (child.getUserIsActive() != null)
-			                    existingChild.setUserIsActive(child.getUserIsActive());
-			                if (child.getCurrentAddress() != null)
-			                    existingChild.setCurrentAddress(child.getCurrentAddress());
-			                if (child.getPreviousMedicalHistory() != null)
-			                    existingChild.setPreviousMedicalHistory(child.getPreviousMedicalHistory());
-			                if (child.getInsuranceDetails() != null)
-			                    existingChild.setInsuranceDetails(child.getInsuranceDetails());
-			                if (child.getInsurerName() != null)
-			                    existingChild.setInsurerName(child.getInsurerName());
-			                if (child.getInsuranceProvider() != null)
-			                    existingChild.setInsuranceProvider(child.getInsuranceProvider());
-			                if (child.getPolicyNumber() != null)
-			                    existingChild.setPolicyNumber(child.getPolicyNumber());
-			                if (child.getDisability() != null)
-			                    existingChild.setDisability(child.getDisability());
-			                if (child.getAge() != null)
-			                    existingChild.setAge(child.getAge());
-			                if (child.getRelationshipType() != null)
-			                    existingChild.setRelationshipType(child.getRelationshipType());
+	                        Optional.ofNullable(childWebModel.getPatientName()).ifPresent(existingChild::setPatientName);
+	                        Optional.ofNullable(childWebModel.getDob()).ifPresent(existingChild::setDob);
+	                        Optional.ofNullable(childWebModel.getGender()).ifPresent(existingChild::setGender);
+	                        Optional.ofNullable(childWebModel.getBloodGroup()).ifPresent(existingChild::setBloodGroup);
+	                        Optional.ofNullable(childWebModel.getAddress()).ifPresent(existingChild::setAddress);
+	                        Optional.ofNullable(childWebModel.getEmergencyContact()).ifPresent(existingChild::setEmergencyContact);
+	                        Optional.ofNullable(childWebModel.getPurposeOfVisit()).ifPresent(existingChild::setPurposeOfVisit);
+	                        Optional.ofNullable(childWebModel.getDoctorId()).ifPresent(existingChild::setDoctorId);
+	                        Optional.ofNullable(childWebModel.getUserIsActive()).ifPresent(existingChild::setUserIsActive);
+	                        Optional.ofNullable(childWebModel.getCurrentAddress()).ifPresent(existingChild::setCurrentAddress);
+	                        Optional.ofNullable(childWebModel.getPreviousMedicalHistory()).ifPresent(existingChild::setPreviousMedicalHistory);
+	                        Optional.ofNullable(childWebModel.getInsuranceDetails()).ifPresent(existingChild::setInsuranceDetails);
+	                        Optional.ofNullable(childWebModel.getInsurerName()).ifPresent(existingChild::setInsurerName);
+	                        Optional.ofNullable(childWebModel.getInsuranceProvider()).ifPresent(existingChild::setInsuranceProvider);
+	                        Optional.ofNullable(childWebModel.getPolicyNumber()).ifPresent(existingChild::setPolicyNumber);
+	                        Optional.ofNullable(childWebModel.getDisability()).ifPresent(existingChild::setDisability);
+	                        Optional.ofNullable(childWebModel.getAge()).ifPresent(existingChild::setAge);
+	                        Optional.ofNullable(childWebModel.getRelationshipType()).ifPresent(existingChild::setRelationshipType);
 
-			                existingChild.setUserUpdatedOn(new Date());
-			                if (userWebModel.getUserUpdatedBy() != null)
-			                    existingChild.setUserUpdatedBy(userWebModel.getUserUpdatedBy());
+	                        existingChild.setUserUpdatedOn(new Date());
+	                        if (userWebModel.getUserUpdatedBy() != null) {
+	                            existingChild.setUserUpdatedBy(userWebModel.getUserUpdatedBy());
+	                        }
 
-			                patientSubChildDetailsRepository.save(existingChild);
-			            }
-			        }
-			    }
-			}
+	                        patientSubChildDetailsRepository.save(existingChild);
 
 
-			return ResponseEntity.ok(new Response(1, "Success", "Patient updated successfully"));
+	            	        if (!Utility.isNullOrEmptyList(userWebModel.getFiles())) {
+	            	            mediaFileRepository.markFilesInactiveByCategoryAndRefId(
+	            	                    MediaFileCategory.patientSubChildDocument,
+	            	                    existingChild.getPatientSubChildDetailsId()
+	            	            );
+	            	            savePatientMediaFiless(userWebModel, patient, MediaFileCategory.patientSubChildDocument, existingChild.getPatientSubChildDetailsId());
+	            	        }
+	                    }
+	                }
+	            }
+	        }
 
-		} catch (Exception e) {
-			logger.error("Patient update failed", e);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new Response(0, "Fail", "Something went wrong during update"));
-		}
+	        return ResponseEntity.ok(new Response(1, "Success", "Patient updated successfully"));
+	    } catch (Exception e) {
+	        logger.error("Patient update failed", e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "Fail", "Something went wrong during update"));
+	    }
 	}
+
+
+	private void savePatientMediaFiless(
+		    PatientDetailsWebModel userWebModel,
+		    PatientDetails savedPatient,
+		    MediaFileCategory category,
+		    Integer categoryRefId) {
+
+		    if (!Utility.isNullOrEmptyList(userWebModel.getFiles())) {
+		        List<MultipartFile> files = userWebModel.getFiles();
+
+		        for (MultipartFile file : files) {
+		            try {
+		                byte[] fileBytes = file.getBytes();
+		                String base64Data = Base64.getEncoder().encodeToString(fileBytes);
+		                String fileName = UUID.randomUUID().toString();
+
+		                MediaFile mediaFile = new MediaFile();
+		                mediaFile.setFileName(fileName);
+		                mediaFile.setFileOriginalName(file.getOriginalFilename());
+		                mediaFile.setFileType(file.getContentType());
+		                mediaFile.setFileSize(String.valueOf(file.getSize()));
+
+		                mediaFile.setCategory(category);
+
+		                if (category == MediaFileCategory.patientDocument) {
+		                    mediaFile.setFileDomainId(HealthCareConstant.patientDocument);
+		                } else if (category == MediaFileCategory.patientSubChildDocument) {
+		                    mediaFile.setFileDomainId(HealthCareConstant.patientSubChildDocument);
+		                }
+
+		                mediaFile.setFileDomainReferenceId(categoryRefId);
+		                mediaFile.setFileIsActive(true);
+		                mediaFile.setFileCreatedBy(userWebModel.getCreatedBy());
+
+		                mediaFileRepository.save(mediaFile);
+
+		                // Save to file system
+		                Base64FileUpload.saveFile(imageLocation + "/" + category.name(), base64Data, fileName);
+
+		            } catch (IOException e) {
+		                logger.error("Error saving file: {}", e.getMessage(), e);
+		            }
+		        }
+		    }
+		}
+
 
 	@Override
 	public ResponseEntity<?> getPatientDetailsById(Integer patientDetailsID) {

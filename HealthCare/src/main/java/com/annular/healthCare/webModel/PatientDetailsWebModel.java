@@ -69,6 +69,7 @@ public class PatientDetailsWebModel {
 	private String appointmentDate;
 	private Integer doctorFees;
 	private ArrayList<FileInputWebModel> filesInputWebModel;
+	
 	private String slotStartTime;
 	private String slotEndTime;
 	private String slotTime;

@@ -3,6 +3,8 @@ package com.annular.healthCare.webModel;
 import java.util.Date;
 import java.util.List;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -43,6 +45,10 @@ public class PatientSubChildDetailsWebModel {
     private Integer patientDetailsId;
     private String relationshipType;
     private List<FileInputWebModel> mediaFiless;
+
+    private List<MultipartFile> files;
+    private List<PatientSubChildDetailsWebModel> childDetailsList;
+
 
 
 }
