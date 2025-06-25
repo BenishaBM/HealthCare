@@ -8,6 +8,8 @@ import javax.persistence.Column;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import com.annular.healthCare.model.PatientSubChildDetails;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -80,6 +82,8 @@ public class PatientDetailsWebModel {
    private List<FileInputWebModel> profilePhotos;
    private List<FileInputWebModel> filess;
    private List<FileInputWebModel> mediaFiles;
+   private List<PatientSubChildDetails> childDetailsList;
+
 
 
 

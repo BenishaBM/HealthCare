@@ -745,6 +745,65 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 				User userFromDB = userRepository.findById(userWebModel.getUserUpdatedBy()).orElse(null);
 				//mediaFilesService.saveMediaFiles(fileInput, userFromDB);
 			}
+			if (userWebModel.getChildDetailsList() != null && !userWebModel.getChildDetailsList().isEmpty()) {
+			    for (PatientSubChildDetails child : userWebModel.getChildDetailsList()) {
+			        
+			        // Only update if child ID is provided
+			        if (child.getPatientSubChildDetailsId() != null) {
+			            Optional<PatientSubChildDetails> existingChildOpt = patientSubChildDetailsRepository
+			                    .findById(child.getPatientSubChildDetailsId());
+
+			            if (existingChildOpt.isPresent()) {
+			                PatientSubChildDetails existingChild = existingChildOpt.get();
+
+			                // Update only provided fields
+			                if (child.getPatientName() != null)
+			                    existingChild.setPatientName(child.getPatientName());
+			                if (child.getDob() != null)
+			                    existingChild.setDob(child.getDob());
+			                if (child.getGender() != null)
+			                    existingChild.setGender(child.getGender());
+			                if (child.getBloodGroup() != null)
+			                    existingChild.setBloodGroup(child.getBloodGroup());
+			                if (child.getAddress() != null)
+			                    existingChild.setAddress(child.getAddress());
+			                if (child.getEmergencyContact() != null)
+			                    existingChild.setEmergencyContact(child.getEmergencyContact());
+			                if (child.getPurposeOfVisit() != null)
+			                    existingChild.setPurposeOfVisit(child.getPurposeOfVisit());
+			                if (child.getDoctorId() != null)
+			                    existingChild.setDoctorId(child.getDoctorId());
+			                if (child.getUserIsActive() != null)
+			                    existingChild.setUserIsActive(child.getUserIsActive());
+			                if (child.getCurrentAddress() != null)
+			                    existingChild.setCurrentAddress(child.getCurrentAddress());
+			                if (child.getPreviousMedicalHistory() != null)
+			                    existingChild.setPreviousMedicalHistory(child.getPreviousMedicalHistory());
+			                if (child.getInsuranceDetails() != null)
+			                    existingChild.setInsuranceDetails(child.getInsuranceDetails());
+			                if (child.getInsurerName() != null)
+			                    existingChild.setInsurerName(child.getInsurerName());
+			                if (child.getInsuranceProvider() != null)
+			                    existingChild.setInsuranceProvider(child.getInsuranceProvider());
+			                if (child.getPolicyNumber() != null)
+			                    existingChild.setPolicyNumber(child.getPolicyNumber());
+			                if (child.getDisability() != null)
+			                    existingChild.setDisability(child.getDisability());
+			                if (child.getAge() != null)
+			                    existingChild.setAge(child.getAge());
+			                if (child.getRelationshipType() != null)
+			                    existingChild.setRelationshipType(child.getRelationshipType());
+
+			                existingChild.setUserUpdatedOn(new Date());
+			                if (userWebModel.getUserUpdatedBy() != null)
+			                    existingChild.setUserUpdatedBy(userWebModel.getUserUpdatedBy());
+
+			                patientSubChildDetailsRepository.save(existingChild);
+			            }
+			        }
+			    }
+			}
+
 
 			return ResponseEntity.ok(new Response(1, "Success", "Patient updated successfully"));
 
