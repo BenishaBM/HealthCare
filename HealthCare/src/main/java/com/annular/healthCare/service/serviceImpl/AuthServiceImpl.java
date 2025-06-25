@@ -1934,7 +1934,10 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	                        splitData.put("slotSplitTimeId", split.getDoctorSlotSpiltTimeId());
 	                        splitData.put("slotStartTime", split.getSlotStartTime());
 	                        splitData.put("slotEndTime", split.getSlotEndTime());
-	                        splitData.put("slotStatus", split.getSlotStatus());
+	                      //  splitData.put("slotStatus", split.getSlotStatus());
+	                        String originalStatus = split.getSlotStatus();
+	                        String displayStatus = "OVERRIDDEN".equalsIgnoreCase(originalStatus) ? "Available" : originalStatus;
+	                        splitData.put("slotStatus", displayStatus);
 	                        return splitData;
 	                    });
 	            })
