@@ -114,7 +114,12 @@ public interface PatientAppoitmentTablerepository extends JpaRepository<PatientA
 	@Query("SELECT p FROM PatientAppointmentTable p  WHERE p.doctor.hospitalId = :hospitalId " )
 	    List<PatientAppointmentTable> findAppointmentsByDoctorHospitalId(@Param("hospitalId") Integer hospitalId);
 
-	
+
+	List<PatientAppointmentTable> findByPatient_PatientDetailsIdAndAppointmentDateAndAppointmentId(
+		    Integer patientId,
+		    String appointmentDate,
+		    Integer appointmentId
+		);
 
 
 

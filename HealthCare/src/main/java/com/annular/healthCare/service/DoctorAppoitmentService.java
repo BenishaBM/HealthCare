@@ -30,7 +30,7 @@ public interface DoctorAppoitmentService {
 
 	ResponseEntity<?> getAllPatientAppointment(String appointmentDate, Integer doctorId);
 
-	ResponseEntity<?> getAllPatientAppointmentDetails(Integer patientId, String currentDatae);
+	ResponseEntity<?> getAllPatientAppointmentDetails(Integer patientId, String currentDatae, Integer appointmentId);
 
 	ResponseEntity<?> saveDoctorFees(HospitalDataListWebModel userWebModel);
 

@@ -178,12 +178,12 @@ public class DoctorAppointmentController {
 	}
 	@GetMapping("getAllPatientAppointmentDetails") // Corrected spelling in endpoint
 	public ResponseEntity<?> getAllPatientAppointmentDetails(
-	        @RequestParam("patientId") Integer  patientId,@RequestParam("appointmentDate")String currentDatae) {
+	        @RequestParam("patientId") Integer  patientId,@RequestParam("appointmentDate")String currentDatae,Integer appointmentId) {
 	    try {
 	        logger.info("getAllPatientAppointmentDetails request for createdOn: {}, appointmentType: {}", patientId);
 	        
 	       
-	        return doctorAppoitmentService.getAllPatientAppointmentDetails(patientId,currentDatae);
+	        return doctorAppoitmentService.getAllPatientAppointmentDetails(patientId,currentDatae,appointmentId);
 	    } catch (Exception e) {
 	        logger.error("getAllPatientMedicalTestBypatientIdAndDate Method Exception: {}", e.getMessage(), e);
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

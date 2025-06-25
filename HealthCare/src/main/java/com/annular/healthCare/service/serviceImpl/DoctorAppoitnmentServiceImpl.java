@@ -947,11 +947,11 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	        }
 	}
 	@Override
-	public ResponseEntity<?> getAllPatientAppointmentDetails(Integer patientId, String appointmentDate) {
+	public ResponseEntity<?> getAllPatientAppointmentDetails(Integer patientId, String appointmentDate,Integer appointmentId) {
 	    try {
 	        // Fetch all appointments with medicines and tests eagerly loaded
 	        List<PatientAppointmentTable> appointments =
-	                patientAppointmentRepository.findByPatient_PatientDetailsIdAndAppointmentDate(patientId, appointmentDate);
+	                patientAppointmentRepository.findByPatient_PatientDetailsIdAndAppointmentDateAndAppointmentId(patientId, appointmentDate,appointmentId);
 
 	        Set<String> uniqueKeys = new HashSet<>();
 
