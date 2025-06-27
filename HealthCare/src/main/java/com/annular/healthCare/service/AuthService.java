@@ -52,5 +52,10 @@ public interface AuthService {
 
 	ResponseEntity<?> saveHospitalLink(HospitalDataListWebModel userWebModel);
 
+	ResponseEntity<?> bookingDemoRegister(UserWebModel userWebModel);
+
+	ResponseEntity<?> getAllbookingDemo(Integer page, Integer size);
+
+
 	
 }

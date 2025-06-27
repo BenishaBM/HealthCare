@@ -44,6 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.annular.healthCare.Response;
 import com.annular.healthCare.Util.Base64FileUpload;
 import com.annular.healthCare.Util.HealthCareConstant;
+import com.annular.healthCare.model.BookingDemo;
 import com.annular.healthCare.model.DoctorDaySlot;
 import com.annular.healthCare.model.DoctorLeaveList;
 import com.annular.healthCare.model.DoctorRole;
@@ -61,6 +62,7 @@ import com.annular.healthCare.model.PatientMappedHospitalId;
 import com.annular.healthCare.model.RefreshToken;
 import com.annular.healthCare.model.SupportStaffMasterData;
 import com.annular.healthCare.model.User;
+import com.annular.healthCare.repository.BookingDemoRepository;
 import com.annular.healthCare.repository.DoctorDaySlotRepository;
 import com.annular.healthCare.repository.DoctorLeaveListRepository;
 import com.annular.healthCare.repository.DoctorRoleRepository;
@@ -148,6 +150,9 @@ public class AuthServiceImpl implements AuthService {
 	
 	@Autowired
 	PatientDetailsRepository patientDetailsRepository;
+	
+	@Autowired
+	BookingDemoRepository bookingDemoRepository;
 	
 	@Autowired
 	DoctorSlotSpiltTimeRepository doctorSlotSplitTimeRepository;
@@ -2468,6 +2473,84 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Patient not found with ID: " + userWebModel.getPatientId());
 	    }
 	}
+
+	@Override
+	public ResponseEntity<?> bookingDemoRegister(UserWebModel userWebModel) {
+	    try {
+	        // Validate incoming data (optional but recommended)
+	        if (userWebModel == null) {
+	            return ResponseEntity.badRequest().body(new Response(0, "Invalid data", "Request body is empty"));
+	        }
+
+	        // Map fields from UserWebModel to BookingDemo
+	        BookingDemo booking = BookingDemo.builder()
+	                .name(userWebModel.getName())
+	                .country(userWebModel.getCountry())
+	                .businessName(userWebModel.getBusinessName())
+	                .businessNameType(userWebModel.getBusinessNameType())
+	                .remarks(userWebModel.getRemarks())
+	                .websiteUrl(userWebModel.getWebsiteUrl())
+	                .email(userWebModel.getEmail())
+	                .city(userWebModel.getCity())
+	                .mobileNumber(userWebModel.getMobileNumber())
+	                .countryCode(userWebModel.getCountryCode())
+	                .createdBy(userWebModel.getCreatedBy())
+	                .isActive(true)
+	                .build();
+
+	        // Save to DB
+	        bookingDemoRepository.save(booking);
+
+	        // Return success response
+	        return ResponseEntity.ok(new Response(1, "Success", "Booking registered successfully"));
+
+	    } catch (Exception e) {
+	        // Log the error (optional but helpful)
+	        e.printStackTrace();
+	        return ResponseEntity.internalServerError()
+	                .body(new Response(0, "Error", "An error occurred while registering booking"));
+	    }
+	}
+
+	@Override
+	public ResponseEntity<?> getAllbookingDemo(Integer page, Integer size) {
+	    try {
+	        // Business logic for page/size validation
+	        if (page == null || page < 1) {
+	            page = 1; // Default to page 1 if null or invalid
+	        }
+
+	        if (size == null || size <= 0) {
+	            size = 10; // Default page size if null or invalid
+	        }
+
+	        int adjustedPage = page - 1; // Spring Data uses 0-based indexing
+
+	        Pageable pageable = PageRequest.of(adjustedPage, size, Sort.by("createdOn").descending());
+	        Page<BookingDemo> bookingPage = bookingDemoRepository.findByIsActiveTrue(pageable);
+
+	        Map<String, Object> response = new HashMap<>();
+	        response.put("status", 1);
+	        response.put("message", "Active bookings retrieved successfully");
+	        response.put("data", bookingPage.getContent());
+	        response.put("currentPage", page); // show 1-based page to client
+	        response.put("totalItems", bookingPage.getTotalElements());
+	        response.put("totalPages", bookingPage.getTotalPages());
+
+	        return ResponseEntity.ok(response);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+
+	        Map<String, Object> errorResponse = new HashMap<>();
+	        errorResponse.put("status", 0);
+	        errorResponse.put("message", "Failed to retrieve booking data");
+	        errorResponse.put("data", null);
+
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+	    }
+	}
+
+
 
 
 }

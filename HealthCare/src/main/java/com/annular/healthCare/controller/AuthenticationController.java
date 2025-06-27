@@ -102,6 +102,36 @@ public class AuthenticationController {
 		}
 
 	}
+	
+	@PostMapping("bookingDemoRegister")
+	public ResponseEntity<?> bookingDemoRegister(@RequestBody UserWebModel userWebModel) {
+		try {
+			logger.info("bookingDemoRegister register controller start");
+			return authService.bookingDemoRegister(userWebModel);
+		} catch (Exception e) {
+			logger.error("bookingDemoRegister Method Exception {}" + e);
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(new Response(-1, "Fail", e.getMessage()));
+		}
+
+	}
+
+	@GetMapping("getAllbookingDemo")
+	public ResponseEntity<?> getAllbookingDemo(
+	        @RequestParam("pageNo") Integer page,
+	        @RequestParam("pageSize") Integer size) {
+	    try {
+	        logger.info("getAllbookingDemo controller start - page: {}, size: {}", page, size);
+	        return authService.getAllbookingDemo(page, size);
+	    } catch (Exception e) {
+	        logger.error("getAllbookingDemo Method Exception {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	
+
+	}
 
 	@PostMapping("login")
 	public ResponseEntity<?> login(@RequestBody UserWebModel userWebModel) {

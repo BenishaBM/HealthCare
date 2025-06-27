@@ -55,6 +55,16 @@ public class UserWebModel {
 	private Integer labMasterDataId;
 	private String dob;
 	private Integer doctorSlotSpiltTimeId;
+    private String name;
+    private String country;
+    private String businessName;
+    private String businessNameType;
+    private String remarks;
+    private String websiteUrl;
+    private String email;
+    private String city;
+    private String mobileNumber;
+
 	
 
 	
