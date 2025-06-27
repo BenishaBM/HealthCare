@@ -28,6 +28,7 @@ import com.annular.healthCare.Util.Base64FileUpload;
 import com.annular.healthCare.Util.HealthCareConstant;
 import com.annular.healthCare.model.AppointmentMedicalTest;
 import com.annular.healthCare.model.AppointmentMedicine;
+import com.annular.healthCare.model.DoctorRole;
 import com.annular.healthCare.model.DoctorSlotSpiltTime;
 import com.annular.healthCare.model.DoctorSpecialty;
 import com.annular.healthCare.model.HospitalDataList;
@@ -965,6 +966,23 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                map.put("doctorSlotSpiltTimeId",appointment.getDoctorSlotSpiltTimeId());
 	                map.put("appointmentDate", appointment.getAppointmentDate());
 	                map.put("doctorSlotId", appointment.getDoctorSlotId());
+	                map.put("hospitalId", appointment.getDoctor().getHospitalId());
+	                map.put("doctorName", appointment.getDoctor().getUserName());
+	                
+	                Integer hospitalId = appointment.getDoctor().getHospitalId();
+	                String hospitalName = null;
+
+	                if (hospitalId != null) {
+	                    Optional<HospitalDataList> hospitalOptional = hospitalDataListRepository.findById(hospitalId);
+	                    if (hospitalOptional.isPresent()) {
+	                        hospitalName = hospitalOptional.get().getHospitalName();
+	                    }
+	                }
+
+//	                // Add to map
+//	                map.put("hospitalId", hospitalId);
+	                map.put("hospitalName", hospitalName);
+	                
 	                map.put("daySlotId", appointment.getDaySlotId());
 	                map.put("timeSlotId", appointment.getTimeSlotId());
 	                map.put("slotStartTime", appointment.getSlotStartTime());
@@ -987,6 +1005,29 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                map.put("doctorfees",appointment.getDoctorFees());
 	                map.put("doctorfeesStatus", appointment.getDoctorFeesStatus());
 	                map.put("doctorprescription", appointment.getDoctorPrescription());
+	                User user = appointment.getDoctor();
+
+	                // Doctor Roles
+	                List<Map<String, Object>> roleDetails = new ArrayList<>();
+	                if (user.getDoctorRoles() != null) {
+	                    for (DoctorRole doctorRole : user.getDoctorRoles()) {
+	                        if (Boolean.TRUE.equals(doctorRole.getUserIsActive())) {
+	                            Map<String, Object> roleMap = new HashMap<>();
+	                            roleMap.put("roleId", doctorRole.getRoleId());
+	                            roleMap.put("isActive", doctorRole.getUserIsActive());
+	                            try {
+	                                String specialtyName = doctorSpecialtyRepository
+	                                        .findSpecialtyNameByRoleId(doctorRole.getRoleId());
+	                                roleMap.put("specialtyName", specialtyName != null ? specialtyName : "N/A");
+	                            } catch (Exception e) {
+	                                //logger.error("Error fetching specialty name for roleId {}: {}", doctorRole.getRoleId(), e.getMessage());
+	                                roleMap.put("specialtyName", "Error retrieving");
+	                            }
+	                            roleDetails.add(roleMap);
+	                        }
+	                    }
+	                }
+	                map.put("roles", roleDetails);
 
 	                // Audit fields
 	                map.put("isActive", appointment.getIsActive());
