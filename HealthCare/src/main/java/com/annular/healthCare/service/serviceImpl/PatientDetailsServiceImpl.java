@@ -1254,6 +1254,8 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 			// Prepare patient details
 			Map<String, Object> patientData = new HashMap<>();
 			patientData.put("patientName", patient.getPatientName());
+			patientData.put("firstName", patient.getFirstName());
+			patientData.put("lastName", patient.getLastName());
 			patientData.put("dob", patient.getDob());
 			patientData.put("gender", patient.getGender());
 			patientData.put("bloodGroup", patient.getBloodGroup());
