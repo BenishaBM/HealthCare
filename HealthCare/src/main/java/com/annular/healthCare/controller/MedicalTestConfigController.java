@@ -277,6 +277,21 @@ public class MedicalTestConfigController {
 	    }
 	}
 	
+
+	@GetMapping("getAllPatientAppointmentByPharmacyPendingList") // Corrected spelling in endpoint
+	public ResponseEntity<?> getAllPatientAppointmentByPharmacyPendingList(
+	        @RequestParam("hospitalId") Integer  hospitalId,@RequestParam("userType")String userType) {
+	    try {
+	        logger.info("getAllPatientAppointmentByPharmacyPendingList request for createdOn: {}, hospitalId");
+	        
+	       
+	        return medicalTestConfigService.getAllPatientAppointmentByPharmacyPendingList(hospitalId,userType);
+	    } catch (Exception e) {
+	        logger.error("getAllPatientAppointmentByPharmacyPendingList Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 	
 	
 	

@@ -44,4 +44,6 @@ public interface MedicalTestConfigService {
 
 	ResponseEntity<?> getAllPatientAppointmentByReceptionistLogin(Integer doctorId);
 
+	ResponseEntity<?> getAllPatientAppointmentByPharmacyPendingList(Integer hospitalId, String userType);
+
 }

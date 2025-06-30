@@ -218,6 +218,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	         appointment.setDoctorFees(userWebModel.getDoctorFees());
 	         appointment.setDoctorPrescription(userWebModel.getDoctorPrescription());
 	         appointment.setFollowUpDate(userWebModel.getFollowUpDate());
+	         appointment.setPharmacyStatus("PENDING");
 
 	         Integer userId = userWebModel.getUserId(); // Who is saving this
 
@@ -423,6 +424,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                 map.put("bloodGroup", patient.getBloodGroup());
 	                 map.put("mobileNumber", patient.getMobileNumber());
 	                 map.put("emailId", patient.getEmailId());
+	                 map.put("pharmacyStatus", app.getPharmacyStatus()); // <-- Include pharmacy status here
 	                 map.put("address", patient.getAddress());
 	                 return map;
 	             })

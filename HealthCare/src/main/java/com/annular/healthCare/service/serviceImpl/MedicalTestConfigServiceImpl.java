@@ -1744,5 +1744,13 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 			        }
 			}
 
+
+			@Override
+			public ResponseEntity<?> getAllPatientAppointmentByPharmacyPendingList(Integer hospitalId,
+					String userType) {
+				// TODO Auto-generated method stub
+				return null;
+			}
+
 }
 	
