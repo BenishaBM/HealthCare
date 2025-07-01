@@ -27,16 +27,31 @@ public interface PatientSubChildDetailsRepository extends JpaRepository<PatientS
 
 
 
-	@Query("SELECT COUNT(p) FROM PatientSubChildDetails p WHERE p.createdBy IN (" +
-		       "SELECT pm.patientId FROM PatientMappedHospitalId pm WHERE pm.hospitalId = :hospitalId)")
-		Integer countTotalSubPatientsByHospitalId(Integer hospitalId);
-
-
-	@Query("SELECT COUNT(p) FROM PatientSubChildDetails p WHERE p.userIsActive = true AND p.userCreatedOn BETWEEN :start AND :end " +
-		       "AND p.createdBy IN (" +
-		       "SELECT pm.patientId FROM PatientMappedHospitalId pm WHERE pm.hospitalId = :hospitalId)")
-		Integer countActiveSubPatientsByHospitalIdAndDateRange(Integer hospitalId,
-		                                                       Date start,
-		                                                      Date end);
-
+	 // OPTION 2A: Use JPQL to avoid table name issues
+    @Query("SELECT COUNT(p) FROM PatientSubChildDetails p " +
+           "WHERE p.patientDetailsId IN (" +
+           "   SELECT pm.patientId FROM PatientMappedHospitalId pm WHERE pm.hospitalId = :hospitalId" +
+           ")")
+    Integer countTotalSubPatientsByHospitalId(@Param("hospitalId") Integer hospitalId);
+    
+    // FIXED: Added missing @Param annotation
+    @Query("SELECT COUNT(p) FROM PatientSubChildDetails p " + 
+           "WHERE p.userIsActive = true " +
+           "AND p.userCreatedOn BETWEEN :start AND :end " + 
+           "AND p.patientDetailsId IN (" +
+           "   SELECT pm.patientId FROM PatientMappedHospitalId pm WHERE pm.hospitalId = :hospitalId" + 
+           ")")
+    Integer countActiveSubPatientsByHospitalIdAndDateRange(
+            @Param("hospitalId") Integer hospitalId, 
+            @Param("start") Date start, 
+            @Param("end") Date end);
+    
+    // FIXED: Use correct table name in native query
+    @Query(value = "SELECT sc.* " + 
+           "FROM patient_sub_child_details sc " +
+           "JOIN patient_details pd ON sc.patientdetailsid = pd.patientdetailsid " +
+           "JOIN patient_mapped_hospital_id pmh ON pd.patientdetailsid = pmh.patientid " +
+           "WHERE pmh.hospitalid = :hospitalId", nativeQuery = true)
+    List<PatientSubChildDetails> findAllSubPatientsByHospitalId(@Param("hospitalId") Integer hospitalId);
 }
+

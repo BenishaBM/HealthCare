@@ -60,6 +60,7 @@ import com.annular.healthCare.model.MediaFileCategory;
 import com.annular.healthCare.model.PatientAppointmentTable;
 import com.annular.healthCare.model.PatientDetails;
 import com.annular.healthCare.model.PatientMappedHospitalId;
+import com.annular.healthCare.model.PatientSubChildDetails;
 import com.annular.healthCare.model.RefreshToken;
 import com.annular.healthCare.model.SupportStaffMasterData;
 import com.annular.healthCare.model.User;
@@ -2794,6 +2795,16 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	                ? ((double) activePatients / totalPatients) * 100
 	                : 0.0;
 
+	        // Fetch patient lists
+	        List<PatientDetails> mainPatientList = patientMappedHospitalIdRepository.findAllPatientsByHospitalId(hospitalId);
+	       // List<PatientSubChildDetails> subPatientList = patientSubChildDetailsRepository.findAllSubPatientsByHospitalId(hospitalId);
+
+	        // Combine lists into one
+	        List<Object> totalPatientList = new ArrayList<>();
+	        totalPatientList.addAll(mainPatientList);
+	       // totalPatientList.addAll(subPatientList);
+
+	        // Prepare response
 	        Map<String, Object> responseMap = new HashMap<>();
 	        responseMap.put("hospitalId", hospitalId);
 	        responseMap.put("totalMainPatients", totalMain);
@@ -2801,6 +2812,7 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	        responseMap.put("totalPatients", totalPatients);
 	        responseMap.put("activePatients", activePatients);
 	        responseMap.put("activePercentage", String.format("%.2f", activePercentage));
+	        //responseMap.put("totalPatientList", totalPatientList); // ✅ Added total list
 
 	        return ResponseEntity.ok(new Response(1, "Success", responseMap));
 	    } catch (Exception e) {

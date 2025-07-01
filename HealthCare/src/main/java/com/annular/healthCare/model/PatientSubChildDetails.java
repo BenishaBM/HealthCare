@@ -24,7 +24,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Table(name = "patientSubChildDetailsv")
+@Table(name = "patientSubChildDetails")
 @Builder
 @Getter
 @Setter

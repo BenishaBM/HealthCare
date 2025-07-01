@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.annular.healthCare.model.PatientDetails;
 import com.annular.healthCare.model.PatientMappedHospitalId;
 
 @Repository
@@ -34,6 +35,11 @@ public interface PatientMappedHospitalIdRepository extends JpaRepository<Patient
 	Integer countActivePatientsByHospitalIdAndDateRange(Integer hospitalId,
 	                                                    Date start,
 	                                                    Date end);
+
+
+	@Query("SELECT pd FROM PatientDetails pd WHERE pd.patientDetailsId IN (SELECT pmh.patientId FROM PatientMappedHospitalId pmh WHERE pmh.hospitalId = :hospitalId)")
+	List<PatientDetails> findAllPatientsByHospitalId(Integer hospitalId);
+
 
 
 
