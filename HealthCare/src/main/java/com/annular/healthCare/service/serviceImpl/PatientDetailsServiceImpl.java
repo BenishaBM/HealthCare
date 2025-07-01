@@ -658,6 +658,8 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 	public ResponseEntity<?> updatePatientDetails(PatientDetailsWebModel userWebModel) {
 	    try {
 	        logger.info("Updating patient details for ID: {}", userWebModel.getPatientDetailsId());
+	        
+	        
 
 	        if (userWebModel.getPatientDetailsId() == null) {
 	            return ResponseEntity.badRequest().body(new Response(0, "Fail", "Patient ID is required for update"));
@@ -670,6 +672,18 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 	        }
 
 	        PatientDetails patient = optionalPatient.get();
+	        
+	        // ✅ Mobile number uniqueness check
+	        if (userWebModel.getMobileNumber() != null &&
+	            !userWebModel.getMobileNumber().equals(patient.getMobileNumber())) {
+	            
+	            Optional<PatientDetails> existingWithSameMobile = patientDetailsRepository.findByMobileNumber(userWebModel.getMobileNumber());
+	            if (existingWithSameMobile.isPresent() &&
+	                !existingWithSameMobile.get().getPatientDetailsId().equals(patient.getPatientDetailsId())) {
+	                
+	                return ResponseEntity.badRequest().body(new Response(0, "Fail", "Mobile number already exists for another patient."));
+	            }
+	        }
 
 	        // Update patient fields
 	        Optional.ofNullable(userWebModel.getFirstName()).ifPresent(patient::setFirstName);

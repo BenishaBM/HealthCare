@@ -33,35 +33,44 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 		try {
-			String jwt = parseJwt(request);
-			logger.info("JWT from request :- {}", jwt);
-			if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-				logger.info("JWT available...");
+		    String jwt = parseJwt(request);
+		    logger.info("JWT from request :- {}", jwt);
 
-				// Old one
-				// String username = jwtUtils.getUserNameFromJwtToken(jwt);
-				// UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+		    if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
+		        logger.info("JWT available...");
 
-				// New one Username and usertype based login
-				String userEmailId = jwtUtils.getDataFromJwtToken(jwt, "userEmailId");
-				String userType = jwtUtils.getDataFromJwtToken(jwt, "userType");
-				StringBuilder userNameWithUserType = new StringBuilder().append(userEmailId).append("^")
-						.append(userType);
-				logger.info("Username with UserType : {}", userNameWithUserType);
+		        String userEmailId = jwtUtils.getDataFromJwtToken(jwt, "userEmailId");
+		        String userType = jwtUtils.getDataFromJwtToken(jwt, "userType");
 
-				UserDetails userDetails = userDetailsService.loadUserByUsername(userNameWithUserType.toString());
+		        // ✅ If userEmailId is null, fallback to subject (mobile number)
+		        if (userEmailId == null || userEmailId.trim().isEmpty()) {
+		            userEmailId = jwtUtils.getUserNameFromJwtToken(jwt); // subject = mobile number
+		            logger.info("Fallback to mobile number from subject: {}", userEmailId);
+		        }
 
-				UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-						userDetails, null, userDetails.getAuthorities());
-				authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-				SecurityContextHolder.getContext().setAuthentication(authentication);
+		        // ✅ Make sure userType is also not null
+		        if (userType == null || userType.trim().isEmpty()) {
+		            logger.warn("userType is missing in JWT. Cannot authenticate.");
+		            throw new RuntimeException("Missing userType in JWT");
+		        }
 
-			} else {
-				logger.info("JWT not available...");
-			}
+		        String userNameWithUserType = userEmailId + "^" + userType;
+		        logger.info("Username with UserType: {}", userNameWithUserType);
+
+		        UserDetails userDetails = userDetailsService.loadUserByUsername(userNameWithUserType);
+
+		        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+		                userDetails, null, userDetails.getAuthorities());
+		        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+		        SecurityContextHolder.getContext().setAuthentication(authentication);
+		    } else {
+		        logger.info("JWT not available...");
+		    }
 		} catch (Exception e) {
-			logger.error("Cannot set user authentication...", e);
+		    logger.error("Cannot set user authentication...", e);
 		}
+
 		filterChain.doFilter(request, response);
 	}
 

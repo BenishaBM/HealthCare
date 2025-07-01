@@ -38,64 +38,37 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        logger.info("I am from loadUserByUsername() !!! ");
-        logger.info("Username: {}, UserType from LoginConstants: {}", username, loginConstants.getUserType());
-        
-        String email;
+        if (username == null) {
+            logger.error("Username received is null in loadUserByUsername()");
+            throw new UsernameNotFoundException("Username cannot be null");
+        }
+
+        String emailOrMobile;
         String userType = null;
-        
-        // Check if username contains the caret separator
-        if (username.contains(CARET)) {
-            String[] parts = username.split(ESCAPED_CARET);
-            email = parts[0];
+
+        if (username.contains("^")) {
+            String[] parts = username.split("\\^");
+            emailOrMobile = parts[0];
             if (parts.length > 1) {
                 userType = parts[1];
             }
-            logger.info("Split username - Email: {}, UserType: {}", email, userType);
         } else {
-            email = username;
+            emailOrMobile = username;
         }
-        
-        // If userType is PATIENT, try to load a patient
+
         if ("PATIENT".equals(userType)) {
-            logger.info("Attempting to load a patient with email: {}", email);
-            Optional<PatientDetails> optionalPatient = patientDetailsRepository.findByEmailIdIgnoreCase(email);
-           // logger.info("Attempting to load a patient with email: {}", identifier);
-           // Optional<PatientDetails> optionalPatient = patientDetailsRepository.findByEmailIdIgnoreCase(identifier);
-            if (optionalPatient.isPresent()) {
-                PatientDetails patient = optionalPatient.get();
-                logger.info("Patient found: ID={}, Email={}", patient.getPatientDetailsId(), patient.getEmailId());
-                return buildPatientUserDetails(patient);
-            } else {
-                // If not found by email, try with mobile number
-                logger.info("Attempting to load a patient with mobile number: {}", email);
-                Optional<PatientDetails> optionalPatientByMobile = patientDetailsRepository.findByMobileNumber(email);
-                
-                if (optionalPatientByMobile.isPresent()) {
-                    PatientDetails patient = optionalPatientByMobile.get();
-                    logger.info("Patient found by mobile: ID={}, Mobile={}", 
-                               patient.getPatientDetailsId(), patient.getMobileNumber());
-                    return buildPatientUserDetails(patient);
-                } else {
-                    logger.error("Patient not found with email or mobile: {}", email);
-                    throw new UsernameNotFoundException("Patient not found with identifier: " + email);
-                }
-            }
+            return patientDetailsRepository.findByEmailIdIgnoreCase(emailOrMobile)
+                .map(this::buildPatientUserDetails)
+                .or(() -> patientDetailsRepository.findByMobileNumber(emailOrMobile)
+                    .map(this::buildPatientUserDetails))
+                .orElseThrow(() -> new UsernameNotFoundException("Patient not found with identifier: " + emailOrMobile));
         } else {
-            // Default behavior for regular users
-            logger.info("Attempting to load a regular user with email: {}", email);
-            Optional<User> optionalUser = userRepo.findByEmailIds(email);
-            
-            if (optionalUser.isPresent()) {
-                User user = optionalUser.get();
-                logger.info("User from DB --> {} -- {} -- {}", user.getUserId(), user.getEmailId(), user.getUserType());
-                return UserDetailsImpl.build(user);
-            } else {
-                logger.error("User not found with email: {}", email);
-                throw new UsernameNotFoundException("User not found with email: " + email);
-            }
+            return userRepo.findByEmailIds(emailOrMobile)
+                .map(UserDetailsImpl::build)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + emailOrMobile));
         }
     }
+
     
     private UserDetails buildPatientUserDetails(PatientDetails patient) {
         List<GrantedAuthority> authorities = new ArrayList<>();
@@ -110,7 +83,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             patient.getEmailId(),        // Email
             "PATIENT",                   // User type
             otpAsString,                 // Password (OTP)
-            authorities                  // Authorities
+            authorities                // Authorities
         );
     }
 }

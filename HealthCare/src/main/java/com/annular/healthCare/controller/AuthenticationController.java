@@ -440,9 +440,11 @@ public class AuthenticationController {
 	            // Retrieve hospital name
 	            String hospitalName = "";
 	           
-	            // Generate JWT token
-	            String jwt = jwtUtils.generateJwtToken(authentication);
-	            
+//	            // Generate JWT token
+//	            String jwt = jwtUtils.generateJwtToken(authentication);
+	            // Generate JWT using mobile number as subject
+	            String jwt = jwtUtils.generateTokenFromMobileNumber(user.getMobileNumber());
+      
 	            return ResponseEntity.ok(new JwtResponse(
 	                jwt, 
 	                user.getPatientDetailsId(), 
