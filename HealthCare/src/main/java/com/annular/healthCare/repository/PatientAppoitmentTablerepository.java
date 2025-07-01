@@ -114,4 +114,19 @@ public interface PatientAppoitmentTablerepository extends JpaRepository<PatientA
 			+ "GROUP BY pharmacy_status", nativeQuery = true)
 	List<Object[]> getAppointmentCountsByPharmacyStatus(@Param("start") Date start, @Param("end") Date end);
 
+	@Query("SELECT p.appointmentType, COUNT(p) FROM PatientAppointmentTable p "
+			+ "WHERE p.doctor.hospitalId = :hospitalId AND p.createdOn BETWEEN :startDate AND :endDate "
+			+ "GROUP BY p.appointmentType")
+	List<Object[]> getAppointmentCountsByType(Date startDate, Date endDate, Integer hospitalId);
+
+	@Query("SELECT p.appointmentStatus, COUNT(p) FROM PatientAppointmentTable p "
+			+ "WHERE p.doctor.hospitalId = :hospitalId AND p.createdOn BETWEEN :startDate AND :endDate "
+			+ "GROUP BY p.appointmentStatus")
+	List<Object[]> getAppointmentCountsByStatus(Date startDate, Date endDate, Integer hospitalId);
+
+	@Query("SELECT p.pharmacyStatus, COUNT(p) FROM PatientAppointmentTable p "
+			+ "WHERE p.doctor.hospitalId = :hospitalId AND p.createdOn BETWEEN :startDate AND :endDate "
+			+ "GROUP BY p.pharmacyStatus")
+	List<Object[]> getAppointmentCountsByPharmacyStatus(Date startDate, Date endDate, Integer hospitalId);
+
 }

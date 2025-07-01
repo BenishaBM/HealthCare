@@ -68,6 +68,9 @@ public interface AuthService {
 
 	ResponseEntity<?> getAllAppointmentListByOnlineAndOffline(String startDate, String endDate);
 
+	ResponseEntity<?> getAllAppointmentListByOnlineAndOfflineByHospitalId(String startDate, String endDate,
+			Integer hospitalId);
+
 
 	
 }

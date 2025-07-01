@@ -576,5 +576,18 @@ public class AuthenticationController {
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+	
+	@GetMapping("/getAllAppointmentListByOnlineAndOfflineByHospitalId")
+	public ResponseEntity<?> getAllAppointmentListByOnlineAndOfflineByHospitalId(@RequestParam("startDate") String startDate,@RequestParam("endDate") String endDate,@RequestParam("hospitalId")Integer hospitalId) {
+	    try {
+	        // Call the service with startDate and endDate
+	        return authService.getAllAppointmentListByOnlineAndOfflineByHospitalId(startDate, endDate,hospitalId);
+	    } catch (Exception e) {
+	        logger.error("getAllAppointmentListByOnlineAndOfflineByHospitalId Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+
 
 }

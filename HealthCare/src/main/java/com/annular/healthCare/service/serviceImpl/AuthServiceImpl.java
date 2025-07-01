@@ -2878,7 +2878,59 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	    }
 	}
 
+	@Override
+	public ResponseEntity<?> getAllAppointmentListByOnlineAndOfflineByHospitalId(
+	        String startDate, String endDate, Integer hospitalId) {
+	    try {
+	        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+	        Date start = sdf.parse(startDate);
+	        Date end = sdf.parse(endDate);
 
+	        List<Object[]> typeResults = patientAppoitnmentRepository
+	            .getAppointmentCountsByType(start, end, hospitalId);
+	        List<Map<String, Object>> typeList = new ArrayList<>();
+	        for (Object[] row : typeResults) {
+	            Map<String, Object> map = new HashMap<>();
+	            map.put("appointmentType", row[0]);
+	            map.put("count", ((Number) row[1]).longValue());
+	            typeList.add(map);
+	        }
+
+	        List<Object[]> statusResults = patientAppoitnmentRepository
+	            .getAppointmentCountsByStatus(start, end, hospitalId);
+	        List<Map<String, Object>> statusList = new ArrayList<>();
+	        long totalAppointmentStatus = 0;
+	        for (Object[] row : statusResults) {
+	            long count = ((Number) row[1]).longValue();
+	            Map<String, Object> map = new HashMap<>();
+	            map.put("doctorAppointmentStatus", row[0]);
+	            map.put("count", count);
+	            statusList.add(map);
+	            totalAppointmentStatus += count;
+	        }
+
+	        List<Object[]> pharmacyResults = patientAppoitnmentRepository
+	            .getAppointmentCountsByPharmacyStatus(start, end, hospitalId);
+	        List<Map<String, Object>> pharmacyList = new ArrayList<>();
+	        for (Object[] row : pharmacyResults) {
+	            Map<String, Object> map = new HashMap<>();
+	            map.put("pharmacyStatus", row[0]);
+	            map.put("count", ((Number) row[1]).longValue());
+	            pharmacyList.add(map);
+	        }
+
+	        Map<String, Object> responseData = new HashMap<>();
+	        responseData.put("appointmentTypeCounts", typeList);
+	        responseData.put("appointmentStatusCounts", statusList);
+	        responseData.put("pharmacyStatusCounts", pharmacyList);
+	        responseData.put("totalAppointmentStatus", totalAppointmentStatus);
+
+	        return ResponseEntity.ok(new Response(1, "Success", responseData));
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	            .body(new Response(0, "Error: " + e.getMessage(), null));
+	    }
+	}
 
 
 	}
