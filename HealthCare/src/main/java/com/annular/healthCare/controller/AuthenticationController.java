@@ -542,7 +542,7 @@ public class AuthenticationController {
 	}
 	
 	@GetMapping("/getAllEmployeeListCountByHospitalId")
-	public ResponseEntity<?> getAllEmployeeListCountByHospitalId(@RequestParam("startDate") String startDate,@RequestParam("endDate") String endDate,@RequestParam("hospitalId")Integer hospitalId,@RequestParam("userType")String userType) {
+	public ResponseEntity<?> getAllEmployeeListCountByHospitalId(@RequestParam("startDate") String startDate,@RequestParam("endDate") String endDate,@RequestParam("hospitalId")Integer hospitalId,@RequestParam(value = "userType", required = false)String userType) {
 	    try {
 	        // Call the service with startDate and endDate
 	        return authService.getAllEmployeeListCountByHospitalId(startDate, endDate,hospitalId,userType);
@@ -560,6 +560,18 @@ public class AuthenticationController {
 	        return authService.getAllPatientListCountByHospitalId(startDate, endDate,hospitalId);
 	    } catch (Exception e) {
 	        logger.error("getAllPatientListCountByHospitalId Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+	
+	@GetMapping("/getAllAppointmentListByOnlineAndOffline")
+	public ResponseEntity<?> getAllAppointmentListByOnlineAndOffline(@RequestParam("startDate") String startDate,@RequestParam("endDate") String endDate) {
+	    try {
+	        // Call the service with startDate and endDate
+	        return authService.getAllAppointmentListByOnlineAndOffline(startDate, endDate);
+	    } catch (Exception e) {
+	        logger.error("getAllAppointmentListByOnlineAndOffline Method Exception: {}", e.getMessage(), e);
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }

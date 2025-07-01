@@ -57,6 +57,7 @@ import com.annular.healthCare.model.HospitalDataList;
 import com.annular.healthCare.model.LabMasterData;
 import com.annular.healthCare.model.MediaFile;
 import com.annular.healthCare.model.MediaFileCategory;
+import com.annular.healthCare.model.PatientAppointmentTable;
 import com.annular.healthCare.model.PatientDetails;
 import com.annular.healthCare.model.PatientMappedHospitalId;
 import com.annular.healthCare.model.RefreshToken;
@@ -2612,23 +2613,50 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	    }
 	}
 
-	// Helper method to reduce duplication
 	private Map<String, Object> getUserTypeStats(String userType, Date start, Date end) {
-	    Integer totalUsers = userRepository.countByUserType(userType);
-	    Integer activeUsers = userRepository.countActiveByUserTypeAndDateRange(userType, start, end);
-
-	    double activePercentage = 0;
-	    if (totalUsers != null && totalUsers > 0) {
-	        activePercentage = ((double) activeUsers / totalUsers) * 100;
-	    }
-
 	    Map<String, Object> map = new HashMap<>();
+
+	    List<User> users = userRepository.findByUserType(userType);
+
+	    int totalUsers = users.size();
+	    long activeUsers = users.stream().filter(user -> Boolean.TRUE.equals(user.getUserIsActive())).count();
+	    String activePercentage = totalUsers > 0
+	            ? String.format("%.2f", (activeUsers * 100.0) / totalUsers)
+	            : "0.00";
+
 	    map.put("userType", userType);
 	    map.put("totalUsers", totalUsers);
 	    map.put("activeUsers", activeUsers);
-	    map.put("activePercentage", String.format("%.2f", activePercentage));
+	    map.put("activePercentage", activePercentage);
+
+	    // Handle doctor leave info
+	    if ("Doctor".equalsIgnoreCase(userType)) {
+	        List<Map<String, Object>> leaveList = new ArrayList<>();
+	        int leaveCount = 0;
+
+	        for (User doctor : users) {
+	            List<DoctorLeaveList> leaves = doctorLeaveListRepository.findByUserUserIdAndDoctorLeaveDateBetween(
+	                    doctor.getUserId(), start, end
+	            );
+
+	            if (!leaves.isEmpty()) {
+	                leaveCount += leaves.size();
+	                Map<String, Object> leaveMap = new HashMap<>();
+	                leaveMap.put("userId", doctor.getUserId());
+	                leaveMap.put("name", doctor.getFirstName() + " " + doctor.getLastName());
+	                leaveMap.put("leaveDates", leaves.stream().map(DoctorLeaveList::getDoctorLeaveDate).collect(Collectors.toList()));
+
+	                leaveList.add(leaveMap);
+	            }
+	        }
+
+	        map.put("leaveCount", leaveCount);
+	        map.put("leaveList", leaveList);
+	    }
+
 	    return map;
 	}
+
 
 	@Override
 	public ResponseEntity<?> getAllPatientListCount(String startDate, String endDate) {
@@ -2638,11 +2666,14 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	        Date start = sdf.parse(startDate);
 	        Date end = sdf.parse(endDate);
 
-	        // Total patients (no filter)
+	        // Total patients
 	        Integer totalPatients = patientDetailsRepository.countTotalPatients();
 
 	        // Active patients within date range
 	        Integer activePatients = patientDetailsRepository.countActivePatientsBetweenDates(start, end);
+
+	        // Sub relation count
+	        Integer subRelationCount = patientSubChildDetailsRepository.countAllSubRelations();
 
 	        // Calculate percentage
 	        double activePercentage = 0;
@@ -2650,11 +2681,12 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	            activePercentage = ((double) activePatients / totalPatients) * 100;
 	        }
 
-	        // Prepare response
+	        // Build response
 	        Map<String, Object> responseMap = new HashMap<>();
 	        responseMap.put("totalPatients", totalPatients);
 	        responseMap.put("activePatients", activePatients);
 	        responseMap.put("activePercentage", String.format("%.2f", activePercentage));
+	        responseMap.put("subRelationCount", subRelationCount); // ✅ Add this line
 
 	        return ResponseEntity.ok(new Response(1, "Success", responseMap));
 	    } catch (Exception e) {
@@ -2671,31 +2703,68 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	        Date start = sdf.parse(startDate);
 	        Date end = sdf.parse(endDate);
 
-	        // Count all users for given hospital & user type
-	        Integer totalUsers = userRepository.countByUserTypeAndHospitalId(userType, hospitalId);
+	        List<Map<String, Object>> resultList = new ArrayList<>();
 
-	        // Count active users within date range
-	        Integer activeUsers = userRepository.countActiveUsersByHospitalIdAndDateRange(userType, hospitalId, start, end);
-
-	        double activePercentage = 0;
-	        if (totalUsers != null && totalUsers > 0) {
-	            activePercentage = ((double) activeUsers / totalUsers) * 100;
+	        if (userType != null && !userType.trim().isEmpty()) {
+	            resultList.add(getUserTypeStatsByHospital(userType, hospitalId, start, end));
+	        } else {
+	            List<String> allUserTypes = userRepository.findAllDistinctUserTypesByHospital(hospitalId);
+	            for (String type : allUserTypes) {
+	                resultList.add(getUserTypeStatsByHospital(type, hospitalId, start, end));
+	            }
 	        }
 
-	        Map<String, Object> responseMap = new HashMap<>();
-	        responseMap.put("userType", userType);
-	        responseMap.put("hospitalId", hospitalId);
-	        responseMap.put("totalUsers", totalUsers);
-	        responseMap.put("activeUsers", activeUsers);
-	        responseMap.put("activePercentage", String.format("%.2f", activePercentage));
+	        return ResponseEntity.ok(new Response(1, "Success", resultList));
 
-	        return ResponseEntity.ok(new Response(1, "Success", responseMap));
 	    } catch (Exception e) {
 	        e.printStackTrace();
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                .body(new Response(0, "Error", "Failed to fetch employee count by hospital ID."));
+	                .body(new Response(0, "Error", "Failed to fetch employee list count by hospital ID."));
 	    }
 	}
+
+	private Map<String, Object> getUserTypeStatsByHospital(String userType, Integer hospitalId, Date start, Date end) {
+	    Map<String, Object> map = new HashMap<>();
+
+	    List<User> users = userRepository.findByUserTypeAndHospitalId(userType, hospitalId);
+	    int totalUsers = users.size();
+	    long activeUsers = users.stream().filter(u -> Boolean.TRUE.equals(u.getUserIsActive())).count();
+	    String activePercentage = totalUsers > 0
+	            ? String.format("%.2f", (activeUsers * 100.0) / totalUsers)
+	            : "0.00";
+
+	    map.put("userType", userType);
+	    map.put("hospitalId", hospitalId);
+	    map.put("totalUsers", totalUsers);
+	    map.put("activeUsers", activeUsers);
+	    map.put("activePercentage", activePercentage);
+
+	    // If doctor, add leave info
+	    if ("Doctor".equalsIgnoreCase(userType)) {
+	        List<Map<String, Object>> leaveList = new ArrayList<>();
+	        int leaveCount = 0;
+
+	        for (User doctor : users) {
+	            List<DoctorLeaveList> leaves = doctorLeaveListRepository
+	                .findByUserUserIdAndDoctorLeaveDateBetween(doctor.getUserId(), start, end);
+
+	            if (!leaves.isEmpty()) {
+	                leaveCount += leaves.size();
+	                Map<String, Object> leaveMap = new HashMap<>();
+	                leaveMap.put("userId", doctor.getUserId());
+	                leaveMap.put("name", doctor.getFirstName() + " " + doctor.getLastName());
+	                leaveMap.put("leaveDates", leaves.stream().map(DoctorLeaveList::getDoctorLeaveDate).collect(Collectors.toList()));
+	                leaveList.add(leaveMap);
+	            }
+	        }
+
+	        map.put("leaveCount", leaveCount);
+	        map.put("leaveList", leaveList);
+	    }
+
+	    return map;
+	}
+
 
 	@Override
 	public ResponseEntity<?> getAllPatientListCountByHospitalId(String startDate, String endDate, Integer hospitalId) {
@@ -2704,28 +2773,31 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	        Date start = sdf.parse(startDate);
 	        Date end = sdf.parse(endDate);
 
-	        // Total + active parent patients
+	        // Main patients
 	        Integer totalMainPatients = patientMappedHospitalIdRepository.countTotalPatientsByHospitalId(hospitalId);
 	        Integer activeMainPatients = patientMappedHospitalIdRepository.countActivePatientsByHospitalIdAndDateRange(hospitalId, start, end);
 
-	        // Total + active sub-patients (child/dependent)
+	        // Sub patients
 	        Integer totalSubPatients = patientSubChildDetailsRepository.countTotalSubPatientsByHospitalId(hospitalId);
 	        Integer activeSubPatients = patientSubChildDetailsRepository.countActiveSubPatientsByHospitalIdAndDateRange(hospitalId, start, end);
 
-	        int totalPatients = (totalMainPatients != null ? totalMainPatients : 0) +
-	                            (totalSubPatients != null ? totalSubPatients : 0);
-	        int activePatients = (activeMainPatients != null ? activeMainPatients : 0) +
-	                             (activeSubPatients != null ? activeSubPatients : 0);
+	        // Safe defaults
+	        int totalMain = (totalMainPatients != null) ? totalMainPatients : 0;
+	        int activeMain = (activeMainPatients != null) ? activeMainPatients : 0;
+	        int totalSub = (totalSubPatients != null) ? totalSubPatients : 0;
+	        int activeSub = (activeSubPatients != null) ? activeSubPatients : 0;
 
-	        double activePercentage = 0;
-	        if (totalPatients > 0) {
-	            activePercentage = ((double) activePatients / totalPatients) * 100;
-	        }
+	        int totalPatients = totalMain + totalSub;
+	        int activePatients = activeMain + activeSub;
+
+	        double activePercentage = (totalPatients > 0)
+	                ? ((double) activePatients / totalPatients) * 100
+	                : 0.0;
 
 	        Map<String, Object> responseMap = new HashMap<>();
 	        responseMap.put("hospitalId", hospitalId);
-	        responseMap.put("totalMainPatients", totalMainPatients);
-	        responseMap.put("totalSubPatients", totalSubPatients);
+	        responseMap.put("totalMainPatients", totalMain);
+	        responseMap.put("totalSubPatients", totalSub);
 	        responseMap.put("totalPatients", totalPatients);
 	        responseMap.put("activePatients", activePatients);
 	        responseMap.put("activePercentage", String.format("%.2f", activePercentage));
@@ -2737,6 +2809,65 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	                .body(new Response(0, "Error", "Failed to fetch patient count by hospital ID."));
 	    }
 	}
+
+	@Override
+	public ResponseEntity<?> getAllAppointmentListByOnlineAndOffline(String startDate, String endDate) {
+	    try {
+	        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+	        Date start = sdf.parse(startDate);
+	        Date end = sdf.parse(endDate);
+
+	        // Count grouped by appointmentType
+	        List<Object[]> typeResults = patientAppoitnmentRepository.getAppointmentCountsByType(start, end);
+	        List<Map<String, Object>> typeList = new ArrayList<>();
+	        for (Object[] row : typeResults) {
+	            Map<String, Object> map = new HashMap<>();
+	            map.put("appointmentType", row[0]);
+	            map.put("count", ((Number) row[1]).longValue());
+	            typeList.add(map);
+	        }
+
+	        // Count grouped by appointmentStatus
+	        List<Object[]> statusResults = patientAppoitnmentRepository.getAppointmentCountsByStatus(start, end);
+	        List<Map<String, Object>> statusList = new ArrayList<>();
+	        long totalAppointmentStatus = 0;
+	        for (Object[] row : statusResults) {
+	            long count = ((Number) row[1]).longValue();
+	            Map<String, Object> map = new HashMap<>();
+	            map.put("doctorAppointmentStatus", row[0]);
+	            map.put("count", count);
+	            statusList.add(map);
+	            totalAppointmentStatus += count;
+	        }
+
+	        // Count grouped by pharmacyStatus
+	        List<Object[]> pharmacyResults = patientAppoitnmentRepository.getAppointmentCountsByPharmacyStatus(start, end);
+	        List<Map<String, Object>> pharmacyList = new ArrayList<>();
+	        for (Object[] row : pharmacyResults) {
+	            Map<String, Object> map = new HashMap<>();
+	            map.put("pharmacyStatus", row[0]);
+	            map.put("count", ((Number) row[1]).longValue());
+	            pharmacyList.add(map);
+	        }
+
+	        // Combine all results
+	        Map<String, Object> responseData = new HashMap<>();
+	        responseData.put("appointmentTypeCounts", typeList);
+	        responseData.put("appointmentStatusCounts", statusList);
+	        responseData.put("pharmacyStatusCounts", pharmacyList);
+	        responseData.put("totalAppointmentStatus", totalAppointmentStatus);
+
+	        return ResponseEntity.ok(new Response(1, "Success", responseData));
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                             .body(new Response(0, "Error", "Failed to fetch appointment data."));
+	    }
+	}
+
+
+
 
 	}
 

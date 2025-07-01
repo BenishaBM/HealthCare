@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 import com.annular.healthCare.model.PatientSubChildDetails;
 
 @Repository
-public interface PatientSubChildDetailsRepository extends JpaRepository<PatientSubChildDetails,Integer> {
+public interface PatientSubChildDetailsRepository extends JpaRepository<PatientSubChildDetails, Integer> {
 
 	Optional<PatientSubChildDetails> findByPatientDetailsIdAndPatientName(Integer patientDetailsId, String patientName);
 
@@ -20,22 +20,23 @@ public interface PatientSubChildDetailsRepository extends JpaRepository<PatientS
 
 	@Query("SELECT p.patientSubChildDetailsId, p.patientName FROM PatientSubChildDetails p WHERE p.patientDetailsId = :patientDetailsId AND p.relationshipType = :relationshipType")
 	List<Object[]> findIdAndNameByPatientDetailsIdAndRelationshipType(
-	    @Param("patientDetailsId") Integer patientDetailsId,
-	    @Param("relationshipType") String relationshipType
-	);
+			@Param("patientDetailsId") Integer patientDetailsId, @Param("relationshipType") String relationshipType);
 
-	@Query("SELECT COUNT(p) FROM PatientSubChildDetails p WHERE p.createdBy IN " +
-		       "(SELECT pm.patientId FROM PatientMappedHospitalId pm WHERE pm.hospitalId = :hospitalId) " +
-		       "AND p.userIsActive = true AND p.userCreatedOn BETWEEN :start AND :end")
-		Integer countActiveSubPatientsByHospitalIdAndDateRange(Integer hospitalId,
-		                                                       Date start,
-		                                                       Date end);
+	@Query("SELECT COUNT(p) FROM PatientSubChildDetails p")
+	Integer countAllSubRelations();
 
-		@Query("SELECT COUNT(p) FROM PatientSubChildDetails p WHERE p.createdBy IN " +
-		       "(SELECT pm.patientId FROM PatientMappedHospitalId pm WHERE pm.hospitalId = :hospitalId)")
+
+
+	@Query("SELECT COUNT(p) FROM PatientSubChildDetails p WHERE p.createdBy IN (" +
+		       "SELECT pm.patientId FROM PatientMappedHospitalId pm WHERE pm.hospitalId = :hospitalId)")
 		Integer countTotalSubPatientsByHospitalId(Integer hospitalId);
 
 
-
+	@Query("SELECT COUNT(p) FROM PatientSubChildDetails p WHERE p.userIsActive = true AND p.userCreatedOn BETWEEN :start AND :end " +
+		       "AND p.createdBy IN (" +
+		       "SELECT pm.patientId FROM PatientMappedHospitalId pm WHERE pm.hospitalId = :hospitalId)")
+		Integer countActiveSubPatientsByHospitalIdAndDateRange(Integer hospitalId,
+		                                                       Date start,
+		                                                      Date end);
 
 }

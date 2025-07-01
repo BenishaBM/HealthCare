@@ -28,4 +28,11 @@ public interface DoctorLeaveListRepository extends JpaRepository<DoctorLeaveList
     @Query("SELECT COUNT(d) > 0 FROM DoctorLeaveList d WHERE d.user.userId = :userId AND d.doctorLeaveDate = :leaveDate AND d.userIsActive = true")
 	boolean existsByUserUserIdAndDoctorLeaveDate(Integer userId, Date leaveDate);
 
+    @Query("SELECT d FROM DoctorLeaveList d WHERE d.user.userId = :userId AND d.doctorLeaveDate BETWEEN :start AND :end")
+    List<DoctorLeaveList> findByUserUserIdAndDoctorLeaveDateBetween(Integer userId,
+                                                        Date start,
+                                                       Date end);
+
+	
+
 }

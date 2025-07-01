@@ -97,6 +97,16 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 	   @Query("SELECT DISTINCT u.userType FROM User u")
 	    List<String> findAllDistinctUserTypes();
 
+	List<User> findByUserTypeIgnoreCase(String string);
+
+	@Query("SELECT u FROM User u WHERE u.userType = :userType AND u.hospitalId = :hospitalId")
+	List<User> findByUserTypeAndHospitalId(String userType,Integer hospitalId);
+
+	@Query("SELECT DISTINCT u.userType FROM User u WHERE u.hospitalId = :hospitalId")
+	List<String> findAllDistinctUserTypesByHospital(Integer hospitalId);
+
+
+
 
 	
 	

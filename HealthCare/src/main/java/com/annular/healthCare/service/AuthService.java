@@ -66,6 +66,8 @@ public interface AuthService {
 
 	ResponseEntity<?> getAllPatientListCountByHospitalId(String startDate, String endDate, Integer hospitalId);
 
+	ResponseEntity<?> getAllAppointmentListByOnlineAndOffline(String startDate, String endDate);
+
 
 	
 }
