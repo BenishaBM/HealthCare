@@ -82,6 +82,19 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 	@Query("SELECT COUNT(u) FROM User u WHERE u.userType = :userType AND u.userIsActive = true")
 	Integer countByUserType(@Param("userType") String userType);
 
+	@Query("SELECT COUNT(u) FROM User u WHERE u.userType = :userType AND u.hospitalId = :hospitalId")
+	Integer countByUserTypeAndHospitalId(String userType,
+	                                     Integer hospitalId);
+
+	@Query("SELECT COUNT(u) FROM User u WHERE u.userType = :userType AND u.hospitalId = :hospitalId AND u.userIsActive = true AND u.userCreatedOn BETWEEN :start AND :end")
+	Integer countActiveUsersByHospitalIdAndDateRange(String userType,
+	                                                 Integer hospitalId,
+	                                                 Date start,
+	                                                 Date end);
+	@Query("SELECT u FROM User u WHERE u.emailId = emailId AND u.userIsActive = true")
+	Optional<User> findByEmailIdsss(String email);
+
+
 	
 	
 

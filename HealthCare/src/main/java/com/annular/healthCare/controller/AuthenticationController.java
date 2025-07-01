@@ -538,5 +538,29 @@ public class AuthenticationController {
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+	
+	@GetMapping("/getAllEmployeeListCountByHospitalId")
+	public ResponseEntity<?> getAllEmployeeListCountByHospitalId(@RequestParam("startDate") String startDate,@RequestParam("endDate") String endDate,@RequestParam("hospitalId")Integer hospitalId,@RequestParam("userType")String userType) {
+	    try {
+	        // Call the service with startDate and endDate
+	        return authService.getAllEmployeeListCountByHospitalId(startDate, endDate,hospitalId,userType);
+	    } catch (Exception e) {
+	        logger.error("getAllEmployeeListCountByHospitalId Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+	
+	@GetMapping("/getAllPatientListCountByHospitalId")
+	public ResponseEntity<?> getAllPatientListCountByHospitalId(@RequestParam("startDate") String startDate,@RequestParam("endDate") String endDate,@RequestParam("hospitalId")Integer hospitalId) {
+	    try {
+	        // Call the service with startDate and endDate
+	        return authService.getAllPatientListCountByHospitalId(startDate, endDate,hospitalId);
+	    } catch (Exception e) {
+	        logger.error("getAllPatientListCountByHospitalId Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 
 }

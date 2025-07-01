@@ -79,6 +79,7 @@ import com.annular.healthCare.repository.MediaFileRepository;
 import com.annular.healthCare.repository.PatientAppoitmentTablerepository;
 import com.annular.healthCare.repository.PatientDetailsRepository;
 import com.annular.healthCare.repository.PatientMappedHospitalIdRepository;
+import com.annular.healthCare.repository.PatientSubChildDetailsRepository;
 import com.annular.healthCare.repository.RefreshTokenRepository;
 import com.annular.healthCare.repository.SupportStaffMasterDataRepository;
 import com.annular.healthCare.repository.UserRepository;
@@ -101,6 +102,9 @@ public class AuthServiceImpl implements AuthService {
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
+	
+	@Autowired
+	private PatientSubChildDetailsRepository patientSubChildDetailsRepository;
 
 	@Autowired
 	RefreshTokenRepository refreshTokenRepository;
@@ -2646,7 +2650,85 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	    }
 	}
 
+	@Override
+	public ResponseEntity<?> getAllEmployeeListCountByHospitalId(String startDate, String endDate, Integer hospitalId, String userType) {
+	    try {
+	        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+	        Date start = sdf.parse(startDate);
+	        Date end = sdf.parse(endDate);
+
+	        // Count all users for given hospital & user type
+	        Integer totalUsers = userRepository.countByUserTypeAndHospitalId(userType, hospitalId);
+
+	        // Count active users within date range
+	        Integer activeUsers = userRepository.countActiveUsersByHospitalIdAndDateRange(userType, hospitalId, start, end);
+
+	        double activePercentage = 0;
+	        if (totalUsers != null && totalUsers > 0) {
+	            activePercentage = ((double) activeUsers / totalUsers) * 100;
+	        }
+
+	        Map<String, Object> responseMap = new HashMap<>();
+	        responseMap.put("userType", userType);
+	        responseMap.put("hospitalId", hospitalId);
+	        responseMap.put("totalUsers", totalUsers);
+	        responseMap.put("activeUsers", activeUsers);
+	        responseMap.put("activePercentage", String.format("%.2f", activePercentage));
+
+	        return ResponseEntity.ok(new Response(1, "Success", responseMap));
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "Error", "Failed to fetch employee count by hospital ID."));
+	    }
+	}
+
+	@Override
+	public ResponseEntity<?> getAllPatientListCountByHospitalId(String startDate, String endDate, Integer hospitalId) {
+	    try {
+	        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+	        Date start = sdf.parse(startDate);
+	        Date end = sdf.parse(endDate);
+
+	        // Total + active parent patients
+	        Integer totalMainPatients = patientMappedHospitalIdRepository.countTotalPatientsByHospitalId(hospitalId);
+	        Integer activeMainPatients = patientMappedHospitalIdRepository.countActivePatientsByHospitalIdAndDateRange(hospitalId, start, end);
+
+	        // Total + active sub-patients (child/dependent)
+	        Integer totalSubPatients = patientSubChildDetailsRepository.countTotalSubPatientsByHospitalId(hospitalId);
+	        Integer activeSubPatients = patientSubChildDetailsRepository.countActiveSubPatientsByHospitalIdAndDateRange(hospitalId, start, end);
+
+	        int totalPatients = (totalMainPatients != null ? totalMainPatients : 0) +
+	                            (totalSubPatients != null ? totalSubPatients : 0);
+	        int activePatients = (activeMainPatients != null ? activeMainPatients : 0) +
+	                             (activeSubPatients != null ? activeSubPatients : 0);
+
+	        double activePercentage = 0;
+	        if (totalPatients > 0) {
+	            activePercentage = ((double) activePatients / totalPatients) * 100;
+	        }
+
+	        Map<String, Object> responseMap = new HashMap<>();
+	        responseMap.put("hospitalId", hospitalId);
+	        responseMap.put("totalMainPatients", totalMainPatients);
+	        responseMap.put("totalSubPatients", totalSubPatients);
+	        responseMap.put("totalPatients", totalPatients);
+	        responseMap.put("activePatients", activePatients);
+	        responseMap.put("activePercentage", String.format("%.2f", activePercentage));
+
+	        return ResponseEntity.ok(new Response(1, "Success", responseMap));
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "Error", "Failed to fetch patient count by hospital ID."));
+	    }
+	}
+
+	}
 
 
 
-}
+
+
+
+

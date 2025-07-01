@@ -62,6 +62,10 @@ public interface AuthService {
 
 	ResponseEntity<?> getAllPatientListCount(String startDate, String endDate);
 
+	ResponseEntity<?> getAllEmployeeListCountByHospitalId(String startDate, String endDate, Integer hospitalId, String userType);
+
+	ResponseEntity<?> getAllPatientListCountByHospitalId(String startDate, String endDate, Integer hospitalId);
+
 
 	
 }
