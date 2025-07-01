@@ -502,4 +502,17 @@ public class AuthenticationController {
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+	
+	@GetMapping("getAllHospitalList")
+	public ResponseEntity<?> getAllHospitalListCount(@RequestBody HospitalDataListWebModel userWebModel){
+	    try {
+	        // Call the service to perform the update
+	        return authService.getAllHospitalListCount(userWebModel);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("getAllHospitalListCount Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 }

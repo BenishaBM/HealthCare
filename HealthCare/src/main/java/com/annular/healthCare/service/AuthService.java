@@ -56,6 +56,8 @@ public interface AuthService {
 
 	ResponseEntity<?> getAllbookingDemo(Integer page, Integer size);
 
+	ResponseEntity<?> getAllHospitalListCount(HospitalDataListWebModel userWebModel);
+
 
 	
 }

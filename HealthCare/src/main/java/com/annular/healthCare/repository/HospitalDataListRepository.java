@@ -33,6 +33,9 @@ public interface HospitalDataListRepository extends JpaRepository<HospitalDataLi
 	@Query("SELECT u FROM HospitalDataList u WHERE u.emailId = :emailId AND u.userIsActive = true")
 	Optional<HospitalDataList> findByEmailId(String emailId);
 
+	@Query("SELECT COUNT(h) FROM HospitalDataList h WHERE h.userIsActive = true")
+	Integer countAllHospitals();
+
 
 
 

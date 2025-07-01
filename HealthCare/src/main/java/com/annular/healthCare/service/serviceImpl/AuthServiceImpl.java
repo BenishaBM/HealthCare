@@ -2550,6 +2550,21 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	    }
 	}
 
+	@Override
+	public ResponseEntity<?> getAllHospitalListCount(HospitalDataListWebModel userWebModel) {
+	    try {
+	        Integer hospitalCount = hospitalDataListRepository.countAllHospitals(); // or countActiveHospitals()
+	        Map<String, Object> responseMap = new HashMap<>();
+	        responseMap.put("hospitalCount", hospitalCount);
+	        return ResponseEntity.ok(new Response(1, "success", responseMap));
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	            .body(new Response(0, "error", "Failed to fetch hospital count."));
+	    }
+	}
+
+
 
 
 
