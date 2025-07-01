@@ -2591,29 +2591,43 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	        Date start = sdf.parse(startDate);
 	        Date end = sdf.parse(endDate);
 
-	        // Get total users by userType (no date filter)
-	        Integer totalUsers = userRepository.countByUserType(userType);
+	        List<Map<String, Object>> resultList = new ArrayList<>();
 
-	        // Get active users within date range
-	        Integer activeUsers = userRepository.countActiveByUserTypeAndDateRange(userType, start, end);
-
-	        double activePercentage = 0;
-	        if (totalUsers != null && totalUsers > 0) {
-	            activePercentage = ((double) activeUsers / totalUsers) * 100;
+	        // If userType is provided, process only that
+	        if (userType != null && !userType.trim().isEmpty()) {
+	            resultList.add(getUserTypeStats(userType, start, end));
+	        } else {
+	            // Handle all user types (e.g., assume you have a method or enum for valid types)
+	            List<String> allUserTypes = userRepository.findAllDistinctUserTypes(); // or manually list them
+	            for (String type : allUserTypes) {
+	                resultList.add(getUserTypeStats(type, start, end));
+	            }
 	        }
 
-	        Map<String, Object> responseMap = new HashMap<>();
-	        responseMap.put("userType", userType);
-	        responseMap.put("totalUsers", totalUsers);
-	        responseMap.put("activeUsers", activeUsers);
-	        responseMap.put("activePercentage", String.format("%.2f", activePercentage));
-
-	        return ResponseEntity.ok(new Response(1, "Success", responseMap));
+	        return ResponseEntity.ok(new Response(1, "Success", resultList));
 	    } catch (Exception e) {
 	        e.printStackTrace();
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 	                .body(new Response(0, "Error", "Failed to fetch employee list count."));
 	    }
+	}
+
+	// Helper method to reduce duplication
+	private Map<String, Object> getUserTypeStats(String userType, Date start, Date end) {
+	    Integer totalUsers = userRepository.countByUserType(userType);
+	    Integer activeUsers = userRepository.countActiveByUserTypeAndDateRange(userType, start, end);
+
+	    double activePercentage = 0;
+	    if (totalUsers != null && totalUsers > 0) {
+	        activePercentage = ((double) activeUsers / totalUsers) * 100;
+	    }
+
+	    Map<String, Object> map = new HashMap<>();
+	    map.put("userType", userType);
+	    map.put("totalUsers", totalUsers);
+	    map.put("activeUsers", activeUsers);
+	    map.put("activePercentage", String.format("%.2f", activePercentage));
+	    return map;
 	}
 
 	@Override

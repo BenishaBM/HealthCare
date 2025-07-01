@@ -94,6 +94,9 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 	@Query("SELECT u FROM User u WHERE u.emailId = emailId AND u.userIsActive = true")
 	Optional<User> findByEmailIdsss(String email);
 
+	   @Query("SELECT DISTINCT u.userType FROM User u")
+	    List<String> findAllDistinctUserTypes();
+
 
 	
 	

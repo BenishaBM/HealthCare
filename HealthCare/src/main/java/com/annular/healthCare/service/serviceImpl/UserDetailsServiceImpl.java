@@ -84,8 +84,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         } else {
             // Default behavior for regular users
             logger.info("Attempting to load a regular user with email: {}", email);
-           Optional<User> optionalUser = userRepo.findByEmailIds(email);
-        //    Optional<User> optionalUser = userRepo.findByEmailIdsss(email);
+            Optional<User> optionalUser = userRepo.findByEmailIds(email);
             
             if (optionalUser.isPresent()) {
                 User user = optionalUser.get();

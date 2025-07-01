@@ -53,20 +53,19 @@ public class JwtUtils {
     }
 
     public String generateJwtTokenForRefreshToken(User user) {
+
+//		UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+
         Claims claims = Jwts.claims();
         claims.put("userEmailId", user.getEmailId());
         claims.put("userType", user.getUserType());
 
-        byte[] keyBytes = new byte[64]; // Consider replacing with a secure key from properties
+        byte[] keyBytes = new byte[64];
         SecretKey key = new SecretKeySpec(keyBytes, "HmacSHA512");
 
-        return Jwts.builder()
-            .setSubject(String.valueOf(user.getUserId())) // ✅ fixed here
-            .setClaims(claims)
-            .setIssuedAt(new Date())
-            .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
-            .signWith(SignatureAlgorithm.HS512, key)
-            .compact();
+        return Jwts.builder().setSubject(user.getEmailId()).setClaims(claims).setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(SignatureAlgorithm.HS512, key).compact();
     }
 
     public String getUserNameFromJwtToken(String token) {

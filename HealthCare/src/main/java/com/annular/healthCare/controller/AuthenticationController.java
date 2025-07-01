@@ -514,18 +514,20 @@ public class AuthenticationController {
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
-	
 	@GetMapping("/getAllEmployeeListCount")
-	public ResponseEntity<?> getAllEmployeeListCount(@RequestParam("startDate") String startDate,@RequestParam("endDate") String endDate,@RequestParam("userType")String userType) {
+	public ResponseEntity<?> getAllEmployeeListCount(
+	        @RequestParam("startDate") String startDate,
+	        @RequestParam("endDate") String endDate,
+	        @RequestParam(value = "userType", required = false) String userType) {
 	    try {
-	        // Call the service with startDate and endDate
-	        return authService.getAllEmployeeListCount(startDate, endDate,userType);
+	        return authService.getAllEmployeeListCount(startDate, endDate, userType);
 	    } catch (Exception e) {
 	        logger.error("getAllEmployeeListCount Method Exception: {}", e.getMessage(), e);
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+
 	
 	@GetMapping("/getAllPatientListCount")
 	public ResponseEntity<?> getAllPatientListCount(@RequestParam("startDate") String startDate,@RequestParam("endDate") String endDate) {
