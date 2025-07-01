@@ -1,5 +1,6 @@
 package com.annular.healthCare.repository;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,6 +43,13 @@ public interface PatientDetailsRepository extends JpaRepository<PatientDetails, 
 
 	@Query("SELECT p FROM PatientDetails p WHERE LOWER(p.emailId) = LOWER(:email)")
 	Optional<PatientDetails> findByEmailIdIgnoreCase(@Param("email") String email);
+
+	@Query("SELECT COUNT(p) FROM PatientDetails p WHERE p.userIsActive = true")
+	Integer countTotalPatients();
+
+	@Query("SELECT COUNT(p) FROM PatientDetails p WHERE p.userIsActive = true AND p.userCreatedOn BETWEEN :start AND :end")
+	Integer countActivePatientsBetweenDates(Date start,Date end);
+
 
 	
 

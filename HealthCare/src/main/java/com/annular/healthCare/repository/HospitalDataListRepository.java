@@ -1,10 +1,12 @@
 package com.annular.healthCare.repository;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.annular.healthCare.model.HospitalDataList;
@@ -35,6 +37,11 @@ public interface HospitalDataListRepository extends JpaRepository<HospitalDataLi
 
 	@Query("SELECT COUNT(h) FROM HospitalDataList h WHERE h.userIsActive = true")
 	Integer countAllHospitals();
+
+
+
+	@Query("SELECT COUNT(h) FROM HospitalDataList h WHERE h.userCreatedOn BETWEEN :start AND :end AND h.userIsActive = :active")
+	Integer countByCreatedOnBetweenAndIsActive(Date start,Date end, Boolean active);
 
 
 

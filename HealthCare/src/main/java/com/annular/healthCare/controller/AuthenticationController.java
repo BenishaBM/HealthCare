@@ -503,16 +503,40 @@ public class AuthenticationController {
 	    }
 	}
 	
-	@GetMapping("getAllHospitalList")
-	public ResponseEntity<?> getAllHospitalListCount(@RequestBody HospitalDataListWebModel userWebModel){
+	@GetMapping("/getAllHospitalListCount")
+	public ResponseEntity<?> getAllHospitalListCount(@RequestParam("startDate") String startDate,@RequestParam("endDate") String endDate) {
 	    try {
-	        // Call the service to perform the update
-	        return authService.getAllHospitalListCount(userWebModel);
+	        // Call the service with startDate and endDate
+	        return authService.getAllHospitalListCount(startDate, endDate);
 	    } catch (Exception e) {
-	        // Handle errors and return a meaningful response
 	        logger.error("getAllHospitalListCount Method Exception: {}", e.getMessage(), e);
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+	
+	@GetMapping("/getAllEmployeeListCount")
+	public ResponseEntity<?> getAllEmployeeListCount(@RequestParam("startDate") String startDate,@RequestParam("endDate") String endDate,@RequestParam("userType")String userType) {
+	    try {
+	        // Call the service with startDate and endDate
+	        return authService.getAllEmployeeListCount(startDate, endDate,userType);
+	    } catch (Exception e) {
+	        logger.error("getAllEmployeeListCount Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+	
+	@GetMapping("/getAllPatientListCount")
+	public ResponseEntity<?> getAllPatientListCount(@RequestParam("startDate") String startDate,@RequestParam("endDate") String endDate) {
+	    try {
+	        // Call the service with startDate and endDate
+	        return authService.getAllPatientListCount(startDate, endDate);
+	    } catch (Exception e) {
+	        logger.error("getAllPatientListCount Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+
 }

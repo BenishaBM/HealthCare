@@ -1,5 +1,6 @@
 package com.annular.healthCare.repository;
 
+import java.util.Date;
 import java.util.List;
 
 import java.util.Optional;
@@ -72,6 +73,15 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
 	@Query("SELECT u FROM User u WHERE u.emailId = :emailId AND u.userIsActive = true")
 	Optional<User> findByEmailIdss(String emailId);
+
+
+
+	@Query("SELECT COUNT(u) FROM User u WHERE u.userType = :userType AND u.userIsActive = true AND u.userCreatedOn BETWEEN :start AND :end")
+	Integer countActiveByUserTypeAndDateRange(String userType,Date start,Date end);
+
+	@Query("SELECT COUNT(u) FROM User u WHERE u.userType = :userType AND u.userIsActive = true")
+	Integer countByUserType(@Param("userType") String userType);
+
 	
 	
 

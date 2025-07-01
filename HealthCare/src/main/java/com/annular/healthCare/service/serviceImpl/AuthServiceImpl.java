@@ -2551,19 +2551,100 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	}
 
 	@Override
-	public ResponseEntity<?> getAllHospitalListCount(HospitalDataListWebModel userWebModel) {
+	public ResponseEntity<?> getAllHospitalListCount(String startDate, String endDate) {
 	    try {
-	        Integer hospitalCount = hospitalDataListRepository.countAllHospitals(); // or countActiveHospitals()
+	        // Parse dates (assuming input is in "yyyy-MM-dd" format)
+	        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+	        Date start = sdf.parse(startDate);
+	        Date end = sdf.parse(endDate);
+
+	        // Get all hospitals regardless of date
+	        Integer totalHospitalCount = hospitalDataListRepository.countAllHospitals();
+	        Integer activeHospitalCount = hospitalDataListRepository.countByCreatedOnBetweenAndIsActive(start, end, true);
+
+	        double activePercentage = 0;
+	        if (totalHospitalCount != null && totalHospitalCount > 0) {
+	            activePercentage = ((double) activeHospitalCount / totalHospitalCount) * 100;
+	        }
+
 	        Map<String, Object> responseMap = new HashMap<>();
-	        responseMap.put("hospitalCount", hospitalCount);
-	        return ResponseEntity.ok(new Response(1, "success", responseMap));
+	        responseMap.put("totalHospitals", totalHospitalCount);
+	        responseMap.put("activeHospitals", activeHospitalCount);
+	        responseMap.put("activePercentage", String.format("%.2f", activePercentage));
+
+	        return ResponseEntity.ok(new Response(1, "Success", responseMap));
 	    } catch (Exception e) {
 	        e.printStackTrace();
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	            .body(new Response(0, "error", "Failed to fetch hospital count."));
+	                .body(new Response(0, "Error", "Failed to fetch hospital count."));
 	    }
 	}
 
+	@Override
+	public ResponseEntity<?> getAllEmployeeListCount(String startDate, String endDate, String userType) {
+	    try {
+	        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+	        Date start = sdf.parse(startDate);
+	        Date end = sdf.parse(endDate);
+
+	        // Get total users by userType (no date filter)
+	        Integer totalUsers = userRepository.countByUserType(userType);
+
+	        // Get active users within date range
+	        Integer activeUsers = userRepository.countActiveByUserTypeAndDateRange(userType, start, end);
+
+	        double activePercentage = 0;
+	        if (totalUsers != null && totalUsers > 0) {
+	            activePercentage = ((double) activeUsers / totalUsers) * 100;
+	        }
+
+	        Map<String, Object> responseMap = new HashMap<>();
+	        responseMap.put("userType", userType);
+	        responseMap.put("totalUsers", totalUsers);
+	        responseMap.put("activeUsers", activeUsers);
+	        responseMap.put("activePercentage", String.format("%.2f", activePercentage));
+
+	        return ResponseEntity.ok(new Response(1, "Success", responseMap));
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "Error", "Failed to fetch employee list count."));
+	    }
+	}
+
+	@Override
+	public ResponseEntity<?> getAllPatientListCount(String startDate, String endDate) {
+	    try {
+	        // Convert dates
+	        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+	        Date start = sdf.parse(startDate);
+	        Date end = sdf.parse(endDate);
+
+	        // Total patients (no filter)
+	        Integer totalPatients = patientDetailsRepository.countTotalPatients();
+
+	        // Active patients within date range
+	        Integer activePatients = patientDetailsRepository.countActivePatientsBetweenDates(start, end);
+
+	        // Calculate percentage
+	        double activePercentage = 0;
+	        if (totalPatients != null && totalPatients > 0) {
+	            activePercentage = ((double) activePatients / totalPatients) * 100;
+	        }
+
+	        // Prepare response
+	        Map<String, Object> responseMap = new HashMap<>();
+	        responseMap.put("totalPatients", totalPatients);
+	        responseMap.put("activePatients", activePatients);
+	        responseMap.put("activePercentage", String.format("%.2f", activePercentage));
+
+	        return ResponseEntity.ok(new Response(1, "Success", responseMap));
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "Error", "Failed to fetch patient list count."));
+	    }
+	}
 
 
 

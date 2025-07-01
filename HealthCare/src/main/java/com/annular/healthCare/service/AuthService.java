@@ -56,7 +56,11 @@ public interface AuthService {
 
 	ResponseEntity<?> getAllbookingDemo(Integer page, Integer size);
 
-	ResponseEntity<?> getAllHospitalListCount(HospitalDataListWebModel userWebModel);
+	ResponseEntity<?> getAllHospitalListCount(String startDate, String endDate);
+
+	ResponseEntity<?> getAllEmployeeListCount(String startDate, String endDate, String userType);
+
+	ResponseEntity<?> getAllPatientListCount(String startDate, String endDate);
 
 
 	
