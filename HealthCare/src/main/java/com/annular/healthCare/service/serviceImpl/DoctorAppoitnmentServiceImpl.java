@@ -968,6 +968,8 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 
 	                // Appointment details
 	                map.put("appointmentId", appointment.getAppointmentId());
+	                map.put("dischargeSummary", appointment.getDischargeSummary());
+	                map.put("dischargeStatus", appointment.getDischargeSummaryStatus());
 	                map.put("doctorSlotSpiltTimeId",appointment.getDoctorSlotSpiltTimeId());
 	                map.put("appointmentDate", appointment.getAppointmentDate());
 	                map.put("doctorSlotId", appointment.getDoctorSlotId());
