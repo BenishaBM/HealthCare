@@ -58,7 +58,7 @@ public interface AuthService {
 
 	ResponseEntity<?> getAllHospitalListCount(String startDate, String endDate);
 
-	ResponseEntity<?> getAllEmployeeListCount(String startDate, String endDate, String userType);
+	
 
 	ResponseEntity<?> getAllPatientListCount(String startDate, String endDate);
 
@@ -70,6 +70,8 @@ public interface AuthService {
 
 	ResponseEntity<?> getAllAppointmentListByOnlineAndOfflineByHospitalId(String startDate, String endDate,
 			Integer hospitalId);
+
+	ResponseEntity<?> getAllEmployeeListCount(String startDate, String endDate, String userType, Integer hospitalId);
 
 
 	

@@ -520,9 +520,10 @@ public class AuthenticationController {
 	public ResponseEntity<?> getAllEmployeeListCount(
 	        @RequestParam("startDate") String startDate,
 	        @RequestParam("endDate") String endDate,
-	        @RequestParam(value = "userType", required = false) String userType) {
+	        @RequestParam(value = "userType", required = false) String userType,
+	        @RequestParam(value = "hospitalId", required = false) Integer hospitalId) {
 	    try {
-	        return authService.getAllEmployeeListCount(startDate, endDate, userType);
+	        return authService.getAllEmployeeListCount(startDate, endDate, userType, hospitalId);
 	    } catch (Exception e) {
 	        logger.error("getAllEmployeeListCount Method Exception: {}", e.getMessage(), e);
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

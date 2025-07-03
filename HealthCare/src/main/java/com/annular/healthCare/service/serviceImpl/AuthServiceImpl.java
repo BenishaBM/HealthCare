@@ -2576,7 +2576,7 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	        Map<String, Object> responseMap = new HashMap<>();
 	        responseMap.put("totalHospitals", totalHospitalCount);
 	        responseMap.put("activeHospitals", activeHospitalCount);
-	        responseMap.put("activePercentage", String.format("%.2f", activePercentage));
+	      //  responseMap.put("activePercentage", String.format("%.2f", activePercentage));
 
 	        return ResponseEntity.ok(new Response(1, "Success", responseMap));
 	    } catch (Exception e) {
@@ -2587,7 +2587,7 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	}
 
 	@Override
-	public ResponseEntity<?> getAllEmployeeListCount(String startDate, String endDate, String userType) {
+	public ResponseEntity<?> getAllEmployeeListCount(String startDate, String endDate, String userType, Integer hospitalId) {
 	    try {
 	        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 	        Date start = sdf.parse(startDate);
@@ -2595,14 +2595,25 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 
 	        List<Map<String, Object>> resultList = new ArrayList<>();
 
-	        // If userType is provided, process only that
-	        if (userType != null && !userType.trim().isEmpty()) {
-	            resultList.add(getUserTypeStats(userType, start, end));
+	        if (hospitalId != null) {
+	            // Use hospital-specific logic
+	            if (userType != null && !userType.trim().isEmpty()) {
+	                resultList.add(getUserTypeStatsByHospital(userType, hospitalId, start, end));
+	            } else {
+	                List<String> allUserTypes = userRepository.findAllDistinctUserTypesByHospital(hospitalId);
+	                for (String type : allUserTypes) {
+	                    resultList.add(getUserTypeStatsByHospital(type, hospitalId, start, end));
+	                }
+	            }
 	        } else {
-	            // Handle all user types (e.g., assume you have a method or enum for valid types)
-	            List<String> allUserTypes = userRepository.findAllDistinctUserTypes(); // or manually list them
-	            for (String type : allUserTypes) {
-	                resultList.add(getUserTypeStats(type, start, end));
+	            // Use general logic (no hospital filtering)
+	            if (userType != null && !userType.trim().isEmpty()) {
+	                resultList.add(getUserTypeStats(userType, start, end));
+	            } else {
+	                List<String> allUserTypes = userRepository.findAllDistinctUserTypes();
+	                for (String type : allUserTypes) {
+	                    resultList.add(getUserTypeStats(type, start, end));
+	                }
 	            }
 	        }
 
@@ -2628,7 +2639,7 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	    map.put("userType", userType);
 	    map.put("totalUsers", totalUsers);
 	    map.put("activeUsers", activeUsers);
-	    map.put("activePercentage", activePercentage);
+	  //  map.put("activePercentage", activePercentage);
 
 	    // Handle doctor leave info
 	    if ("Doctor".equalsIgnoreCase(userType)) {
@@ -2686,7 +2697,7 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	        Map<String, Object> responseMap = new HashMap<>();
 	        responseMap.put("totalPatients", totalPatients);
 	        responseMap.put("activePatients", activePatients);
-	        responseMap.put("activePercentage", String.format("%.2f", activePercentage));
+	      //  responseMap.put("activePercentage", String.format("%.2f", activePercentage));
 	        responseMap.put("subRelationCount", subRelationCount); // ✅ Add this line
 
 	        return ResponseEntity.ok(new Response(1, "Success", responseMap));
@@ -2738,7 +2749,7 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	    map.put("hospitalId", hospitalId);
 	    map.put("totalUsers", totalUsers);
 	    map.put("activeUsers", activeUsers);
-	    map.put("activePercentage", activePercentage);
+	  //  map.put("activePercentage", activePercentage);
 
 	    // If doctor, add leave info
 	    if ("Doctor".equalsIgnoreCase(userType)) {
@@ -2811,7 +2822,7 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	        responseMap.put("totalSubPatients", totalSub);
 	        responseMap.put("totalPatients", totalPatients);
 	        responseMap.put("activePatients", activePatients);
-	        responseMap.put("activePercentage", String.format("%.2f", activePercentage));
+	      //  responseMap.put("activePercentage", String.format("%.2f", activePercentage));
 	        //responseMap.put("totalPatientList", totalPatientList); // ✅ Added total list
 
 	        return ResponseEntity.ok(new Response(1, "Success", responseMap));
