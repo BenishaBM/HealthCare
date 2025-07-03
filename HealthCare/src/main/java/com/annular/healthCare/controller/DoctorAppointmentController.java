@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.annular.healthCare.Response;
 import com.annular.healthCare.service.DoctorAppoitmentService;
 import com.annular.healthCare.webModel.HospitalDataListWebModel;
+import com.annular.healthCare.webModel.PatientAppointmentWebModel;
 
 @RestController
 @RequestMapping("/doctorAppoitmentHistory")
@@ -263,6 +264,19 @@ public class DoctorAppointmentController {
 	    } catch (Exception e) {
 	        // Handle errors and return a meaningful response
 	        logger.error("rescheduleAppointmentOnlineAndOffline Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+	
+	@PostMapping("addDischargeSummaryByAppointmentId")
+	public ResponseEntity<?> addDischargeSummaryByAppointmentId(@RequestBody PatientAppointmentWebModel userWebModel) {
+	    try {
+	        // Call the service to perform the update
+	        return doctorAppoitmentService.addDischargeSummaryByAppointmentId(userWebModel);
+	    } catch (Exception e) {
+	        // Handle errors and return a meaningful response
+	        logger.error("addDischargeSummaryByAppointmentId Method Exception: {}", e.getMessage(), e);
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }

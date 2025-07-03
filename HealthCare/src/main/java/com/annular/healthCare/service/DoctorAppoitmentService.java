@@ -5,6 +5,7 @@ import java.util.Date;
 import org.springframework.http.ResponseEntity;
 
 import com.annular.healthCare.webModel.HospitalDataListWebModel;
+import com.annular.healthCare.webModel.PatientAppointmentWebModel;
 
 public interface DoctorAppoitmentService {
 
@@ -41,5 +42,7 @@ public interface DoctorAppoitmentService {
 	ResponseEntity<?> cancelAppointmentOnlineAndOffline(HospitalDataListWebModel userWebModel);
 
 	ResponseEntity<?> rescheduleAppointmentOnlineAndOffline(HospitalDataListWebModel userWebModel);
+
+	ResponseEntity<?> addDischargeSummaryByAppointmentId(PatientAppointmentWebModel userWebModel);
 
 }

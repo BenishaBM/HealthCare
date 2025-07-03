@@ -42,5 +42,7 @@ public class PatientAppointmentWebModel {
 	    private String doctorPrescription;
 	    private String medicineData;
 	    private String token;
+	    private String dischargeSummary;
+	    private Boolean dischargeSummaryStatus;
 
 }

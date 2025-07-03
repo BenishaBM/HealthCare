@@ -62,6 +62,7 @@ import com.annular.healthCare.webModel.AppointmentMedicalTestWebModel;
 import com.annular.healthCare.webModel.FileInputWebModel;
 import com.annular.healthCare.webModel.HospitalDataListWebModel;
 import com.annular.healthCare.webModel.MedicineScheduleWebModel;
+import com.annular.healthCare.webModel.PatientAppointmentWebModel;
 
 @Service
 public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
@@ -893,6 +894,8 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	            // Appointment details
 	                // Appointment details
 	                details.put("appointmentId", appointment.getAppointmentId());
+	                details.put("dischargeSummary", appointment.getDischargeSummary());
+	                details.put("dischargeSummaryStatus", appointment.getDischargeSummaryStatus());
 	                details.put("appointmentDate", appointment.getAppointmentDate());
 	                details.put("appointmentType", appointment.getAppointmentType());
 	                details.put("appointmentStatus", appointment.getAppointmentStatus());
@@ -1394,6 +1397,37 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	        return ResponseEntity.internalServerError().body(new Response(-1, "Fail", "Error occurred while rescheduling appointment"));
 	    }
 	}
+	
+	
+	@Override
+	public ResponseEntity<?> addDischargeSummaryByAppointmentId(PatientAppointmentWebModel userWebModel) {
+	    try {
+	        if (userWebModel.getAppointmentId() == null) {
+	            return ResponseEntity.badRequest().body(new Response(0, "Fail", "Appointment ID is required"));
+	        }
+
+	        Optional<PatientAppointmentTable> optionalAppointment = patientAppointmentRepository.findById(userWebModel.getAppointmentId());
+
+	        if (!optionalAppointment.isPresent()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Response(0, "Fail", "Appointment not found"));
+	        }
+
+	        PatientAppointmentTable appointment = optionalAppointment.get();
+
+	        // Update discharge summary and status
+	        appointment.setDischargeSummary(userWebModel.getDischargeSummary());
+	        appointment.setDischargeSummaryStatus(true);
+	        appointment.setUpdatedOn(new Date());
+	        appointment.setUpdatedBy(userWebModel.getUpdatedBy()); // Assuming this is passed
+
+	        patientAppointmentRepository.save(appointment);
+
+	        return ResponseEntity.ok(new Response(1, "Success", "Discharge summary updated successfully"));
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response(0, "Error", e.getMessage()));
+	    }
+	}
+
 
 
 

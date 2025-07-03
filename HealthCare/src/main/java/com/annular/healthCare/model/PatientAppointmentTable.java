@@ -146,4 +146,10 @@ public class PatientAppointmentTable {
     @Column(name = "readyMinuteStatus")
     private String readyMinutesStatus;
     
+    @Column(name = "dischargeSummary")
+    private String dischargeSummary;
+    
+    @Column(name = "dischargeSummaryStatus")
+    private Boolean dischargeSummaryStatus;
+    
 }
