@@ -27,6 +27,7 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.annular.healthCare.webModel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,12 +88,6 @@ import com.annular.healthCare.repository.SupportStaffMasterDataRepository;
 import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.service.AuthService;
 import com.annular.healthCare.service.SmsService;
-import com.annular.healthCare.webModel.DoctorDaySlotWebModel;
-import com.annular.healthCare.webModel.DoctorLeaveListWebModel;
-import com.annular.healthCare.webModel.DoctorSlotTimeWebModel;
-import com.annular.healthCare.webModel.FileInputWebModel;
-import com.annular.healthCare.webModel.HospitalDataListWebModel;
-import com.annular.healthCare.webModel.UserWebModel;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -101,6 +96,9 @@ public class AuthServiceImpl implements AuthService {
 
 	@Autowired
 	UserRepository userRepository;
+
+    @Autowired
+    SmsService smsService;
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
@@ -163,8 +161,7 @@ public class AuthServiceImpl implements AuthService {
 	@Autowired
 	DoctorSlotSpiltTimeRepository doctorSlotSplitTimeRepository;
 	
-	@Autowired
-	private SmsService smsService;
+
 
 	
 	@Autowired
@@ -2625,7 +2622,9 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	    }
 	}
 
-	private Map<String, Object> getUserTypeStats(String userType, Date start, Date end) {
+
+
+    private Map<String, Object> getUserTypeStats(String userType, Date start, Date end) {
 	    Map<String, Object> map = new HashMap<>();
 
 	    List<User> users = userRepository.findByUserType(userType);
@@ -2944,7 +2943,69 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	}
 
 
-	}
+    /**
+     * Sends a password reset request to Super Admin when a user forgets their password.
+     *
+     * @param email Email address of the user requesting reset.
+     * @return ResponseEntity with success or error status.
+     */
+
+    public ResponseEntity<?> sendResetRequestToSuperAdmin(String email) {
+        try{
+            Optional<User> userOpt = userRepository.findByEmailIds(email);
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.ok( new Response(1,"fail","User not found with email: " + email));
+            }
+
+            String superAdminEmail = "arunkumarkpm69@gmail.com";
+            String message = "User " + email + " requested a password reset.\nPlease log in and reset the password.";
+
+            smsService.sendEmail(superAdminEmail, message);
+
+            return ResponseEntity.ok(new Response(1, "Success", "Password reset request sent to Super Admin"));
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response(0, "Error: " + e.getMessage(), null));
+
+        }
+
+    }
+
+
+    /**
+     * Allows Super Admin to reset a user's password manually.
+     *
+     * Steps:
+     * 1. Fetch the user by email.
+     * 2. Encode and update the new password.
+     * 3. Save the updated user to the database.
+     * 4. Notify the user via email with login link.
+     *
+     * @param request Contains user email and the new password.
+     * @return Success or error message.
+     */
+
+
+    public String resetPasswordByAdmin(UserWebModel request) {
+        Optional<User> userOpt = userRepository.findByEmailIds(request.getEmail());
+        if (userOpt.isEmpty()) return "User not found";
+
+        User user = userOpt.get();
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        String loginLink = "http://localhost:8080/login";
+        String emailBody = "Hi, your password has been reset by Super Admin.\nClick here to login: " + loginLink;
+        smsService.sendEmail(user.getEmailId(), emailBody);
+
+        return "Password reset successful by Super Admin.";
+    }
+
+
+
+
+
+}
 
 
 

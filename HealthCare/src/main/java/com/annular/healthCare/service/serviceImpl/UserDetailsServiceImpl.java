@@ -2,7 +2,6 @@ package com.annular.healthCare.service.serviceImpl;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import com.annular.healthCare.UserStatusConfig;
 import com.annular.healthCare.model.PatientDetails;
-import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.PatientDetailsRepository;
 import com.annular.healthCare.repository.UserRepository;
 import com.annular.healthCare.security.UserDetailsImpl;
@@ -26,6 +24,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public static final Logger logger = LoggerFactory.getLogger(UserDetailsServiceImpl.class);
     private static final String CARET = "^";
     private static final String ESCAPED_CARET = "\\^";
+
+
     
     @Autowired
     UserRepository userRepo;
@@ -86,4 +86,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             authorities                // Authorities
         );
     }
+
+
+
 }

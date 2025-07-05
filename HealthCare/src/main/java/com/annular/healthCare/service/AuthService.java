@@ -74,5 +74,12 @@ public interface AuthService {
 	ResponseEntity<?> getAllEmployeeListCount(String startDate, String endDate, String userType, Integer hospitalId);
 
 
+	public ResponseEntity<?> sendResetRequestToSuperAdmin(String email);
+
+	public String resetPasswordByAdmin(UserWebModel request);
+
+
+
+
 	
 }

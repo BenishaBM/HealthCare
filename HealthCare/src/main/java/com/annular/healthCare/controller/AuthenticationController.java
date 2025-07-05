@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.annular.healthCare.service.SmsService;
+import com.annular.healthCare.webModel.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,10 +30,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.annular.healthCare.service.AuthService;
-import com.annular.healthCare.webModel.FileInputWebModel;
-import com.annular.healthCare.webModel.HospitalDataListWebModel;
-import com.annular.healthCare.webModel.PatientDetailsWebModel;
-import com.annular.healthCare.webModel.UserWebModel;
 import com.annular.healthCare.Response;
 import com.annular.healthCare.UserStatusConfig;
 import com.annular.healthCare.Util.Base64FileUpload;
@@ -58,6 +57,12 @@ public class AuthenticationController {
 
 	@Autowired
 	AuthService authService;
+	@Autowired
+	private SmsService smsService;
+
+	@Autowired
+	private PasswordEncoder encoder;
+
 
 	@Autowired
 	JwtUtils jwtUtils;
@@ -590,6 +595,44 @@ public class AuthenticationController {
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
+	}
+
+	/**
+	 * Endpoint for users to request a password reset.
+	 * Sends an email to Super Admin with the user's email and a reset approval link.
+	 *
+	 * @param email UserWebModel containing the user's email address.
+	 * @return Response indicating success or failure.
+	 */
+	@PostMapping("/forgotPassword")
+	public ResponseEntity<?> requestPasswordReset(@RequestBody UserWebModel email) {
+
+		try{
+			return authService.sendResetRequestToSuperAdmin(email.getEmail());
+
+		}catch (Exception e){
+
+			logger.error("requestPasswordReset Method Exception: {}", e.getMessage(), e);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(new Response(-1, "Fail", e.getMessage()));
+		}
+
+	}
+//	@PostMapping("/resetPassword")
+//	public ResponseEntity<String> resetUserPassword(@RequestBody UserWebModel request) {
+//		return ResponseEntity.ok(authService.resetPasswordByAdmin(request));
+//	}
+
+	/**
+	 * Endpoint for Super Admin to reset a user's password.
+	 *
+	 * @param request Contains user email and new password.
+	 * @return ResponseEntity with success or failure message.
+	 */
+
+	@PostMapping("/resetPassword")
+	public ResponseEntity<String> resetUserPassword(@RequestBody UserWebModel request) {
+		return ResponseEntity.ok(authService.resetPasswordByAdmin(request));
 	}
 
 

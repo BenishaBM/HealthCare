@@ -23,6 +23,7 @@ import lombok.ToString;
 public class UserWebModel {
 
 	private Integer userId;
+
 	private String emailId;
 	private String password;
 	private String userType;
@@ -64,6 +65,7 @@ public class UserWebModel {
     private String email;
     private String city;
     private String mobileNumber;
+	private String newPassword;
 
 	
 
