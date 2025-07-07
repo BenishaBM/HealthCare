@@ -955,6 +955,18 @@ private String checkTimeSlotOverlaps(List<DoctorSlotTimeWebModel> timeSlots, Str
 	        userMap.put("userIsActive", user.getUserIsActive());
 	        userMap.put("empId", user.getEmpId());
 	        userMap.put("gender", user.getGender());
+	        userMap.put("hospitalId", user.getHospitalId());
+	        if (user.getHospitalId() != null) {
+	            Optional<HospitalDataList> hospitalOpt = hospitalDataListRepository.findById(user.getHospitalId());
+	            if (hospitalOpt.isPresent()) {
+	                userMap.put("hospitalName", hospitalOpt.get().getHospitalName());
+	            } else {
+	                userMap.put("hospitalName", "Unknown");
+	            }
+	        } else {
+	            userMap.put("hospitalName", "Not Assigned");
+	        }
+     
 	        userMap.put("createdOn", user.getUserCreatedOn());
 	        return userMap;
 	    }).collect(Collectors.toList());
