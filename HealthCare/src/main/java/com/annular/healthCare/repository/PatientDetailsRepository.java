@@ -51,6 +51,8 @@ public interface PatientDetailsRepository extends JpaRepository<PatientDetails, 
 	Integer countActivePatientsBetweenDates(Date start,Date end);
 
 
+
+
 	
 
 

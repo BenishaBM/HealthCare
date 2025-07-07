@@ -53,5 +53,34 @@ public interface PatientSubChildDetailsRepository extends JpaRepository<PatientS
            "JOIN patient_mapped_hospital_id pmh ON pd.patientdetailsid = pmh.patientid " +
            "WHERE pmh.hospitalid = :hospitalId", nativeQuery = true)
     List<PatientSubChildDetails> findAllSubPatientsByHospitalId(@Param("hospitalId") Integer hospitalId);
+
+//    @Query("SELECT COUNT(p) FROM PatientSubChildDetails p WHERE p.hospitalId = :hospitalId")
+//    Integer countSubRelationsByHospitalId(@Param("hospitalId") Integer hospitalId);
+
+   
+    @Query("SELECT COUNT(p) " +
+    	       "FROM PatientSubChildDetails p " +
+    	       "JOIN PatientDetails d ON p.patientDetailsId = d.patientDetailsId " +
+    	       "JOIN PatientMappedHospitalId m ON d.patientDetailsId = m.patientId " +
+    	       "WHERE m.hospitalId = :hospitalId " +
+    	       "AND p.userCreatedOn BETWEEN :startDate AND :endDate")
+    	Integer countSubRelationsByHospitalIdAndDateRange(@Param("hospitalId") Integer hospitalId,
+    	                                                  @Param("startDate") Date startDate,
+    	                                                  @Param("endDate") Date endDate);
+
+
+
+
+    @Query("SELECT COUNT(p) FROM PatientSubChildDetails p WHERE p.userCreatedOn BETWEEN :startDate AND :endDate")
+    Integer countSubRelationsByDateRange(@Param("startDate") Date startDate,
+                                         @Param("endDate") Date endDate);
+
+    
+    
+
+
+
+
+
 }
 

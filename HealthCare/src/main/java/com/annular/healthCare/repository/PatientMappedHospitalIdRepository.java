@@ -13,7 +13,7 @@ import com.annular.healthCare.model.PatientDetails;
 import com.annular.healthCare.model.PatientMappedHospitalId;
 
 @Repository
-public interface PatientMappedHospitalIdRepository extends JpaRepository<PatientMappedHospitalId,Integer>{
+public interface PatientMappedHospitalIdRepository extends JpaRepository<PatientMappedHospitalId, Integer> {
 
 	List<PatientMappedHospitalId> findByHospitalId(Integer hospitalId);
 
@@ -21,26 +21,29 @@ public interface PatientMappedHospitalIdRepository extends JpaRepository<Patient
 
 	Optional<PatientMappedHospitalId> findByPatientIdAndHospitalId(Integer patientDetailsId, Integer hospitalId);
 
-	@Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM PatientMappedHospitalId p " +
-		       "WHERE p.patientId = :patientId AND p.hospitalId = :hospitalId AND p.userIsActive = true")
-		boolean existsByPatientIdAndHospitalId(@Param("patientId") Integer patientId, @Param("hospitalId") Integer hospitalId);
+	@Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM PatientMappedHospitalId p "
+			+ "WHERE p.patientId = :patientId AND p.hospitalId = :hospitalId AND p.userIsActive = true")
+	boolean existsByPatientIdAndHospitalId(@Param("patientId") Integer patientId,
+			@Param("hospitalId") Integer hospitalId);
 
 	@Query("SELECT p FROM PatientMappedHospitalId p WHERE p.patientId = :patientId AND p.hospitalId = :hospitalId")
-	Optional<PatientMappedHospitalId> findMappedData(@Param("patientId") Integer patientId, @Param("hospitalId") Integer hospitalId);
-
-	@Query("SELECT COUNT(p) FROM PatientMappedHospitalId p WHERE p.hospitalId = :hospitalId")
-	Integer countTotalPatientsByHospitalId(Integer hospitalId);
+	Optional<PatientMappedHospitalId> findMappedData(@Param("patientId") Integer patientId,
+			@Param("hospitalId") Integer hospitalId);
 
 	@Query("SELECT COUNT(p) FROM PatientMappedHospitalId p WHERE p.hospitalId = :hospitalId AND p.userIsActive = true AND p.userCreatedOn BETWEEN :start AND :end")
-	Integer countActivePatientsByHospitalIdAndDateRange(Integer hospitalId,
-	                                                    Date start,
-	                                                    Date end);
-
+	Integer countActivePatientsByHospitalIdAndDateRange(Integer hospitalId, Date start, Date end);
 
 	@Query("SELECT pd FROM PatientDetails pd WHERE pd.patientDetailsId IN (SELECT pmh.patientId FROM PatientMappedHospitalId pmh WHERE pmh.hospitalId = :hospitalId)")
 	List<PatientDetails> findAllPatientsByHospitalId(Integer hospitalId);
 
+	@Query("SELECT COUNT(p) FROM PatientMappedHospitalId p WHERE p.hospitalId = :hospitalId AND p.userCreatedOn BETWEEN :startDate AND :endDate AND p.userIsActive = true")
+	Integer countActivePatientsByHospitalId(Date startDate, Date endDate, Integer hospitalId);
 
+	@Query("SELECT COUNT(p) FROM PatientMappedHospitalId p WHERE p.hospitalId = :hospitalId AND p.userCreatedOn BETWEEN :startDate AND :endDate")
+	Integer countTotalPatientsByHospitalId(Date startDate, Date endDate, Integer hospitalId);
+
+	@Query("SELECT COUNT(p) FROM PatientMappedHospitalId p WHERE p.hospitalId = :hospitalId")
+	Integer countTotalPatientsByHospitalId(@Param("hospitalId") Integer hospitalId);
 
 
 

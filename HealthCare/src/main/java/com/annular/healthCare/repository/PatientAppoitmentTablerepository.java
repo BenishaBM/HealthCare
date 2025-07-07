@@ -129,4 +129,5 @@ public interface PatientAppoitmentTablerepository extends JpaRepository<PatientA
 			+ "GROUP BY p.pharmacyStatus")
 	List<Object[]> getAppointmentCountsByPharmacyStatus(Date startDate, Date endDate, Integer hospitalId);
 
+	
 }

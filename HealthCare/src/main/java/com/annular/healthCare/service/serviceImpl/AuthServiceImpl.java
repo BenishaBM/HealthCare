@@ -2618,43 +2618,55 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	@Override
-	public ResponseEntity<?> getAllPatientListCount(String startDate, String endDate) {
-		try {
-			// Convert dates
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-			Date start = sdf.parse(startDate);
-			Date end = sdf.parse(endDate);
+	public ResponseEntity<?> getAllPatientListCount(String startDate, String endDate, Integer hospitalId) {
+	    try {
+	        // Convert dates
+	        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+	        Date start = sdf.parse(startDate);
+	        Date end = sdf.parse(endDate);
 
-			// Total patients
-			Integer totalPatients = patientDetailsRepository.countTotalPatients();
+	        Integer totalPatients = 0;
+	        Integer activePatients = 0;
 
-			// Active patients within date range
-			Integer activePatients = patientDetailsRepository.countActivePatientsBetweenDates(start, end);
+	        if (hospitalId != null) {
+	            // Fetch data based on hospitalId
+	        	totalPatients = patientMappedHospitalIdRepository.countTotalPatientsByHospitalId(start,end,hospitalId);
+	        	activePatients = patientMappedHospitalIdRepository.countActivePatientsByHospitalId(start,end,hospitalId);
 
-			// Sub relation count
-			Integer subRelationCount = patientSubChildDetailsRepository.countAllSubRelations();
+	        } else {
+	            // Fetch data based on date range
+	            totalPatients = patientDetailsRepository.countTotalPatients();
+	            activePatients = patientDetailsRepository.countActivePatientsBetweenDates(start, end);
+	        }
 
-			// Calculate percentage
-			double activePercentage = 0;
-			if (totalPatients != null && totalPatients > 0) {
-				activePercentage = ((double) activePatients / totalPatients) * 100;
-			}
+	        Integer subRelationCount = 0;
+	        if (hospitalId != null) {
+	            subRelationCount = patientSubChildDetailsRepository.countSubRelationsByHospitalIdAndDateRange(hospitalId, start, end);
+	        } else {
+	            subRelationCount = patientSubChildDetailsRepository.countSubRelationsByDateRange(start, end);
+	        }
 
-			// Build response
-			Map<String, Object> responseMap = new HashMap<>();
-			responseMap.put("totalPatients", totalPatients);
-			responseMap.put("activePatients", activePatients);
-			// responseMap.put("activePercentage", String.format("%.2f", activePercentage));
-			responseMap.put("subRelationCount", subRelationCount); // ✅ Add this line
 
-			return ResponseEntity.ok(new Response(1, "Success", responseMap));
-		} catch (Exception e) {
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new Response(0, "Error", "Failed to fetch patient list count."));
-		}
+	        // Calculate percentage
+	        double activePercentage = 0;
+	        if (totalPatients != null && totalPatients > 0) {
+	            activePercentage = ((double) activePatients / totalPatients) * 100;
+	        }
+
+	        // Build response
+	        Map<String, Object> responseMap = new HashMap<>();
+	        responseMap.put("totalPatients", totalPatients);
+	        responseMap.put("activePatients", activePatients);
+	        // responseMap.put("activePercentage", String.format("%.2f", activePercentage));
+	        responseMap.put("subRelationCount", subRelationCount);
+
+	        return ResponseEntity.ok(new Response(1, "Success", responseMap));
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(0, "Error", "Failed to fetch patient list count."));
+	    }
 	}
-
 	@Override
 	public ResponseEntity<?> getAllEmployeeListCountByHospitalId(String startDate, String endDate, Integer hospitalId,
 			String userType) {
@@ -2782,14 +2794,15 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	@Override
-	public ResponseEntity<?> getAllAppointmentListByOnlineAndOffline(String startDate, String endDate) {
+	public ResponseEntity<?> getAllAppointmentListByOnlineAndOffline(String startDate, String endDate,Integer hospitalId) {
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 			Date start = sdf.parse(startDate);
 			Date end = sdf.parse(endDate);
 
 			// Count grouped by appointmentType
-			List<Object[]> typeResults = patientAppoitnmentRepository.getAppointmentCountsByType(start, end);
+			//List<Object[]> typeResults = patientAppoitnmentRepository.getAppointmentCountsByType(start, end);
+			List<Object[]> typeResults = patientAppoitnmentRepository.getAppointmentCountsByType(start, end, hospitalId);
 			List<Map<String, Object>> typeList = new ArrayList<>();
 			for (Object[] row : typeResults) {
 				Map<String, Object> map = new HashMap<>();
@@ -2799,7 +2812,8 @@ public class AuthServiceImpl implements AuthService {
 			}
 
 			// Count grouped by appointmentStatus
-			List<Object[]> statusResults = patientAppoitnmentRepository.getAppointmentCountsByStatus(start, end);
+			List<Object[]> statusResults = patientAppoitnmentRepository.getAppointmentCountsByStatus(start, end, hospitalId);
+			//List<Object[]> statusResults = patientAppoitnmentRepository.getAppointmentCountsByStatus(start, end);
 			List<Map<String, Object>> statusList = new ArrayList<>();
 			long totalAppointmentStatus = 0;
 			for (Object[] row : statusResults) {
@@ -2812,8 +2826,9 @@ public class AuthServiceImpl implements AuthService {
 			}
 
 			// Count grouped by pharmacyStatus
-			List<Object[]> pharmacyResults = patientAppoitnmentRepository.getAppointmentCountsByPharmacyStatus(start,
-					end);
+		//	List<Object[]> pharmacyResults = patientAppoitnmentRepository.getAppointmentCountsByPharmacyStatus(start,
+				//	end);
+			List<Object[]> pharmacyResults = patientAppoitnmentRepository.getAppointmentCountsByPharmacyStatus(start, end, hospitalId);
 			List<Map<String, Object>> pharmacyList = new ArrayList<>();
 			for (Object[] row : pharmacyResults) {
 				Map<String, Object> map = new HashMap<>();

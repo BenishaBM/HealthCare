@@ -60,14 +60,13 @@ public interface AuthService {
 
 	
 
-	ResponseEntity<?> getAllPatientListCount(String startDate, String endDate);
+	ResponseEntity<?> getAllPatientListCount(String startDate, String endDate, Integer hospitalId);
 
 	ResponseEntity<?> getAllEmployeeListCountByHospitalId(String startDate, String endDate, Integer hospitalId, String userType);
 
 	ResponseEntity<?> getAllPatientListCountByHospitalId(String startDate, String endDate, Integer hospitalId);
 
-	ResponseEntity<?> getAllAppointmentListByOnlineAndOffline(String startDate, String endDate);
-
+	
 	ResponseEntity<?> getAllAppointmentListByOnlineAndOfflineByHospitalId(String startDate, String endDate,
 			Integer hospitalId);
 
@@ -76,6 +75,8 @@ public interface AuthService {
 	ResponseEntity<?> emailNotificationSendToForgotPassword(HospitalDataListWebModel userWebModel);
 
 	ResponseEntity<?> forgotPassword(HospitalDataListWebModel userWebModel);
+
+	ResponseEntity<?> getAllAppointmentListByOnlineAndOffline(String startDate, String endDate, Integer hospitalId);
 
 
 	
