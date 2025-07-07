@@ -73,6 +73,10 @@ public interface AuthService {
 
 	ResponseEntity<?> getAllEmployeeListCount(String startDate, String endDate, String userType, Integer hospitalId);
 
+	ResponseEntity<?> emailNotificationSendToForgotPassword(HospitalDataListWebModel userWebModel);
+
+	ResponseEntity<?> forgotPassword(HospitalDataListWebModel userWebModel);
+
 
 	
 }

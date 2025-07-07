@@ -126,6 +126,11 @@ public class HospitalDataListWebModel {
         
         
     }
+    
+    
+    // Fields for Forgot Password
+    private String newPassword;
+    private String confirmPassword;
 
 
 

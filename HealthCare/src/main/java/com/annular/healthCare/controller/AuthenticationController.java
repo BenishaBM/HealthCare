@@ -591,6 +591,30 @@ public class AuthenticationController {
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+	
+	@PostMapping("/emailNotificationSendToForgotPassword")
+	public ResponseEntity<?> emailNotificationSendToForgotPassword(@RequestBody HospitalDataListWebModel userWebModel) {
+	    try {
+	        // Call the service with startDate and endDate
+	        return authService.emailNotificationSendToForgotPassword(userWebModel);
+	    } catch (Exception e) {
+	        logger.error("emailNotificationSendToForgotPassword Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+
+	@PostMapping("/forgotPassword")
+	public ResponseEntity<?> forgotPassword(@RequestBody HospitalDataListWebModel userWebModel) {
+	    try {
+	        // Call the service with startDate and endDate
+	        return authService.forgotPassword(userWebModel);
+	    } catch (Exception e) {
+	        logger.error("forgotPassword Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
 
 
 }
