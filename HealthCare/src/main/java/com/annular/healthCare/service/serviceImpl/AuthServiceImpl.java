@@ -2582,14 +2582,14 @@ public class AuthServiceImpl implements AuthService {
 
 		int totalUsers = users.size();
 		long activeUsers = users.stream().filter(user -> Boolean.TRUE.equals(user.getUserIsActive())).count();
-		String activePercentage = totalUsers > 0 ? String.format("%.2f", (activeUsers * 100.0) / totalUsers) : "0.00";
+		long inactiveUsers = users.stream().filter(user -> Boolean.FALSE.equals(user.getUserIsActive())).count();
 
 		map.put("userType", userType);
 		map.put("totalUsers", totalUsers);
 		map.put("activeUsers", activeUsers);
-		// map.put("activePercentage", activePercentage);
+		map.put("inactiveUsers", inactiveUsers); 
 
-		// Handle doctor leave info
+		// Doctor leave details
 		if ("Doctor".equalsIgnoreCase(userType)) {
 			List<Map<String, Object>> leaveList = new ArrayList<>();
 			int leaveCount = 0;
@@ -2603,8 +2603,8 @@ public class AuthServiceImpl implements AuthService {
 					Map<String, Object> leaveMap = new HashMap<>();
 					leaveMap.put("userId", doctor.getUserId());
 					leaveMap.put("name", doctor.getFirstName() + " " + doctor.getLastName());
-					leaveMap.put("leaveDates",
-							leaves.stream().map(DoctorLeaveList::getDoctorLeaveDate).collect(Collectors.toList()));
+					leaveMap.put("leaveDates", leaves.stream()
+							.map(DoctorLeaveList::getDoctorLeaveDate).collect(Collectors.toList()));
 
 					leaveList.add(leaveMap);
 				}
@@ -2616,6 +2616,7 @@ public class AuthServiceImpl implements AuthService {
 
 		return map;
 	}
+
 
 	@Override
 	public ResponseEntity<?> getAllPatientListCount(String startDate, String endDate, Integer hospitalId) {
@@ -2701,13 +2702,14 @@ public class AuthServiceImpl implements AuthService {
 		List<User> users = userRepository.findByUserTypeAndHospitalId(userType, hospitalId);
 		int totalUsers = users.size();
 		long activeUsers = users.stream().filter(u -> Boolean.TRUE.equals(u.getUserIsActive())).count();
-		String activePercentage = totalUsers > 0 ? String.format("%.2f", (activeUsers * 100.0) / totalUsers) : "0.00";
+		long inactiveUsers = users.stream().filter(u -> Boolean.FALSE.equals(u.getUserIsActive())).count();
+		// String activePercentage = totalUsers > 0 ? String.format("%.2f", (activeUsers * 100.0) / totalUsers) : "0.00";
 
 		map.put("userType", userType);
 		map.put("hospitalId", hospitalId);
 		map.put("totalUsers", totalUsers);
 		map.put("activeUsers", activeUsers);
-		// map.put("activePercentage", activePercentage);
+		map.put("inactiveUsers", inactiveUsers); 
 
 		// If doctor, add leave info
 		if ("Doctor".equalsIgnoreCase(userType)) {
@@ -2794,15 +2796,19 @@ public class AuthServiceImpl implements AuthService {
 	}
 
 	@Override
-	public ResponseEntity<?> getAllAppointmentListByOnlineAndOffline(String startDate, String endDate,Integer hospitalId) {
+	public ResponseEntity<?> getAllAppointmentListByOnlineAndOffline(String startDate, String endDate, Integer hospitalId) {
 		try {
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 			Date start = sdf.parse(startDate);
 			Date end = sdf.parse(endDate);
 
 			// Count grouped by appointmentType
-			//List<Object[]> typeResults = patientAppoitnmentRepository.getAppointmentCountsByType(start, end);
-			List<Object[]> typeResults = patientAppoitnmentRepository.getAppointmentCountsByType(start, end, hospitalId);
+			List<Object[]> typeResults;
+			if (hospitalId == null) {
+				typeResults = patientAppoitnmentRepository.getAppointmentCountsByType(start, end);
+			} else {
+				typeResults = patientAppoitnmentRepository.getAppointmentCountsByType(start, end, hospitalId);
+			}
 			List<Map<String, Object>> typeList = new ArrayList<>();
 			for (Object[] row : typeResults) {
 				Map<String, Object> map = new HashMap<>();
@@ -2812,8 +2818,12 @@ public class AuthServiceImpl implements AuthService {
 			}
 
 			// Count grouped by appointmentStatus
-			List<Object[]> statusResults = patientAppoitnmentRepository.getAppointmentCountsByStatus(start, end, hospitalId);
-			//List<Object[]> statusResults = patientAppoitnmentRepository.getAppointmentCountsByStatus(start, end);
+			List<Object[]> statusResults;
+			if (hospitalId == null) {
+				statusResults = patientAppoitnmentRepository.getAppointmentCountsByStatus(start, end);
+			} else {
+				statusResults = patientAppoitnmentRepository.getAppointmentCountsByStatus(start, end, hospitalId);
+			}
 			List<Map<String, Object>> statusList = new ArrayList<>();
 			long totalAppointmentStatus = 0;
 			for (Object[] row : statusResults) {
@@ -2826,9 +2836,12 @@ public class AuthServiceImpl implements AuthService {
 			}
 
 			// Count grouped by pharmacyStatus
-		//	List<Object[]> pharmacyResults = patientAppoitnmentRepository.getAppointmentCountsByPharmacyStatus(start,
-				//	end);
-			List<Object[]> pharmacyResults = patientAppoitnmentRepository.getAppointmentCountsByPharmacyStatus(start, end, hospitalId);
+			List<Object[]> pharmacyResults;
+			if (hospitalId == null) {
+				pharmacyResults = patientAppoitnmentRepository.getAppointmentCountsByPharmacyStatus(start, end);
+			} else {
+				pharmacyResults = patientAppoitnmentRepository.getAppointmentCountsByPharmacyStatus(start, end, hospitalId);
+			}
 			List<Map<String, Object>> pharmacyList = new ArrayList<>();
 			for (Object[] row : pharmacyResults) {
 				Map<String, Object> map = new HashMap<>();
