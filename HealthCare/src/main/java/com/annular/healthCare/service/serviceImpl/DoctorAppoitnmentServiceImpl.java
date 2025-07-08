@@ -358,6 +358,8 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	             Map<String, Object> map = new HashMap<>();
 	             map.put("id", med.getId());
 	             map.put("name", med.getName());
+	             map.put("medicineType", med.getMedicineType());
+	             map.put("expireDate", med.getExpireDate());
 	             return map;
 	         }).collect(Collectors.toList());
 

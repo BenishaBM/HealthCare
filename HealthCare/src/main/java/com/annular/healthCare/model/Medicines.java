@@ -9,6 +9,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -72,5 +74,17 @@ public class Medicines {
 	
 	@Column(name = "hospitalId")
 	private Integer hospitalId;
+	
+	@Column(name = "medicineType")
+	private String medicineType;
+	
+	@Column(name = "packedDate")
+	@Temporal(TemporalType.DATE)
+	private Date packedDate;
+	
+	@Column(name = "expire_date")
+	@Temporal(TemporalType.DATE)
+	private Date expireDate;
+
     
 }
