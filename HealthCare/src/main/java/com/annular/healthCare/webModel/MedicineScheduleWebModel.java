@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.persistence.Column;
+
 import org.springframework.web.multipart.MultipartFile;
 
 import com.annular.healthCare.webModel.HospitalDataListWebModel.MedicineDetail;
@@ -34,5 +36,7 @@ public class MedicineScheduleWebModel {
     private Boolean every8Hours;
     private Integer days;
     private Integer totalTabletCount;
+    private Integer bottleCount;
+    private String ml;
 
 }

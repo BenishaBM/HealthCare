@@ -77,6 +77,8 @@ public class HospitalDataListWebModel {
     private String appointmentDate;
     private String slotStartTime;
     private String slotEndTime;
+    private Integer bottleCount;
+    private String ml;
 
 
 

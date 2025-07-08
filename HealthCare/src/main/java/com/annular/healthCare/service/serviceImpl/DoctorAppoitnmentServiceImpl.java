@@ -1,7 +1,9 @@
 package com.annular.healthCare.service.serviceImpl;
 
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -228,29 +230,79 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	         // Save Medicines
 	         if (userWebModel.getSchedules() != null) {
 	             for (MedicineScheduleWebModel medSchedule : userWebModel.getSchedules()) {
-	                 medicineRepository.findById(medSchedule.getMedicineId()).ifPresent(medicine -> {
-	                     AppointmentMedicine am = AppointmentMedicine.builder()
-	                         .appointment(appointment)
-	                         .medicine(medicine)
-	                         .isActive(true)
-	                         .createdBy(userId)
-	                         .updatedBy(userId)
-	                         .patientStatus(false)
-	                         .morningBF(medSchedule.getMorningBF())
-	                         .morningAF(medSchedule.getMorningAF())
-	                         .afternoonBF(medSchedule.getAfternoonBF())
-	                         .afternoonAF(medSchedule.getAfternoonAF())
-	                         .totalTabletCount(medSchedule.getTotalTabletCount())
-	                         .nightBF(medSchedule.getNightBF())
-	                         .nightAF(medSchedule.getNightAF())
-	                         .every6Hours(medSchedule.getEvery6Hours())
-	                         .every8Hours(medSchedule.getEvery8Hours())
-	                         .days(medSchedule.getDays())
-	                         .customizeDays(medSchedule.getDays())
-	                         .build();
+	            	 Optional<Medicines> optionalMedicine = medicineRepository.findById(medSchedule.getMedicineId());
+	            	 if (optionalMedicine.isPresent()) {
+	            	     Medicines medicine = optionalMedicine.get();
+	            	     int days = medSchedule.getDays();
+	            	     Date currentDate = new Date();
 
-	                     appointmentMedicineRepository.save(am);
-	                 });
+	            	     // Calculate end date
+	            	     Calendar cal = Calendar.getInstance();
+	            	     cal.setTime(currentDate);
+	            	     cal.add(Calendar.DATE, days);
+	            	     Date prescribedEndDate = cal.getTime();
+
+	            	     // Check expiry
+	            	     Date expireDate = medicine.getExpireDate();
+	            	     if (expireDate != null && prescribedEndDate.after(expireDate)) {
+	            	         String formattedExpireDate = new SimpleDateFormat("yyyy-MM-dd").format(expireDate);
+	            	         String errorMessage = String.format(
+	            	             "The medicine '%s' will expire on %s. You cannot prescribe it for %d days.",
+	            	             medicine.getName(), formattedExpireDate, days
+	            	         );
+	            	         return ResponseEntity.badRequest().body(new Response(0, "error", errorMessage));
+	            	     }
+
+	            	     // Save appointment medicine
+	            	     AppointmentMedicine am = AppointmentMedicine.builder()
+	            	         .appointment(appointment)
+	            	         .medicine(medicine)
+	            	         .isActive(true)
+	            	         .createdBy(userId)
+	            	         .updatedBy(userId)
+	            	         .patientStatus(false)
+	            	         .morningBF(medSchedule.getMorningBF())
+	            	         .morningAF(medSchedule.getMorningAF())
+	            	         .afternoonBF(medSchedule.getAfternoonBF())
+	            	         .afternoonAF(medSchedule.getAfternoonAF())
+	            	         .totalTabletCount(medSchedule.getTotalTabletCount())
+	            	         .nightBF(medSchedule.getNightBF())
+	            	         .nightAF(medSchedule.getNightAF())
+	            	         .every6Hours(medSchedule.getEvery6Hours())
+	            	         .every8Hours(medSchedule.getEvery8Hours())
+	            	         .days(days)
+	            	         .bottleCount(medSchedule.getBottleCount())
+	            	         .ml(medSchedule.getMl())
+	            	         .customizeDays(days)
+	            	         .build();
+
+	            	     appointmentMedicineRepository.save(am);
+	            	 }
+
+
+	               //  medicineRepository.findById(medSchedule.getMedicineId()).ifPresent(medicine -> {
+//	                     AppointmentMedicine am = AppointmentMedicine.builder()
+//	                         .appointment(appointment)
+//	                         .medicine(medicine)
+//	                         .isActive(true)
+//	                         .createdBy(userId)
+//	                         .updatedBy(userId)
+//	                         .patientStatus(false)
+//	                         .morningBF(medSchedule.getMorningBF())
+//	                         .morningAF(medSchedule.getMorningAF())
+//	                         .afternoonBF(medSchedule.getAfternoonBF())
+//	                         .afternoonAF(medSchedule.getAfternoonAF())
+//	                         .totalTabletCount(medSchedule.getTotalTabletCount())
+//	                         .nightBF(medSchedule.getNightBF())
+//	                         .nightAF(medSchedule.getNightAF())
+//	                         .every6Hours(medSchedule.getEvery6Hours())
+//	                         .every8Hours(medSchedule.getEvery8Hours())
+//	                         .days(medSchedule.getDays())
+//	                         .customizeDays(medSchedule.getDays())
+//	                         .build();
+//
+//	                     appointmentMedicineRepository.save(am);
+//	                 });
 	             }
 	         }
 
@@ -565,6 +617,8 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                             medMap.put("patientMedicineDays", med.getPatientMedicineDays());
 	                             medMap.put("customizeDays", med.getCustomizeDays());
 	                             medMap.put("totalTabletCount", med.getTotalTabletCount());
+	                             medMap.put("ml", med.getMl());
+	                             medMap.put("bottleCount", med.getBottleCount());
 
 	                             Medicines medicine = med.getMedicine();
 	                             if (medicine != null) {
@@ -1085,6 +1139,8 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                        medMap.put("updatedBy", med.getUpdatedBy());
 	                        medMap.put("updatedOn", med.getUpdatedOn());
 	                        medMap.put("customizeDays", med.getCustomizeDays());
+	                        medMap.put("ml", med.getMl());
+	                        medMap.put("bottleCount", med.getBottleCount());
 
 	                        // Medicine details
 	                        Medicines medicine = med.getMedicine();
@@ -1097,6 +1153,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                            medMap.put("packSizeLabel", medicine.getPackSizeLabel());
 	                            medMap.put("shortComposition1", medicine.getShortComposition1());
 	                            medMap.put("shortComposition2", medicine.getShortComposition2());
+	                            medMap.put("expireDate", medicine.getExpireDate());
 	                        }
 
 	                        medicineList.add(medMap);
