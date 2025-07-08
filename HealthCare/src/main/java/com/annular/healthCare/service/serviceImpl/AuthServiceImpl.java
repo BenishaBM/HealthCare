@@ -2935,7 +2935,7 @@ public class AuthServiceImpl implements AuthService {
 			User user = optionalUser.get();
 
 			// Generate reset token or link (dummy for now)
-			String resetLink = "https://yourdomain.com/reset-password?email=" + user.getEmailId();
+			String resetLink = "http://13.201.251.125/reset-password?email=" + user.getEmailId();
 
 			// Send email
 			SimpleMailMessage message = new SimpleMailMessage();
