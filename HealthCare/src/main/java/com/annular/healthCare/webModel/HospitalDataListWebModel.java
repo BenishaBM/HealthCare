@@ -67,6 +67,7 @@ public class HospitalDataListWebModel {
     private Integer appointmentId;
     private List<Integer> medicineIds;
 	private String hospitalLink;
+	 private Integer dispensedTabletCount;
 
    
     private Integer doctorId;
@@ -125,6 +126,7 @@ public class HospitalDataListWebModel {
         private Integer patientMedicineDays;
         private float amount;
         private Integer prescribedTotalAmount;
+        private Integer dispensedTabletCount;
         
         
     }

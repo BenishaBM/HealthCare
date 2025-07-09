@@ -619,6 +619,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                             medMap.put("totalTabletCount", med.getTotalTabletCount());
 	                             medMap.put("ml", med.getMl());
 	                             medMap.put("bottleCount", med.getBottleCount());
+	                             medMap.put("dispensedTabletCount", med.getDispensedTabletCount());
 
 	                             Medicines medicine = med.getMedicine();
 	                             if (medicine != null) {
@@ -630,6 +631,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                                 medMap.put("packSizeLabel", medicine.getPackSizeLabel());
 	                                 medMap.put("shortComposition1", medicine.getShortComposition1());
 	                                 medMap.put("shortComposition2", medicine.getShortComposition2());
+	                                 medMap.put("expireDate", medicine.getExpireDate());
 	                             }
 
 	                             medicineList.add(medMap);
@@ -651,6 +653,64 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	     }
 	 }
 
+//	 @Override
+//	 public ResponseEntity<?> saveMedicineDetailByPharamacy(HospitalDataListWebModel userWebModel) {
+//	     try {
+//	         Integer appointmentId = userWebModel.getAppointmentId();
+//
+//	         // Get Appointment
+//	         Optional<PatientAppointmentTable> appointmentOpt = patientAppointmentRepository.findById(appointmentId);
+//	         if (!appointmentOpt.isPresent()) {
+//	             return ResponseEntity.badRequest().body("Invalid appointment ID");
+//	         }
+//
+//	         PatientAppointmentTable appointment = appointmentOpt.get();
+//
+//	         List<HospitalDataListWebModel.MedicineDetail> medicineDetails = userWebModel.getMedicineDetails();
+//	         if (medicineDetails == null || medicineDetails.isEmpty()) {
+//	             return ResponseEntity.badRequest().body("No medicine details provided.");
+//	         }
+//
+//	         float totalAmount = 0; // initialize total amount
+//
+//	         for (HospitalDataListWebModel.MedicineDetail detail : medicineDetails) {
+//	             Integer medicineId = detail.getMedicineId();
+//
+//	             List<AppointmentMedicine> existingMedicines =
+//	                 appointmentMedicineRepository.findByAppointmentAppointmentIdAndMedicineId(appointmentId, medicineId);
+//
+//	             for (AppointmentMedicine existing : existingMedicines) {
+//	                 System.out.println("detail.getPatientStatus(): " + detail.getPatientStatus());
+//	                 existing.setPatientStatus(detail.getPatientStatus());
+//	                 existing.setCustomizeDays(detail.getPatientMedicineDays());
+//	                 existing.setUpdatedBy(appointment.getCreatedBy()); // or session user
+//                     existing.setPrescribedTotalAmount(detail.getPrescribedTotalAmount());
+//                     existing.setDispensedTabletCount(detail.getDispensedTabletCount());
+//	                 // Use wrapper Float to safely handle null
+//	                 Float amount = detail.getAmount();
+//	                 existing.setAmount(amount != null ? amount : 0f); // default to 0f if null
+//	                 totalAmount += (amount != null) ? amount : 0;
+//
+//	                 existing.setUpdatedOn(new Date());
+//	                 appointmentMedicineRepository.save(existing);
+//	             }
+//	         }
+//
+//	         // Set the calculated total medicine amount
+//	         appointment.setTotalMedicineAmount(totalAmount);
+//
+//	         // Update pharmacy status to COMPLETED
+//	         appointment.setPharmacyStatus("COMPLETED");
+//
+//	         patientAppointmentRepository.save(appointment);
+//
+//	         return ResponseEntity.ok(new Response(1, "success", "Medicines updated successfully"));
+//	     } catch (Exception e) {
+//	         e.printStackTrace();
+//	         return ResponseEntity.internalServerError().body(new Response(0, "error", "An error occurred: " + e.getMessage()));
+//	     }
+//	 }
+	 
 	 @Override
 	 public ResponseEntity<?> saveMedicineDetailByPharamacy(HospitalDataListWebModel userWebModel) {
 	     try {
@@ -663,13 +723,14 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	         }
 
 	         PatientAppointmentTable appointment = appointmentOpt.get();
-
 	         List<HospitalDataListWebModel.MedicineDetail> medicineDetails = userWebModel.getMedicineDetails();
+
 	         if (medicineDetails == null || medicineDetails.isEmpty()) {
 	             return ResponseEntity.badRequest().body("No medicine details provided.");
 	         }
 
-	         float totalAmount = 0; // initialize total amount
+	         float totalAmount = 0;
+	         boolean allFullyDispensed = true; // assume true until proven otherwise
 
 	         for (HospitalDataListWebModel.MedicineDetail detail : medicineDetails) {
 	             Integer medicineId = detail.getMedicineId();
@@ -678,26 +739,39 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                 appointmentMedicineRepository.findByAppointmentAppointmentIdAndMedicineId(appointmentId, medicineId);
 
 	             for (AppointmentMedicine existing : existingMedicines) {
-	                 System.out.println("detail.getPatientStatus(): " + detail.getPatientStatus());
 	                 existing.setPatientStatus(detail.getPatientStatus());
 	                 existing.setCustomizeDays(detail.getPatientMedicineDays());
-	                 existing.setUpdatedBy(appointment.getCreatedBy()); // or session user
-                     existing.setPrescribedTotalAmount(detail.getPrescribedTotalAmount());
-	                 // Use wrapper Float to safely handle null
+	                 existing.setUpdatedBy(appointment.getCreatedBy());
+	                 existing.setPrescribedTotalAmount(detail.getPrescribedTotalAmount());
+	                 existing.setDispensedTabletCount(detail.getDispensedTabletCount());
+
 	                 Float amount = detail.getAmount();
-	                 existing.setAmount(amount != null ? amount : 0f); // default to 0f if null
+	                 existing.setAmount(amount != null ? amount : 0f);
 	                 totalAmount += (amount != null) ? amount : 0;
 
 	                 existing.setUpdatedOn(new Date());
+
+	                 // Logic to check full vs partial
+	                 Integer prescribed = existing.getPrescribedTotalAmount();
+	                 Integer dispensed = existing.getDispensedTabletCount();
+
+	                 if (prescribed != null && dispensed != null) {
+	                     if (!prescribed.equals(dispensed)) {
+	                         allFullyDispensed = false;
+	                     }
+	                 } else {
+	                     allFullyDispensed = false;
+	                 }
+
 	                 appointmentMedicineRepository.save(existing);
 	             }
 	         }
 
-	         // Set the calculated total medicine amount
+	         // Set total amount
 	         appointment.setTotalMedicineAmount(totalAmount);
 
-	         // Update pharmacy status to COMPLETED
-	         appointment.setPharmacyStatus("COMPLETED");
+	         // Update pharmacy status
+	         appointment.setPharmacyStatus(allFullyDispensed ? "FULLYPAID" : "PARTIALLYPAID");
 
 	         patientAppointmentRepository.save(appointment);
 
@@ -707,6 +781,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	         return ResponseEntity.internalServerError().body(new Response(0, "error", "An error occurred: " + e.getMessage()));
 	     }
 	 }
+
 
 	 @Override
 	 public ResponseEntity<?> getAllPatientMedicalTestByHospitalIdAndDate(Integer hospitalId, String currentDate) {
