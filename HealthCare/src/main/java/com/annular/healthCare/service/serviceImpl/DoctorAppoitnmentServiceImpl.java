@@ -382,6 +382,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                 smsService.sendSms(phoneNumber, pharmacyMsg);
 	             } catch (Exception smsEx) {
 	                 // Log SMS error
+	            	 return ResponseEntity.ok(new Response(1, "success", "Appointment updated successfully."));
 	             }
 	         }
 
