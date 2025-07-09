@@ -1230,7 +1230,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                            medMap.put("shortComposition1", medicine.getShortComposition1());
 	                            medMap.put("shortComposition2", medicine.getShortComposition2());
 	                            medMap.put("expireDate", medicine.getExpireDate());
-	                        }
+	                            medMap.put("medicineType", medicine.getMedicineType());	                        }
 
 	                        medicineList.add(medMap);
 	                    }
