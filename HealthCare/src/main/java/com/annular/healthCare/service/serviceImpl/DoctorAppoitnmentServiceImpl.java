@@ -788,31 +788,16 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	 public ResponseEntity<?> getAllPatientMedicalTestByHospitalIdAndDate(Integer hospitalId, String currentDate) {
 	     try {
 	         // Step 1: Get appointments by date
-	    	    List<PatientAppointmentTable> appointments = patientAppointmentRepository.findByAppointmentDate(currentDate);
+	         List<PatientAppointmentTable> appointments = patientAppointmentRepository.findByAppointmentDate(currentDate);
 
-		         // Fetch all patient-hospital mappings for the given hospitalId
-		         List<PatientMappedHospitalId> mappings = patientMappedHospitalIdRepository.findByHospitalId(hospitalId);
-
-		         // Extract patient IDs that belong to the hospital
-		         Set<Integer> patientIds = mappings.stream()
-		             .map(PatientMappedHospitalId::getPatientId)
-		             .collect(Collectors.toSet());
-
-		         // Filter appointments where:
-		         // - Patient is not null
-		         // - Patient is mapped to the given hospital
-		         // - Medicines exist for the appointment
-//		         List<Map<String, Object>> filteredData = appointments.stream()
-//		             .filter(app -> app.getPatient() != null
-//		                         && patientIds.contains(app.getPatient().getPatientDetailsId())
-//		                         && appointmentMedicineRepository.existsByAppointment(app))
-//	             .map(app -> {
-		         List<Map<String, Object>> filteredData = appointments.stream()
-		        		    .filter(app -> app.getPatient() != null
-		        		                && patientIds.contains(app.getPatient().getPatientDetailsId())
-		        		                && appointmentMedicalTestRepository.existsByAppointment(app))
-		        		    .sorted(Comparator.comparing(PatientAppointmentTable::getCreatedOn).reversed()) // Sort by createdOn descending
-		        		    .map(app -> {
+	         // Filter appointments where:
+	         // - Patient is not null
+	         // - Medicines exist for the appointment
+	         List<Map<String, Object>> filteredData = appointments.stream()
+	             .filter(app -> app.getPatient() != null
+	                         && appointmentMedicalTestRepository.existsByAppointment(app))
+	             .sorted(Comparator.comparing(PatientAppointmentTable::getCreatedOn).reversed()) // Sort by createdOn descending
+	             .map(app -> {
 	                 PatientDetails patient = app.getPatient();
 	                 Map<String, Object> map = new HashMap<>();
 	                 map.put("patientDetailsId", patient.getPatientDetailsId());
@@ -823,9 +808,10 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                 map.put("mobileNumber", patient.getMobileNumber());
 	                 map.put("emailId", patient.getEmailId());
 	                 map.put("address", patient.getAddress());
+	                 map.put("appointmentId", app.getAppointmentId());
 	                 return map;
 	             })
-	             .distinct() // Optional to avoid duplicate patient maps
+	             .distinct() // Optional: removes duplicate patient maps
 	             .collect(Collectors.toList());
 
 	         return ResponseEntity.ok(new Response(1, "success", filteredData));
@@ -836,6 +822,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	             .body(new Response(0, "error", "An error occurred while fetching patient details."));
 	     }
 	 }
+
 
 	 @Override
 	 public ResponseEntity<?> getAllPatientMedicalTestBypatientIdAndDate(Integer patientId, String appointmentDate) {
