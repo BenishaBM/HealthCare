@@ -1792,10 +1792,16 @@ public class AuthServiceImpl implements AuthService {
 		}
 	}
 
+//	private boolean checkDoctorLeave(User doctor, LocalDate requestDate) {
+//		Date reqDate = Date.from(requestDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+//		return doctorLeaveListRepository.existsByUserAndDoctorLeaveDateAndUserIsActive(doctor, reqDate, true);
+//	}
 	private boolean checkDoctorLeave(User doctor, LocalDate requestDate) {
-		Date reqDate = Date.from(requestDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-		return doctorLeaveListRepository.existsByUserAndDoctorLeaveDateAndUserIsActive(doctor, reqDate, true);
+	    ZoneId indiaZone = ZoneId.of("Asia/Kolkata");
+	    Date reqDate = Date.from(requestDate.atStartOfDay(indiaZone).toInstant());
+	    return doctorLeaveListRepository.existsByUserAndDoctorLeaveDateAndUserIsActive(doctor, reqDate, true);
 	}
+
 
 	private boolean isValidSlot(DoctorDaySlot doctorSlot, LocalDate requestDate) {
 		if (doctorSlot == null || requestDate == null)
