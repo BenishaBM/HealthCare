@@ -685,9 +685,12 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 	        
 	     // Move forward to the first matching weekday ON or AFTER the startDate
 	        int currentDay = startCal.get(Calendar.DAY_OF_WEEK);
-	        int daysUntilTarget = (calendarDayOfWeek + 7 - currentDay) % 7;
+	        int daysUntilTarget = (calendarDayOfWeek - currentDay + 7) % 7;
 
-	        startCal.add(Calendar.DAY_OF_MONTH, daysUntilTarget);
+	        // Only move forward if needed (don't move backward)
+	        if (daysUntilTarget != 0) {
+	            startCal.add(Calendar.DAY_OF_MONTH, daysUntilTarget);
+	        }
 
 	        
 	        // Generate all dates for the specified day of week within the range
