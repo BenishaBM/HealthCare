@@ -23,6 +23,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -621,94 +622,164 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 	 * @param endDate the end date as java.util.Date
 	 * @return list of dates in "yyyy-MM-dd" format
 	 */
+//	private List<String> generateDatesForDayOfWeek(String dayOfWeekStr, Date startDate, Date endDate) {
+//	    List<String> dates = new ArrayList<>();
+//	    
+//	    try {
+//	        int dayOfWeek;
+//	        
+//	        // Check if the input is a number or a day name
+//	        if (dayOfWeekStr.matches("\\d+")) {
+//	            // It's a number, parse it directly
+//	            dayOfWeek = Integer.parseInt(dayOfWeekStr);
+//	            if (dayOfWeek < 1 || dayOfWeek > 7) {
+//	                throw new IllegalArgumentException("Day of week must be between 1 and 7, got: " + dayOfWeek);
+//	            }
+//	        } else {
+//	            // It's a day name, convert to a number (1=Monday, 7=Sunday)
+//	            switch (dayOfWeekStr.trim().toLowerCase()) {
+//	                case "monday":
+//	                    dayOfWeek = 1;
+//	                    break;
+//	                case "tuesday":
+//	                    dayOfWeek = 2;
+//	                    break;
+//	                case "wednesday":
+//	                    dayOfWeek = 3;
+//	                    break;
+//	                case "thursday":
+//	                    dayOfWeek = 4;
+//	                    break;
+//	                case "friday":
+//	                    dayOfWeek = 5;
+//	                    break;
+//	                case "saturday":
+//	                    dayOfWeek = 6;
+//	                    break;
+//	                case "sunday":
+//	                    dayOfWeek = 7;
+//	                    break;
+//	                default:
+//	                    throw new IllegalArgumentException("Invalid day of week: " + dayOfWeekStr);
+//	            }
+//	        }
+//	        
+//	        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+//	        Calendar startCal = Calendar.getInstance();
+//	        startCal.setTime(startDate);
+//	        
+//	        Calendar endCal = Calendar.getInstance();
+//	        endCal.setTime(endDate);
+//	        
+//	        // Convert from Monday-Sunday (1-7) to Calendar's Sunday-Saturday (1-7)
+//	        int calendarDayOfWeek;
+//	        if (dayOfWeek == 7) {
+//	            calendarDayOfWeek = Calendar.SUNDAY; // 1
+//	        } else {
+//	            calendarDayOfWeek = dayOfWeek + 1; // Add 1 to convert
+//	        }
+//	        
+//	        // Find the first occurrence of the requested day
+////	        while (startCal.get(Calendar.DAY_OF_WEEK) != calendarDayOfWeek) {
+////	            startCal.add(Calendar.DAY_OF_MONTH, 1);
+////	        }
+//	        
+//	     // Move forward to the first matching weekday ON or AFTER the startDate
+//	        int currentDay = startCal.get(Calendar.DAY_OF_WEEK);
+//	        int daysUntilTarget = (calendarDayOfWeek - currentDay + 7) % 7;
+//
+//	        // Only move forward if needed (don't move backward)
+//	        if (daysUntilTarget != 0) {
+//	            startCal.add(Calendar.DAY_OF_MONTH, daysUntilTarget);
+//	        }
+//
+//	        
+//	        // Generate all dates for the specified day of week within the range
+//	        while (!startCal.after(endCal)) {
+//	            dates.add(dateFormat.format(startCal.getTime()));
+//	            startCal.add(Calendar.DATE, 7); // Move to next week
+//	        }
+//	        
+//	        
+//	        log.debug("Generated {} dates for day {}", dates.size(), dayOfWeekStr);
+//	        
+//	    } catch (Exception e) {
+//	        log.error("Error generating dates for day '{}': {}", dayOfWeekStr, e.getMessage(), e);
+//	        throw new RuntimeException("Error generating dates for day '" + dayOfWeekStr + "': " + e.getMessage(), e);
+//	    }
+//	    
+//	    return dates;
+//	}
+	
 	private List<String> generateDatesForDayOfWeek(String dayOfWeekStr, Date startDate, Date endDate) {
 	    List<String> dates = new ArrayList<>();
-	    
+
 	    try {
 	        int dayOfWeek;
-	        
-	        // Check if the input is a number or a day name
+
 	        if (dayOfWeekStr.matches("\\d+")) {
-	            // It's a number, parse it directly
 	            dayOfWeek = Integer.parseInt(dayOfWeekStr);
 	            if (dayOfWeek < 1 || dayOfWeek > 7) {
 	                throw new IllegalArgumentException("Day of week must be between 1 and 7, got: " + dayOfWeek);
 	            }
 	        } else {
-	            // It's a day name, convert to a number (1=Monday, 7=Sunday)
 	            switch (dayOfWeekStr.trim().toLowerCase()) {
-	                case "monday":
-	                    dayOfWeek = 1;
-	                    break;
-	                case "tuesday":
-	                    dayOfWeek = 2;
-	                    break;
-	                case "wednesday":
-	                    dayOfWeek = 3;
-	                    break;
-	                case "thursday":
-	                    dayOfWeek = 4;
-	                    break;
-	                case "friday":
-	                    dayOfWeek = 5;
-	                    break;
-	                case "saturday":
-	                    dayOfWeek = 6;
-	                    break;
-	                case "sunday":
-	                    dayOfWeek = 7;
-	                    break;
+	                case "monday": dayOfWeek = 1; break;
+	                case "tuesday": dayOfWeek = 2; break;
+	                case "wednesday": dayOfWeek = 3; break;
+	                case "thursday": dayOfWeek = 4; break;
+	                case "friday": dayOfWeek = 5; break;
+	                case "saturday": dayOfWeek = 6; break;
+	                case "sunday": dayOfWeek = 7; break;
 	                default:
 	                    throw new IllegalArgumentException("Invalid day of week: " + dayOfWeekStr);
 	            }
 	        }
-	        
+
+	        TimeZone timeZone = TimeZone.getTimeZone("Asia/Kolkata");
 	        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-	        Calendar startCal = Calendar.getInstance();
+	        dateFormat.setTimeZone(timeZone);
+
+	        Calendar startCal = Calendar.getInstance(timeZone);
 	        startCal.setTime(startDate);
-	        
-	        Calendar endCal = Calendar.getInstance();
+	        // Clear time
+	        startCal.set(Calendar.HOUR_OF_DAY, 0);
+	        startCal.set(Calendar.MINUTE, 0);
+	        startCal.set(Calendar.SECOND, 0);
+	        startCal.set(Calendar.MILLISECOND, 0);
+
+	        Calendar endCal = Calendar.getInstance(timeZone);
 	        endCal.setTime(endDate);
-	        
-	        // Convert from Monday-Sunday (1-7) to Calendar's Sunday-Saturday (1-7)
-	        int calendarDayOfWeek;
-	        if (dayOfWeek == 7) {
-	            calendarDayOfWeek = Calendar.SUNDAY; // 1
-	        } else {
-	            calendarDayOfWeek = dayOfWeek + 1; // Add 1 to convert
-	        }
-	        
-	        // Find the first occurrence of the requested day
-//	        while (startCal.get(Calendar.DAY_OF_WEEK) != calendarDayOfWeek) {
-//	            startCal.add(Calendar.DAY_OF_MONTH, 1);
-//	        }
-	        
-	     // Move forward to the first matching weekday ON or AFTER the startDate
+	        endCal.set(Calendar.HOUR_OF_DAY, 0);
+	        endCal.set(Calendar.MINUTE, 0);
+	        endCal.set(Calendar.SECOND, 0);
+	        endCal.set(Calendar.MILLISECOND, 0);
+
+	        int calendarDayOfWeek = (dayOfWeek == 7) ? Calendar.SUNDAY : dayOfWeek + 1;
+
+	        // Move forward to first match ON or AFTER startDate
 	        int currentDay = startCal.get(Calendar.DAY_OF_WEEK);
 	        int daysUntilTarget = (calendarDayOfWeek - currentDay + 7) % 7;
-
-	        // Only move forward if needed (don't move backward)
 	        if (daysUntilTarget != 0) {
 	            startCal.add(Calendar.DAY_OF_MONTH, daysUntilTarget);
 	        }
 
-	        
-	        // Generate all dates for the specified day of week within the range
+	        // Now loop and add all matching weekdays
 	        while (!startCal.after(endCal)) {
 	            dates.add(dateFormat.format(startCal.getTime()));
-	            startCal.add(Calendar.DATE, 7); // Move to next week
+	            startCal.add(Calendar.DAY_OF_MONTH, 7);
 	        }
-	        
-	        
+
 	        log.debug("Generated {} dates for day {}", dates.size(), dayOfWeekStr);
-	        
+
 	    } catch (Exception e) {
 	        log.error("Error generating dates for day '{}': {}", dayOfWeekStr, e.getMessage(), e);
-	        throw new RuntimeException("Error generating dates for day '" + dayOfWeekStr + "': " + e.getMessage(), e);
+	        throw new RuntimeException("Error generating dates: " + e.getMessage(), e);
 	    }
-	    
+
 	    return dates;
 	}
+
 
 	/**
 	 * Parses the slot time duration from a string format (e.g., "30 mins", "1 hour") to minutes as an integer
