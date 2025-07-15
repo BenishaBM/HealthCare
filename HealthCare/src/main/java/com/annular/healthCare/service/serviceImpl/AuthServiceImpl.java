@@ -47,6 +47,7 @@ import com.annular.healthCare.Response;
 import com.annular.healthCare.Util.Base64FileUpload;
 import com.annular.healthCare.Util.HealthCareConstant;
 import com.annular.healthCare.model.BookingDemo;
+import com.annular.healthCare.model.ContactUsData;
 import com.annular.healthCare.model.DoctorDaySlot;
 import com.annular.healthCare.model.DoctorLeaveList;
 import com.annular.healthCare.model.DoctorRole;
@@ -67,6 +68,7 @@ import com.annular.healthCare.model.RefreshToken;
 import com.annular.healthCare.model.SupportStaffMasterData;
 import com.annular.healthCare.model.User;
 import com.annular.healthCare.repository.BookingDemoRepository;
+import com.annular.healthCare.repository.ContactUsRepository;
 import com.annular.healthCare.repository.DoctorDaySlotRepository;
 import com.annular.healthCare.repository.DoctorLeaveListRepository;
 import com.annular.healthCare.repository.DoctorRoleRepository;
@@ -105,6 +107,9 @@ public class AuthServiceImpl implements AuthService {
 
 	@Autowired
 	private JavaMailSender javaMailSender;
+	
+	@Autowired
+	private ContactUsRepository contactUsRepository;
 	
 	@Autowired
 	private UserRepository userRepository;
@@ -2998,5 +3003,90 @@ public class AuthServiceImpl implements AuthService {
 					.body(new Response(0, "Fail", "Error resetting password: " + e.getMessage()));
 		}
 	}
+
+	@Override
+	public ResponseEntity<?> saveContactUs(HospitalDataListWebModel userWebModel) {
+	    try {
+	        ContactUsData contact = ContactUsData.builder()
+	                .name(userWebModel.getName())
+	                .email(userWebModel.getEmail())
+	                .mobileNumber(userWebModel.getMobileNumber())
+	                .countryCode(userWebModel.getCountryCode())
+	                .subject(userWebModel.getSubject())
+	                .message(userWebModel.getMessage())
+	                .createdBy(userWebModel.getUserId()) // or 0 if guest
+	                .updatedBy(userWebModel.getUserId())
+	                .isActive(true)
+	                .build();
+
+	        contactUsRepository.save(contact);
+
+	        return ResponseEntity.ok(new Response(1, "Success","Contact details submitted successfully."));
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body("Failed to save contact data: " + e.getMessage());
+	    }
+	}
+
+	@Override
+	public ResponseEntity<?> getAllContactUs(Integer page, Integer size) {
+	    try {
+	        // Step 1: Fetch all sorted data
+	        List<ContactUsData> allContacts = contactUsRepository.findAll(Sort.by("createdOn").descending());
+
+	        int total = allContacts.size();
+	        int toIndex = Math.min((page + 1) * size, total); // Include all previous pages
+	        List<ContactUsData> paginatedList = allContacts.subList(0, toIndex);
+
+	        // Step 2: Create response map
+	        Map<String, Object> response = new HashMap<>();
+	        response.put("content", paginatedList);
+	        response.put("currentPage", page);
+	        response.put("pageSize", size);
+	        response.put("totalElements", total);
+	        response.put("totalPages", (int) Math.ceil((double) total / size));
+
+	        return ResponseEntity.ok(new Response(1, "Success",response));
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body("Failed to retrieve contact data: " + e.getMessage());
+	    }
+	}
+
+	@Override
+	public ResponseEntity<?> getAllContactUsById(Integer id) {
+	    try {
+	        Optional<ContactUsData> contactData = contactUsRepository.findById(id);
+
+	        if (contactData.isPresent()) {
+	            return ResponseEntity.ok(contactData.get());
+	        } else {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body("Contact data not found for ID: " + id);
+	        }
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body("Error retrieving contact data: " + e.getMessage());
+	    }
+	}
+
+	@Override
+	public ResponseEntity<?> getAllBookingDemoById(Integer id) {
+	    try {
+	        Optional<BookingDemo> booking = bookingDemoRepository.findById(id);
+
+	        if (booking.isPresent()) {
+	            return ResponseEntity.ok(booking.get());
+	        } else {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body("Booking data not found for ID: " + id);
+	        }
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body("Error retrieving booking data: " + e.getMessage());
+	    }
+	    
+	}
+
 
 }

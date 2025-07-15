@@ -81,6 +81,13 @@ public class HospitalDataListWebModel {
     private Integer bottleCount;
     private String ml;
 
+    
+    
+    private String name;
+    private String email;
+    private String mobileNumber;
+    private String subject;
+    private String message;
 
 
     

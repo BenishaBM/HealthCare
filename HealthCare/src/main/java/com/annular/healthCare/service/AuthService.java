@@ -78,6 +78,14 @@ public interface AuthService {
 
 	ResponseEntity<?> getAllAppointmentListByOnlineAndOffline(String startDate, String endDate, Integer hospitalId);
 
+	ResponseEntity<?> saveContactUs(HospitalDataListWebModel userWebModel);
+
+	ResponseEntity<?> getAllContactUs(Integer page, Integer size);
+
+	ResponseEntity<?> getAllContactUsById(Integer id);
+
+	ResponseEntity<?> getAllBookingDemoById(Integer id);
+
 
 	
 }

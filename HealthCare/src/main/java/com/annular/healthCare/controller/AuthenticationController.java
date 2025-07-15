@@ -617,6 +617,64 @@ public class AuthenticationController {
 	                .body(new Response(-1, "Fail", e.getMessage()));
 	    }
 	}
+	
+	
+	@PostMapping("/saveContactUs")
+	public ResponseEntity<?> saveContactUs(@RequestBody HospitalDataListWebModel userWebModel) {
+	    try {
+	        // Call the service with startDate and endDate
+	        return authService.saveContactUs(userWebModel);
+	    } catch (Exception e) {
+	        logger.error("saveContactUs Method Exception: {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	}
+
+
+	@GetMapping("getAllContactUs")
+	public ResponseEntity<?> getAllContactUs(
+	        @RequestParam("pageNo") Integer page,
+	        @RequestParam("pageSize") Integer size) {
+	    try {
+	        logger.info("getAllContactUs controller start - page: {}, size: {}", page, size);
+	        return authService.getAllContactUs(page, size);
+	    } catch (Exception e) {
+	        logger.error("getAllContactUs Method Exception {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	
+
+	}
+	
+	@GetMapping("getAllContactUsById")
+	public ResponseEntity<?> getAllContactUsById(@RequestParam("id")Integer id) {
+	    try {
+	        logger.info("getAllContactUsById controller start - page: {}, size: {}", id);
+	        return authService.getAllContactUsById(id);
+	    } catch (Exception e) {
+	        logger.error("getAllContactUsById Method Exception {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	
+
+	}
+	
+	@GetMapping("getAllBookingDemoById")
+	public ResponseEntity<?> getAllBookingDemoById(@RequestParam("id")Integer id) {
+	    try {
+	        logger.info("getAllBookingDemoById controller start - page: {}, size: {}", id);
+	        return authService.getAllBookingDemoById(id);
+	    } catch (Exception e) {
+	        logger.error("getAllBookingDemoById Method Exception {}", e.getMessage(), e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Fail", e.getMessage()));
+	    }
+	
+
+	}
 
 
 }
