@@ -679,9 +679,16 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService{
 	        }
 	        
 	        // Find the first occurrence of the requested day
-	        while (startCal.get(Calendar.DAY_OF_WEEK) != calendarDayOfWeek) {
-	            startCal.add(Calendar.DAY_OF_MONTH, 1);
-	        }
+//	        while (startCal.get(Calendar.DAY_OF_WEEK) != calendarDayOfWeek) {
+//	            startCal.add(Calendar.DAY_OF_MONTH, 1);
+//	        }
+	        
+	     // Move forward to the first matching weekday ON or AFTER the startDate
+	        int currentDay = startCal.get(Calendar.DAY_OF_WEEK);
+	        int daysUntilTarget = (calendarDayOfWeek + 7 - currentDay) % 7;
+
+	        startCal.add(Calendar.DAY_OF_MONTH, daysUntilTarget);
+
 	        
 	        // Generate all dates for the specified day of week within the range
 	        while (!startCal.after(endCal)) {
