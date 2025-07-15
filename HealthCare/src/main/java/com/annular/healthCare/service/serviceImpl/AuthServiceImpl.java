@@ -2981,7 +2981,7 @@ public class AuthServiceImpl implements AuthService {
 	            String encryptedToken = EncryptionUtil.generateTokenWithExpiry(user.getEmailId());
 
 	            // Reset link with token
-	            String resetLink = "http://13.201.251.125/reset-password?token=" + encryptedToken;
+	            String resetLink = "http://13.201.217.62/reset-password?token=" + encryptedToken;
 
 	            // Send email
 	            SimpleMailMessage message = new SimpleMailMessage();
