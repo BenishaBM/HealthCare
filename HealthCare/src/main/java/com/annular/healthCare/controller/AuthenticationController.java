@@ -34,6 +34,7 @@ import com.annular.healthCare.webModel.UserWebModel;
 import com.annular.healthCare.Response;
 import com.annular.healthCare.UserStatusConfig;
 import com.annular.healthCare.Util.Base64FileUpload;
+import com.annular.healthCare.Util.EncryptionUtil;
 import com.annular.healthCare.Util.HealthCareConstant;
 import com.annular.healthCare.model.HospitalDataList;
 import com.annular.healthCare.model.MediaFile;
@@ -675,6 +676,27 @@ public class AuthenticationController {
 	
 
 	}
+	
+	  @GetMapping("/reset-password")
+	    public ResponseEntity<?> validateResetToken(@RequestParam("token") String token) {
+	        try {
+	            String email = EncryptionUtil.validateTokenAndGetEmail(token, 5 * 60 * 1000); // 5 min expiry
+
+	            Optional<User> optionalUser = userRepository.findByEmailIds(email);
+	            if (!optionalUser.isPresent()) {
+	                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found for token");
+	            }
+
+	       
+	            return ResponseEntity.ok(new Response(1, "Success","Token is valid. Proceed to reset password for: " + email));
+
+	        } catch (IllegalArgumentException ex) {
+	        	return ResponseEntity.badRequest().body(new Response(0, "Fail","Reset link expired or invalid."));
+	        } catch (Exception e) {
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error validating token: " + e.getMessage());
+	        }
+	    }
+
 
 
 }

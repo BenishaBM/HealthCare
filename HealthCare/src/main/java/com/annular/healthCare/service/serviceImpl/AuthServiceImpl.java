@@ -45,6 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.annular.healthCare.Response;
 import com.annular.healthCare.Util.Base64FileUpload;
+import com.annular.healthCare.Util.EncryptionUtil;
 import com.annular.healthCare.Util.HealthCareConstant;
 import com.annular.healthCare.model.BookingDemo;
 import com.annular.healthCare.model.ContactUsData;
@@ -2933,37 +2934,72 @@ public class AuthServiceImpl implements AuthService {
 
 	@Override
 	public ResponseEntity<?> emailNotificationSendToForgotPassword(HospitalDataListWebModel userWebModel) {
-		try {
-			if (userWebModel.getEmailId() == null || userWebModel.getEmailId().isEmpty()) {
-				return ResponseEntity.badRequest().body(new Response(0, "Fail", "Email ID is required"));
-			}
+//		try {
+//			if (userWebModel.getEmailId() == null || userWebModel.getEmailId().isEmpty()) {
+//				return ResponseEntity.badRequest().body(new Response(0, "Fail", "Email ID is required"));
+//			}
+//
+//			Optional<User> optionalUser = userRepository.findByEmailIds(userWebModel.getEmailId());
+//			if (!optionalUser.isPresent()) {
+//				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Response(0, "Fail", "Email ID not found"));
+//			}
+//
+//			User user = optionalUser.get();
+//
+//			// Generate reset token or link (dummy for now)
+//			String resetLink = "http://13.201.251.125/reset-password?email=" + user.getEmailId();
+//
+//			// Send email
+//			SimpleMailMessage message = new SimpleMailMessage();
+//			message.setTo(user.getEmailId());
+//			message.setSubject("Forgot Password - HealthCare System");
+//			message.setText("Dear " + user.getFirstName() + ",\n\n" + "We received a request to reset your password.\n"
+//					+ "Click the link below to reset it:\n" + resetLink + "\n\n"
+//					+ "If you did not request a password reset, please ignore this email.\n\n"
+//					+ "Regards,\nHealthCare Support Team");
+//
+//			javaMailSender.send(message);
+//
+//			return ResponseEntity.ok(new Response(1, "Success", "Password reset email sent successfully."));
+//		} catch (Exception e) {
+//			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//					.body(new Response(0, "Fail", "Error sending email: " + e.getMessage()));
+//		}
+		 try {
+	            if (userWebModel.getEmailId() == null || userWebModel.getEmailId().isEmpty()) {
+	                return ResponseEntity.badRequest().body(new Response(0, "Fail", "Email ID is required"));
+	            }
 
-			Optional<User> optionalUser = userRepository.findByEmailIds(userWebModel.getEmailId());
-			if (!optionalUser.isPresent()) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Response(0, "Fail", "Email ID not found"));
-			}
+	            Optional<User> optionalUser = userRepository.findByEmailIds(userWebModel.getEmailId());
+	            if (!optionalUser.isPresent()) {
+	                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Response(0, "Fail", "Email ID not found"));
+	            }
 
-			User user = optionalUser.get();
+	            User user = optionalUser.get();
 
-			// Generate reset token or link (dummy for now)
-			String resetLink = "http://13.201.251.125/reset-password?email=" + user.getEmailId();
+	            // Generate encrypted token with timestamp
+	            String encryptedToken = EncryptionUtil.generateTokenWithExpiry(user.getEmailId());
 
-			// Send email
-			SimpleMailMessage message = new SimpleMailMessage();
-			message.setTo(user.getEmailId());
-			message.setSubject("Forgot Password - HealthCare System");
-			message.setText("Dear " + user.getFirstName() + ",\n\n" + "We received a request to reset your password.\n"
-					+ "Click the link below to reset it:\n" + resetLink + "\n\n"
-					+ "If you did not request a password reset, please ignore this email.\n\n"
-					+ "Regards,\nHealthCare Support Team");
+	            // Reset link with token
+	            String resetLink = "http://13.201.251.125/reset-password?token=" + encryptedToken;
 
-			javaMailSender.send(message);
+	            // Send email
+	            SimpleMailMessage message = new SimpleMailMessage();
+	            message.setTo(user.getEmailId());
+	            message.setSubject("Forgot Password - HealthCare System");
+	            message.setText("Dear " + user.getFirstName() + ",\n\n" +
+	                    "We received a request to reset your password.\n" +
+	                    "Click the link below within 5 minutes to reset it:\n" + resetLink + "\n\n" +
+	                    "If you did not request a password reset, please ignore this email.\n\n" +
+	                    "Regards,\nHealthCare Support Team");
 
-			return ResponseEntity.ok(new Response(1, "Success", "Password reset email sent successfully."));
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new Response(0, "Fail", "Error sending email: " + e.getMessage()));
-		}
+	            javaMailSender.send(message);
+
+	            return ResponseEntity.ok(new Response(1, "Success", "Password reset email sent successfully."));
+	        } catch (Exception e) {
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                    .body(new Response(0, "Fail", "Error sending email: " + e.getMessage()));
+	        }
 	}
 
 	@Override
@@ -3087,6 +3123,8 @@ public class AuthServiceImpl implements AuthService {
 	    }
 	    
 	}
+	
+	
 
 
 }
