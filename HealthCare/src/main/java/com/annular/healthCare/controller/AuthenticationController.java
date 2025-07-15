@@ -688,7 +688,7 @@ public class AuthenticationController {
 	            }
 
 	       
-	            return ResponseEntity.ok(new Response(1, "Success","Token is valid. Proceed to reset password for: " + email));
+	            return ResponseEntity.ok(new Response(1, "Success",email));
 
 	        } catch (IllegalArgumentException ex) {
 	        	return ResponseEntity.badRequest().body(new Response(0, "Fail","Reset link expired or invalid."));
