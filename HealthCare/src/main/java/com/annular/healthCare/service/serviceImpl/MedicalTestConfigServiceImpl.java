@@ -150,7 +150,7 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService {
 		Optional<Department> existing = departmentRepository.findByName(request.getName());
 
 		if (existing.isPresent()) {
-			return ResponseEntity.ok(new Response(0, "fail", "Department already exists."));
+			return ResponseEntity.badRequest().body(new Response(0, "fail","Department already exists."));
 		}
 
 		Department department = Department.builder().name(request.getName()).createdBy(request.getCreatedBy())
