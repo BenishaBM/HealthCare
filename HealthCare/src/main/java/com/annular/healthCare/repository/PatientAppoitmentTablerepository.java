@@ -71,9 +71,14 @@ public interface PatientAppoitmentTablerepository extends JpaRepository<PatientA
 	@Query("SELECT p FROM PatientAppointmentTable p WHERE p.appointmentDate = :appointmentDate AND p.timeSlotId = :slotTimeId")
 	List<PatientAppointmentTable> findByAppointmentDateAndDoctorSlotTimeId(String appointmentDate, Integer slotTimeId);
 
-	@Query("SELECT DISTINCT a FROM PatientAppointmentTable a LEFT JOIN FETCH a.appointmentMedicines m WHERE a.patient.patientDetailsId = :patientId AND a.appointmentDate = :appointmentDate")
+	//@Query("SELECT DISTINCT a FROM PatientAppointmentTable a LEFT JOIN FETCH a.appointmentMedicines m WHERE a.patient.patientDetailsId = :patientId AND a.appointmentDate = :appointmentDate")
+	@Query("SELECT DISTINCT a FROM PatientAppointmentTable a " +
+		       "LEFT JOIN FETCH a.appointmentMedicines m " +
+		       "WHERE a.patient.patientDetailsId = :patientId " +
+		       "AND a.appointmentDate = :appointmentDate " +
+		       "AND a.appointmentId = :appontmentId")
 	List<PatientAppointmentTable> findAppointmentsWithMedicines(@Param("patientId") Integer patientId,
-			@Param("appointmentDate") String appointmentDate);
+			@Param("appointmentDate") String appointmentDate,Integer appontmentId);
 
 	@Query("SELECT p FROM PatientAppointmentTable p WHERE " + "(:doctorId IS NULL OR p.doctor.userId = :doctorId) AND "
 			+ "(:appointmentDate IS NULL OR FUNCTION('DATE', p.appointmentDate) = FUNCTION('DATE', :appointmentDate))")
@@ -128,6 +133,8 @@ public interface PatientAppoitmentTablerepository extends JpaRepository<PatientA
 			+ "WHERE p.doctor.hospitalId = :hospitalId AND p.createdOn BETWEEN :startDate AND :endDate "
 			+ "GROUP BY p.pharmacyStatus")
 	List<Object[]> getAppointmentCountsByPharmacyStatus(Date startDate, Date endDate, Integer hospitalId);
+
+	
 
 	
 }

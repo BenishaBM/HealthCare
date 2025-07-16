@@ -458,14 +458,11 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	         List<PatientMappedHospitalId> mappings = patientMappedHospitalIdRepository.findByHospitalId(hospitalId);
 
 	         // Extract patient IDs that belong to the hospital
-	         Set<Integer> patientIds = mappings.stream()
+	         List<Integer> patientIds = mappings.stream()
 	             .map(PatientMappedHospitalId::getPatientId)
-	             .collect(Collectors.toSet());
+	             .collect(Collectors.toList());
 
-	         // Filter appointments where:
-	         // - Patient is not null
-	         // - Patient is mapped to the given hospital
-	         // - Medicines exist for the appointment
+	         // Filter appointments and allow duplicates
 	         List<Map<String, Object>> filteredData = appointments.stream()
 	             .filter(app -> app.getPatient() != null
 	                         && patientIds.contains(app.getPatient().getPatientDetailsId())
@@ -475,17 +472,17 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                 Map<String, Object> map = new HashMap<>();
 	                 map.put("patientDetailsId", patient.getPatientDetailsId());
 	                 map.put("patientName", patient.getPatientName());
+	                 map.put("appointmentId", app.getAppointmentId());
 	                 map.put("dob", patient.getDob());
 	                 map.put("gender", patient.getGender());
 	                 map.put("bloodGroup", patient.getBloodGroup());
 	                 map.put("mobileNumber", patient.getMobileNumber());
 	                 map.put("emailId", patient.getEmailId());
-	                 map.put("pharmacyStatus", app.getPharmacyStatus()); // <-- Include pharmacy status here
+	                 map.put("pharmacyStatus", app.getPharmacyStatus());
 	                 map.put("address", patient.getAddress());
 	                 return map;
 	             })
-	             .distinct()
-	             .collect(Collectors.toList());
+	             .collect(Collectors.toList()); // No .distinct()
 
 	         return ResponseEntity.ok(new Response(1, "success", filteredData));
 
@@ -495,6 +492,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	             .body(new Response(0, "error", "An error occurred while fetching patient details."));
 	     }
 	 }
+
 
 //	 @Override
 //	 public ResponseEntity<?> getAllPatientPharamcyByHospitalIdAndDate(Integer hospitalId, String currentDate) {
@@ -532,11 +530,11 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 //	 }
 
 	 @Override
-	 public ResponseEntity<?> getAllPatientPharamcyBypatientIdAndDate(Integer patientId, String appointmentDate) {
+	 public ResponseEntity<?> getAllPatientPharamcyBypatientIdAndDate(Integer patientId, String appointmentDate,Integer appontmentId) {
 	     try {
 	         // Use JOIN FETCH version to fetch medicines
 	         List<PatientAppointmentTable> appointments =
-	                 patientAppointmentRepository.findAppointmentsWithMedicines(patientId, appointmentDate);
+	                 patientAppointmentRepository.findAppointmentsWithMedicines(patientId, appointmentDate, appontmentId);
 
 	         Set<String> uniqueKeys = new HashSet<>();
 

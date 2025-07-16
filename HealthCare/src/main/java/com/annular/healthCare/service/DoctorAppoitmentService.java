@@ -19,7 +19,8 @@ public interface DoctorAppoitmentService {
 
 	ResponseEntity<?> getAllPatientPharamcyByHospitalIdAndDate(Integer hospitalId, String currentDatae);
 
-	ResponseEntity<?> getAllPatientPharamcyBypatientIdAndDate(Integer patientId, String currentDatae);
+	ResponseEntity<?> getAllPatientPharamcyBypatientIdAndDate(Integer patientId, String currentDatae,
+			Integer appontmentId);
 
 	ResponseEntity<?> saveMedicineDetailByPharamacy(HospitalDataListWebModel userWebModel);
 
@@ -44,5 +45,7 @@ public interface DoctorAppoitmentService {
 	ResponseEntity<?> rescheduleAppointmentOnlineAndOffline(HospitalDataListWebModel userWebModel);
 
 	ResponseEntity<?> addDischargeSummaryByAppointmentId(PatientAppointmentWebModel userWebModel);
+
+	
 
 }
