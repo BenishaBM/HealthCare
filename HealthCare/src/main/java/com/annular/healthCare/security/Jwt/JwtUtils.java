@@ -121,6 +121,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
+import com.annular.healthCare.model.PatientDetails;
 import com.annular.healthCare.model.User;
 
 import io.jsonwebtoken.Claims;
@@ -228,6 +229,18 @@ public class JwtUtils {
                 .compact();
     }
 
+    public String generateJwtTokenForRefreshToken(PatientDetails patientDetails) {
+        String mobileNumber = patientDetails.getMobileNumber(); // ✅ Ensure getter exists
+
+        return Jwts.builder()
+                .setSubject(mobileNumber)
+                .claim("mobileNumber", mobileNumber)
+                .claim("userType", "PATIENT")
+                .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(SignatureAlgorithm.HS512, getSigningKey())
+                .compact();
+    }
 
     
 }

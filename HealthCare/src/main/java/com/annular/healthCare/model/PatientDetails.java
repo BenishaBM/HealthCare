@@ -48,6 +48,9 @@ public class PatientDetails {
 	@Column(name = "dob")
 	private String dob;
 	
+	@Column(name = "user_type")
+	private String userType;
+	
 	@Column(name = "gender")
 	private String gender;
 	

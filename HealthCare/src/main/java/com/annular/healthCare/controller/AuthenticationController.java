@@ -235,6 +235,26 @@ public class AuthenticationController {
 		return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Refresh Token Failed"));
 	}
 
+	
+	@PostMapping("refreshTokenUser")
+	public ResponseEntity<?> refreshTokenUser(@RequestBody UserWebModel userWebModel) {
+		Optional<RefreshToken> data = refreshTokenRepository.findByToken(userWebModel.getToken());
+		if (data.isPresent()) {
+			Response token = authService.verifyExpiration(data.get());
+			Optional<PatientDetails> userData = patientDetailsRepository.findById(data.get().getUserId());
+			String jwt = jwtUtils.generateJwtTokenForRefreshToken(userData.get());
+			RefreshToken refreshToken = data.get();
+			   // Retrieve hospital name
+
+			refreshToken.setExpiryToken(LocalTime.now().plusMinutes(17));
+			refreshTokenRepository.save(refreshToken);
+			return ResponseEntity.ok(new JwtResponse(jwt, userData.get().getPatientDetailsId(),
+
+					1, token.getData().toString(), userData.get().getUserType(), userData.get().getEmailId(), userData.get().getPatientDetailsId(),"",null,""));
+		}
+		return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Refresh Token Failed"));
+	}
+	
 	@GetMapping("getUserDetailsByUserType")
 	public ResponseEntity<?> getUserDetailsByUserType(@RequestParam("userType") String userType,@RequestParam("pageNo")Integer pageNo,@RequestParam("pageSize")Integer pageSize) {
 		try {
