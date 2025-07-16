@@ -14,7 +14,7 @@ import com.annular.healthCare.model.MedicalTestConfig;
 public interface DepartmentRepository extends JpaRepository<Department,Integer>{
 
 	@Query("SELECT d FROM Department d WHERE d.name = :name AND d.isActive = true")
-	Optional<Department> findByName(String department);
+	Optional<Department> findByName(String name);
 
 	List<Department> findByHospitalIdAndIsActiveTrue(Integer hospitalId);
 
