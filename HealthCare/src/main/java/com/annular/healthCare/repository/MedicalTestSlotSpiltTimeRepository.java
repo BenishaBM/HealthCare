@@ -51,18 +51,32 @@ public interface MedicalTestSlotSpiltTimeRepository extends JpaRepository<Medica
 
 	List<MedicalTestSlotSpiltTime> findByMedicalTestSlotDateAndIsActiveTrue(MedicalTestSlotDate savedSlotDate);
 
+//	@Query("SELECT COUNT(m) > 0 FROM MedicalTestSlotSpiltTime m " +
+//		       "JOIN MedicalTestSlotDate d ON m.medicalTestSlotDate.medicalTestSlotDateId = d.medicalTestSlotDateId " +
+//		       "JOIN MedicalTestSlot s ON d.medicalTestSlotId = s.medicalTestSlotId " +
+//		       "WHERE d.date = :date " +
+//		       "AND m.slotStartTime = :startTime " +
+//		       "AND m.slotEndTime = :endTime " +
+//		       "AND m.isActive = true " +
+//		       "AND s.department.id = :departmentId")
+//		boolean existsOverlappingSlotForDepartment(Integer departmentId,
+//		                                           String date,
+//		                                            String startTime,
+//		                                          String endTime);
+	
+	
 	@Query("SELECT COUNT(m) > 0 FROM MedicalTestSlotSpiltTime m " +
 		       "JOIN MedicalTestSlotDate d ON m.medicalTestSlotDate.medicalTestSlotDateId = d.medicalTestSlotDateId " +
 		       "JOIN MedicalTestSlot s ON d.medicalTestSlotId = s.medicalTestSlotId " +
 		       "WHERE d.date = :date " +
-		       "AND m.slotStartTime = :startTime " +
-		       "AND m.slotEndTime = :endTime " +
+		       "AND (:startTime < m.slotEndTime AND :endTime > m.slotStartTime) " +
 		       "AND m.isActive = true " +
 		       "AND s.department.id = :departmentId")
 		boolean existsOverlappingSlotForDepartment(Integer departmentId,
 		                                           String date,
-		                                            String startTime,
-		                                          String endTime);
+		                                           String startTime,
+		                                           String endTime);
+
 
 
 
