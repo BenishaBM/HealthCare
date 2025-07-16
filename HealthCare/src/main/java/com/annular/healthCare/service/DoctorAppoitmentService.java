@@ -26,7 +26,7 @@ public interface DoctorAppoitmentService {
 
 	ResponseEntity<?> getAllPatientMedicalTestByHospitalIdAndDate(Integer hospitalId, String currentDatae);
 
-	ResponseEntity<?> getAllPatientMedicalTestBypatientIdAndDate(Integer patientId, String currentDatae);
+	ResponseEntity<?> getAllPatientMedicalTestBypatientIdAndDate(Integer patientId, String currentDatae, Integer appointmentId);
 
 	ResponseEntity<?> deleteParticularSpiltSlot(Integer id);
 
