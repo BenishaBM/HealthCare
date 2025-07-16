@@ -39,4 +39,7 @@ public interface MedicalTestSlotDateRepository extends JpaRepository<MedicalTest
             String date,
             Boolean isActive
         );
+
+
+	boolean existsByMedicalTestSlotIdAndDateAndIsActiveTrue(Integer medicalTestSlotId, String date);
 }
