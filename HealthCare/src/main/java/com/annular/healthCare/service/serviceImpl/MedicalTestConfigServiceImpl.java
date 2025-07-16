@@ -599,58 +599,176 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService {
 
 	}
 
+//	/**
+//	 * Process time slot splitting with validation
+//	 */
+//	private void processTimeSlotSplitting(MedicalTestSlotDate savedSlotDate,
+//            MedicalTestSlotTimeWebModel timeSlotModel,
+//            Integer createdBy,
+//            Integer departmentId)
+//
+//	{
+//		try {
+//			List<TimeSlotInterval> timeIntervals = splitTimeSlot(timeSlotModel.getSlotStartTime(),
+//					timeSlotModel.getSlotEndTime(), parseSlotDuration(timeSlotModel.getSlotTime()));
+//
+//// Validate generated intervals for overlaps
+//			validateTimeIntervals(timeIntervals);
+//
+//			for (TimeSlotInterval interval : timeIntervals) {
+//
+//				String dbStartTime = convert24To12Hour(interval.getStartTime());
+//				String dbEndTime = convert24To12Hour(interval.getEndTime());
+//
+//				log.info("Checking overlap for deptId={}, date={}, start={}, end={}",
+//				         departmentId, savedSlotDate.getDate(), dbStartTime, dbEndTime);
+//
+//				boolean exists = medicalTestSlotSpiltTimeRepository.existsOverlappingSlotForDepartment(
+//				    departmentId,
+//				    savedSlotDate.getDate(),
+//				    dbStartTime,
+//				    dbEndTime
+//				);
+//
+//
+//				if (exists) {
+//					throw new ValidationException(
+//							String.format("Time slot %s - %s overlaps with an existing slot on %s", dbStartTime,
+//									dbEndTime, savedSlotDate.getDate()));
+//				}
+//
+//// Save to DB
+//				MedicalTestSlotSpiltTime spiltTime = MedicalTestSlotSpiltTime.builder().slotStartTime(dbStartTime)
+//						.slotEndTime(dbEndTime).slotStatus("AVAILABLE").medicalTestSlotDate(savedSlotDate)
+//						.createdBy(createdBy).isActive(true).build();
+//
+//				medicalTestSlotSpiltTimeRepository.save(spiltTime);
+//			}
+//
+//		} catch (Exception e) {
+//			log.error("Error processing time slots for date {}: {}", savedSlotDate.getDate(), e.getMessage(), e);
+//			throw new RuntimeException("Error processing time slots: " + e.getMessage(), e);
+//		}
+//	}
+
 	/**
-	 * Process time slot splitting with validation
+	 * FIXED: Process time slot splitting with proper AM/PM handling
 	 */
 	private void processTimeSlotSplitting(MedicalTestSlotDate savedSlotDate,
-            MedicalTestSlotTimeWebModel timeSlotModel,
-            Integer createdBy,
-            Integer departmentId)
+	        MedicalTestSlotTimeWebModel timeSlotModel,
+	        Integer createdBy,
+	        Integer departmentId) {
+	    try {
+	        List<TimeSlotInterval> timeIntervals = splitTimeSlot(
+	            timeSlotModel.getSlotStartTime(),
+	            timeSlotModel.getSlotEndTime(), 
+	            parseSlotDuration(timeSlotModel.getSlotTime())
+	        );
 
-	{
-		try {
-			List<TimeSlotInterval> timeIntervals = splitTimeSlot(timeSlotModel.getSlotStartTime(),
-					timeSlotModel.getSlotEndTime(), parseSlotDuration(timeSlotModel.getSlotTime()));
+	        // Validate generated intervals for overlaps
+	        validateTimeIntervals(timeIntervals);
 
-// Validate generated intervals for overlaps
-			validateTimeIntervals(timeIntervals);
+	        for (TimeSlotInterval interval : timeIntervals) {
+	            // FIXED: Ensure proper AM/PM conversion
+	            String dbStartTime = convertTo12HourFormat(interval.getStartTime());
+	            String dbEndTime = convertTo12HourFormat(interval.getEndTime());
 
-			for (TimeSlotInterval interval : timeIntervals) {
+	            log.info("Processing time slot - deptId={}, date={}, start={}, end={}",
+	                     departmentId, savedSlotDate.getDate(), dbStartTime, dbEndTime);
 
-				String dbStartTime = convert24To12Hour(interval.getStartTime());
-				String dbEndTime = convert24To12Hour(interval.getEndTime());
+	            // Check for overlapping slots
+	            boolean exists = medicalTestSlotSpiltTimeRepository.existsOverlappingSlotForDepartment(
+	                departmentId,
+	                savedSlotDate.getDate(),
+	                dbStartTime,
+	                dbEndTime
+	            );
 
-				log.info("Checking overlap for deptId={}, date={}, start={}, end={}",
-				         departmentId, savedSlotDate.getDate(), dbStartTime, dbEndTime);
+	            if (exists) {
+	                throw new ValidationException(
+	                    String.format("Time slot %s - %s overlaps with an existing slot on %s", 
+	                        dbStartTime, dbEndTime, savedSlotDate.getDate())
+	                );
+	            }
 
-				boolean exists = medicalTestSlotSpiltTimeRepository.existsOverlappingSlotForDepartment(
-				    departmentId,
-				    savedSlotDate.getDate(),
-				    dbStartTime,
-				    dbEndTime
-				);
+	            // Save to DB with proper AM/PM format
+	            MedicalTestSlotSpiltTime spiltTime = MedicalTestSlotSpiltTime.builder()
+	                .slotStartTime(dbStartTime)
+	                .slotEndTime(dbEndTime)
+	                .slotStatus("AVAILABLE")
+	                .medicalTestSlotDate(savedSlotDate)
+	                .createdBy(createdBy)
+	                .isActive(true)
+	                .build();
 
+	            medicalTestSlotSpiltTimeRepository.save(spiltTime);
+	            log.info("Saved time slot: {} to {} for date: {}", dbStartTime, dbEndTime, savedSlotDate.getDate());
+	        }
 
-				if (exists) {
-					throw new ValidationException(
-							String.format("Time slot %s - %s overlaps with an existing slot on %s", dbStartTime,
-									dbEndTime, savedSlotDate.getDate()));
-				}
+	    } catch (Exception e) {
+	        log.error("Error processing time slots for date {}: {}", savedSlotDate.getDate(), e.getMessage(), e);
+	        throw new RuntimeException("Error processing time slots: " + e.getMessage(), e);
+	    }
+	}
+	
+	/**
+	 * FIXED: Improved 24-hour to 12-hour conversion with proper AM/PM handling
+	 * @throws java.text.ParseException 
+	 */
+	private String convertTo12HourFormat(String time24OrAmPm) throws java.text.ParseException {
+	    if (time24OrAmPm == null || time24OrAmPm.trim().isEmpty()) {
+	        throw new IllegalArgumentException("Time cannot be null or empty");
+	    }
 
-// Save to DB
-				MedicalTestSlotSpiltTime spiltTime = MedicalTestSlotSpiltTime.builder().slotStartTime(dbStartTime)
-						.slotEndTime(dbEndTime).slotStatus("AVAILABLE").medicalTestSlotDate(savedSlotDate)
-						.createdBy(createdBy).isActive(true).build();
+	    String trimmedTime = time24OrAmPm.trim();
+	    
+	    // If already in AM/PM format, return as is
+	    if (trimmedTime.toLowerCase().contains("am") || trimmedTime.toLowerCase().contains("pm")) {
+	        return normalizeAmPmFormat(trimmedTime);
+	    }
 
-				medicalTestSlotSpiltTimeRepository.save(spiltTime);
-			}
-
-		} catch (Exception e) {
-			log.error("Error processing time slots for date {}: {}", savedSlotDate.getDate(), e.getMessage(), e);
-			throw new RuntimeException("Error processing time slots: " + e.getMessage(), e);
-		}
+	    // Convert from 24-hour format
+	    try {
+	        TimeZone timeZone = TimeZone.getTimeZone("Asia/Kolkata");
+	        
+	        SimpleDateFormat inputFormat = new SimpleDateFormat("HH:mm");
+	        inputFormat.setTimeZone(timeZone);
+	        
+	        SimpleDateFormat outputFormat = new SimpleDateFormat("hh:mm a", Locale.ENGLISH);
+	        outputFormat.setTimeZone(timeZone);
+	        
+	        Date parsedTime = inputFormat.parse(trimmedTime);
+	        String convertedTime = outputFormat.format(parsedTime);
+	        
+	        log.debug("Converted time {} to {}", trimmedTime, convertedTime);
+	        return convertedTime;
+	        
+	    } catch (ParseException e) {
+	        log.error("Error converting time format: {}", trimmedTime, e);
+	        throw new RuntimeException("Invalid time format: " + trimmedTime, e);
+	    }
 	}
 
+
+/**
+ * FIXED: Normalize AM/PM format to ensure consistency
+ */
+private String normalizeAmPmFormat(String amPmTime) {
+    if (amPmTime == null || amPmTime.trim().isEmpty()) {
+        return amPmTime;
+    }
+    
+    String normalized = amPmTime.trim()
+        .replaceAll("(?i)\\s*am\\s*", " AM")
+        .replaceAll("(?i)\\s*pm\\s*", " PM");
+    
+    // Ensure proper spacing
+    normalized = normalized.replaceAll("\\s+", " ");
+    
+    return normalized;
+}
+
+	
 	/**
 	 * Validate all day slots for conflicts and overlaps
 	 */
@@ -681,17 +799,24 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService {
 	}
 
 	private String convert24To12Hour(String time24) throws java.text.ParseException {
-		try {
-			SimpleDateFormat inputFormat = new SimpleDateFormat("HH:mm"); // 24-hour format
-			SimpleDateFormat outputFormat = new SimpleDateFormat("hh:mm a", Locale.ENGLISH); // 12-hour AM/PM format
-			outputFormat.setDateFormatSymbols(new DateFormatSymbols(Locale.ENGLISH));
-			Date date = inputFormat.parse(time24);
-			return outputFormat.format(date);
-		} catch (ParseException e) {
-			log.error("Invalid 24-hour time format: {}", time24);
-			throw new RuntimeException("Invalid time format: " + time24);
-		}
+	    try {
+	        TimeZone timeZone = TimeZone.getTimeZone("Asia/Kolkata");
+
+	        SimpleDateFormat inputFormat = new SimpleDateFormat("HH:mm");
+	        inputFormat.setTimeZone(timeZone);
+
+	        SimpleDateFormat outputFormat = new SimpleDateFormat("hh:mm a", Locale.ENGLISH);
+	        outputFormat.setTimeZone(timeZone);
+
+	        return outputFormat.format(inputFormat.parse(time24));
+	    } catch (ParseException e) {
+	        log.error("Error parsing time: {}", time24);
+	        throw new RuntimeException("Invalid time format: " + time24);
+	    }
 	}
+
+
+
 
 	/**
 	 * Validate a single day slot
@@ -1123,40 +1248,99 @@ public class MedicalTestConfigServiceImpl implements MedicalTestConfigService {
 		}
 	}
 
+//	/**
+//	 * Splits a time slot into intervals based on slot duration and formats time
+//	 * with AM/PM
+//	 */
+//	private List<TimeSlotInterval> splitTimeSlot(String startTime, String endTime, Integer slotDuration)
+//	        throws java.text.ParseException {
+//	    List<TimeSlotInterval> intervals = new ArrayList<>();
+//
+//	    TimeZone timeZone = TimeZone.getTimeZone("Asia/Kolkata");
+//
+//	    SimpleDateFormat inputFormat = new SimpleDateFormat("HH:mm");
+//	    inputFormat.setTimeZone(timeZone);
+//
+//	    SimpleDateFormat outputFormat = new SimpleDateFormat("hh:mm a"); // Converts to AM/PM
+//	    outputFormat.setTimeZone(timeZone);
+//
+//	    Calendar startCal = Calendar.getInstance(timeZone);
+//	    startCal.setTime(inputFormat.parse(startTime));
+//
+//	    Calendar endCal = Calendar.getInstance(timeZone);
+//	    endCal.setTime(inputFormat.parse(endTime));
+//
+//	    while (startCal.before(endCal)) {
+//	        String intervalStart = outputFormat.format(startCal.getTime());
+//
+//	        startCal.add(Calendar.MINUTE, slotDuration);
+//
+//	        String intervalEnd = outputFormat.format(startCal.getTime());
+//
+//	        intervals.add(new TimeSlotInterval(intervalStart, intervalEnd));
+//	    }
+//
+//	    return intervals;
+//	}
 	/**
-	 * Splits a time slot into intervals based on slot duration and formats time
-	 * with AM/PM
+	 * FIXED: Enhanced time slot splitting with proper AM/PM handling
+	 * @throws java.text.ParseException 
 	 */
-	private List<TimeSlotInterval> splitTimeSlot(String startTime, String endTime, Integer slotDuration)
-			throws java.text.ParseException {
-		List<TimeSlotInterval> intervals = new ArrayList<>();
+	private List<TimeSlotInterval> splitTimeSlot(String startTime, String endTime, Integer slotDuration) throws java.text.ParseException {
+	    List<TimeSlotInterval> intervals = new ArrayList<>();
+	    
+	    if (startTime == null || endTime == null || slotDuration == null || slotDuration <= 0) {
+	        throw new IllegalArgumentException("Invalid parameters for time slot splitting");
+	    }
 
-		SimpleDateFormat inputFormat = new SimpleDateFormat("HH:mm");
-		SimpleDateFormat outputFormat = new SimpleDateFormat("hh:mm a", Locale.ENGLISH);
-		outputFormat.getDateFormatSymbols().setAmPmStrings(new String[] { "AM", "PM" });
+	    try {
+	        TimeZone timeZone = TimeZone.getTimeZone("Asia/Kolkata");
+	        
+	        SimpleDateFormat inputFormat = new SimpleDateFormat("HH:mm");
+	        inputFormat.setTimeZone(timeZone);
+	        
+	        SimpleDateFormat outputFormat = new SimpleDateFormat("hh:mm a", Locale.ENGLISH);
+	        outputFormat.setTimeZone(timeZone);
 
-		Calendar startCal = Calendar.getInstance();
-		startCal.setTime(inputFormat.parse(startTime));
+	        Calendar startCal = Calendar.getInstance(timeZone);
+	        startCal.setTime(inputFormat.parse(startTime.trim()));
 
-		Calendar endCal = Calendar.getInstance();
-		endCal.setTime(inputFormat.parse(endTime));
+	        Calendar endCal = Calendar.getInstance(timeZone);
+	        endCal.setTime(inputFormat.parse(endTime.trim()));
 
-		while (startCal.getTime().before(endCal.getTime())) {
-			String intervalStart = outputFormat.format(startCal.getTime());
+	        // Validate that start time is before end time
+	        if (!startCal.before(endCal)) {
+	            throw new IllegalArgumentException("Start time must be before end time");
+	        }
 
-			startCal.add(Calendar.MINUTE, slotDuration);
-
-			if (startCal.getTime().after(endCal.getTime())) {
-				String formattedEndTime = outputFormat.format(endCal.getTime());
-				intervals.add(new TimeSlotInterval(intervalStart, formattedEndTime));
-			} else {
-				String intervalEnd = outputFormat.format(startCal.getTime());
-				intervals.add(new TimeSlotInterval(intervalStart, intervalEnd));
-			}
-		}
-
-		return intervals;
+	        while (startCal.before(endCal)) {
+	            String intervalStart = outputFormat.format(startCal.getTime());
+	            
+	            // Add slot duration
+	            startCal.add(Calendar.MINUTE, slotDuration);
+	            
+	            // Don't exceed end time
+	            if (startCal.after(endCal)) {
+	                break;
+	            }
+	            
+	            String intervalEnd = outputFormat.format(startCal.getTime());
+	            
+	            intervals.add(new TimeSlotInterval(intervalStart, intervalEnd));
+	            
+	            log.debug("Created interval: {} - {}", intervalStart, intervalEnd);
+	        }
+	        
+	        log.info("Generated {} time intervals with {} minute slots", intervals.size(), slotDuration);
+	        
+	    } catch (ParseException e) {
+	        log.error("Error parsing time during slot splitting: start={}, end={}", startTime, endTime, e);
+	        throw new RuntimeException("Error parsing time during slot splitting", e);
+	    }
+	    
+	    return intervals;
 	}
+
 
 //	@Override
 //	public ResponseEntity<?> saveMedicalTestSlotByDepartmentId(MedicalTestConfigWebModel medicalTestConfigWebModel) {
