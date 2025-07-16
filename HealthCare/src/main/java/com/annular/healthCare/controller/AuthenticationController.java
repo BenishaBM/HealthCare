@@ -436,7 +436,7 @@ public class AuthenticationController {
 	            logger.info("Authentication successful for: " + user.getMobileNumber());
 	            
 	            // Generate refresh token
-	            //RefreshToken refreshToken = authService.createRefreshToken(user);
+	            RefreshToken refreshToken = authService.createRefreshTokens(user);
 	            
 	            // Retrieve hospital name
 	            String hospitalName = "";
@@ -449,8 +449,8 @@ public class AuthenticationController {
 	            return ResponseEntity.ok(new JwtResponse(
 	                jwt, 
 	                user.getPatientDetailsId(), 
-	                1, "",
-	              //  refreshToken.getToken(), 
+	                1, 
+	               refreshToken.getToken(), 
 	                "PATIENT", 
 	                user.getEmailId(), 
 	                1,

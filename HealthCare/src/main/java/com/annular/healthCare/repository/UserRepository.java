@@ -13,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.annular.healthCare.model.HospitalDataList;
+import com.annular.healthCare.model.PatientDetails;
 import com.annular.healthCare.model.User;
 
 
@@ -104,6 +105,9 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
 	@Query("SELECT DISTINCT u.userType FROM User u WHERE u.hospitalId = :hospitalId")
 	List<String> findAllDistinctUserTypesByHospital(Integer hospitalId);
+
+	@Query("SELECT u FROM PatientDetails u WHERE u.mobileNumber = :mobileNumber AND u.userIsActive = true")
+	Optional<PatientDetails> findByMobileNumber(String mobileNumber);
 
 
 

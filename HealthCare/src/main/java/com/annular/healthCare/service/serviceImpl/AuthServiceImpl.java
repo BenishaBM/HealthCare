@@ -3123,7 +3123,40 @@ public class AuthServiceImpl implements AuthService {
 	    }
 	    
 	}
-	
+
+	@Override
+	public RefreshToken createRefreshTokens(PatientDetails user) {
+	    try {
+	        logger.info("createRefreshToken method start");
+
+	        Optional<PatientDetails> checkUser = userRepository.findByMobileNumber(user.getMobileNumber());
+
+	        if (checkUser.isPresent()) {
+	            PatientDetails existingUser = checkUser.get();
+
+	            // ✅ Update mobile number
+	            existingUser.setMobileNumber(user.getMobileNumber());
+	            patientDetailsRepository.save(existingUser); // Save changes
+
+	            // ✅ Create and save refresh token
+	            RefreshToken refreshToken = new RefreshToken();
+	            refreshToken.setUserId(existingUser.getPatientDetailsId());
+	            refreshToken.setToken(UUID.randomUUID().toString());
+
+	            refreshToken = refreshTokenRepository.save(refreshToken);
+
+	            logger.info("createRefreshToken method end");
+	            return refreshToken;
+	        } else {
+	            logger.warn("User not found for email: " + user.getEmailId());
+	            return null;
+	        }
+	    } catch (Exception e) {
+	        logger.error("Error in createRefreshToken method: ", e);
+	        return null;
+	    }
+	}
+
 	
 
 

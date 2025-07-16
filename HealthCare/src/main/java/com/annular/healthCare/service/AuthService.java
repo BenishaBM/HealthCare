@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import org.springframework.http.ResponseEntity;
 
 import com.annular.healthCare.Response;
+import com.annular.healthCare.model.PatientDetails;
 import com.annular.healthCare.model.RefreshToken;
 import com.annular.healthCare.model.User;
 import com.annular.healthCare.webModel.HospitalDataListWebModel;
@@ -85,6 +86,8 @@ public interface AuthService {
 	ResponseEntity<?> getAllContactUsById(Integer id);
 
 	ResponseEntity<?> getAllBookingDemoById(Integer id);
+
+	RefreshToken createRefreshTokens(PatientDetails user);
 
 
 	
