@@ -198,11 +198,11 @@ public class AuthServiceImpl implements AuthService {
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 			}
 
-			// Validate phone number format if provided
-			if (userWebModel.getPhoneNumber() != null && !isValidPhoneNumber(userWebModel.getPhoneNumber())) {
-				response.put("message", "Invalid phone number format");
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-			}
+//			// Validate phone number format if provided
+//			if (userWebModel.getPhoneNumber() != null && !isValidPhoneNumber(userWebModel.getPhoneNumber())) {
+//				response.put("message", "Invalid phone number format");
+//				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+//			}
 
 			// Validate doctor slots if user is a doctor
 			if (userWebModel.getUserType().equalsIgnoreCase("DOCTOR") && userWebModel.getDoctorDaySlots() != null) {
@@ -247,6 +247,56 @@ public class AuthServiceImpl implements AuthService {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
+	
+	
+	/**
+	 * Normalizes phone number for database storage
+	 * Stores only 10 digits (without +91) for Indian numbers
+	 */
+	private String normalizePhoneForStorage(String phoneNumber) {
+	    if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+	        return phoneNumber;
+	    }
+	    
+	    phoneNumber = phoneNumber.trim();
+	    
+	    // If it starts with +91, remove it
+	    if (phoneNumber.startsWith("+91")) {
+	        phoneNumber = phoneNumber.substring(3);
+	    }
+	    
+	    // If it starts with 91 (without +), remove it
+	    if (phoneNumber.startsWith("91") && phoneNumber.length() == 12) {
+	        phoneNumber = phoneNumber.substring(2);
+	    }
+	    
+	    return phoneNumber;
+	}
+
+	/**
+	 * Formats phone number for SMS sending
+	 * Adds +91 prefix for Indian numbers
+	 */
+	private String formatPhoneForSMS(String phoneNumber) {
+	    if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+	        return phoneNumber;
+	    }
+	    
+	    phoneNumber = phoneNumber.trim();
+	    
+	    // If it's a 10-digit Indian number, add +91
+	    if (phoneNumber.matches("^[6-9][0-9]{9}$")) {
+	        return "+91" + phoneNumber;
+	    }
+	    
+	    // If it already has +91, return as is
+	    if (phoneNumber.startsWith("+91")) {
+	        return phoneNumber;
+	    }
+	    
+	    // For international numbers, assume they already have country code
+	    return phoneNumber;
+	}
 
 	/**
 	 * Validates phone number format
@@ -259,30 +309,55 @@ public class AuthServiceImpl implements AuthService {
 		return phoneNumber.matches("^[0-9]{10}$");
 	}
 
+//	/**
+//	 * Sends registration SMS to user
+//	 */
+//	private boolean sendRegistrationSMS(UserWebModel userWebModel) {
+//		if (userWebModel.getPhoneNumber() == null || userWebModel.getPhoneNumber().trim().isEmpty()) {
+//			return true; // No phone number provided, consider it successful
+//		}
+//
+//		String smsMessage;
+//		if (userWebModel.getUserType().equalsIgnoreCase("ADMIN")) {
+//			smsMessage = "Welcome to Aegle Healthcare Application. Wishing you all the very best!";
+//		} else {
+//			smsMessage = "Hi " + userWebModel.getFirstName() + ", you have been successfully registered!";
+//		}
+//
+//		try {
+//			smsService.sendSms(userWebModel.getPhoneNumber(), smsMessage);
+//			return true;
+//		} catch (Exception smsEx) {
+//			logger.error("SMS could not be sent to user: " + userWebModel.getPhoneNumber(), smsEx);
+//			return false;
+//		}
+//	}
+
 	/**
 	 * Sends registration SMS to user
 	 */
 	private boolean sendRegistrationSMS(UserWebModel userWebModel) {
-		if (userWebModel.getPhoneNumber() == null || userWebModel.getPhoneNumber().trim().isEmpty()) {
-			return true; // No phone number provided, consider it successful
-		}
-
-		String smsMessage;
-		if (userWebModel.getUserType().equalsIgnoreCase("ADMIN")) {
-			smsMessage = "Welcome to Aegle Healthcare Application. Wishing you all the very best!";
-		} else {
-			smsMessage = "Hi " + userWebModel.getFirstName() + ", you have been successfully registered!";
-		}
-
-		try {
-			smsService.sendSms(userWebModel.getPhoneNumber(), smsMessage);
-			return true;
-		} catch (Exception smsEx) {
-			logger.error("SMS could not be sent to user: " + userWebModel.getPhoneNumber(), smsEx);
-			return false;
-		}
+	    if (userWebModel.getPhoneNumber() == null || userWebModel.getPhoneNumber().trim().isEmpty()) {
+	        return true; // No phone number provided, consider it successful
+	    }
+	    
+	    String smsMessage;
+	    if (userWebModel.getUserType().equalsIgnoreCase("ADMIN")) {
+	        smsMessage = "Welcome to Aegle Healthcare Application. Wishing you all the very best!";
+	    } else {
+	        smsMessage = "Hi " + userWebModel.getFirstName() + ", you have been successfully registered!";
+	    }
+	    
+	    try {
+	        // Format phone number with +91 prefix for SMS
+	        String formattedPhone = formatPhoneForSMS(userWebModel.getPhoneNumber());
+	        smsService.sendSms(formattedPhone, smsMessage);
+	        return true;
+	    } catch (Exception smsEx) {
+	        logger.error("SMS could not be sent to user: " + userWebModel.getPhoneNumber(), smsEx);
+	        return false;
+	    }
 	}
-
 	/**
 	 * Creates and saves a new user based on the provided web model
 	 */
@@ -297,6 +372,8 @@ public class AuthServiceImpl implements AuthService {
 		if (userWebModel.getPassword() == null || userWebModel.getPassword().trim().isEmpty()) {
 			throw new IllegalArgumentException("Password is required");
 		}
+		
+		
 
 		User newUser = User.builder().emailId(userWebModel.getEmailId().trim())
 				.firstName(userWebModel.getFirstName().trim())
@@ -305,13 +382,20 @@ public class AuthServiceImpl implements AuthService {
 				.yearOfExperiences(userWebModel.getYearOfExperiences()).userType(userWebModel.getUserType())
 				.countryCode(userWebModel.getCountryCode()).dob(userWebModel.getDob())
 				.supportStaffId(userWebModel.getSupportStaffId()).labMasterDataId(userWebModel.getLabMasterDataId())
-				.phoneNumber(userWebModel.getPhoneNumber()).doctorFees(userWebModel.getDoctorfees()).userIsActive(true)
+				//.phoneNumber(userWebModel.getPhoneNumber())
+				.doctorFees(userWebModel.getDoctorfees()).userIsActive(true)
 				.currentAddress(userWebModel.getCurrentAddress()).empId(userWebModel.getEmpId())
 				.gender(userWebModel.getGender())
 				.createdBy(userWebModel.getCreatedBy() != null ? userWebModel.getCreatedBy() : 1)
 				.userName((userWebModel.getFirstName() + " "
 						+ (userWebModel.getLastName() != null ? userWebModel.getLastName() : "")).trim())
 				.hospitalId(userWebModel.getHospitalId()).build();
+		
+		 // Normalize phone number for database storage (remove +91 if present)
+	    if (userWebModel.getPhoneNumber() != null) {
+	        String normalizedPhone = normalizePhoneForStorage(userWebModel.getPhoneNumber());
+	        newUser.setPhoneNumber(normalizedPhone);
+	    }
 
 		return userRepository.save(newUser);
 	}
