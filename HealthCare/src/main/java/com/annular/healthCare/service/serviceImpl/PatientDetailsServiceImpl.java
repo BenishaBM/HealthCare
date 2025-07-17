@@ -405,7 +405,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 		// If not booked, proceed with creating the appointment
 		PatientAppointmentTable appointment = PatientAppointmentTable.builder().doctor(doctor)
 				.age(userWebModel.getAge()).dateOfBirth(userWebModel.getDateOfBirth())
-				.patientName(userWebModel.getPatientName()).relationShipType(userWebModel.getRelationshipType())
+				.patientName(userWebModel.getFirstName() + " " + userWebModel.getLastNmae()).relationShipType(userWebModel.getRelationshipType())
 				.patient(patient).doctorSlotId(userWebModel.getDoctorSlotId()).token(String.valueOf(newToken)) // Assigning
 																												// token
 	             .doctorSlotSpiltTimeId(userWebModel.getDoctorSlotSpiltTimeId())																	// sequentially
