@@ -43,5 +43,8 @@ public interface MediaFileRepository extends JpaRepository<MediaFile, Integer>{
     @Query("UPDATE MediaFile m SET m.fileIsActive = false WHERE m.category = :category AND m.fileDomainReferenceId = :refId")
     void markFilesInactiveByCategoryAndRefId(@Param("category") MediaFileCategory category,
                                              @Param("refId") Integer refId);
+    
+	
+	List<MediaFile> findByFileDomainReferenceIdAndFileDomainIdAndFileIsActiveTrue(Integer id, int resultdocument);
 
 }

@@ -2373,59 +2373,121 @@ private String normalizeAmPmFormat(String amPmTime) {
 		return ResponseEntity.ok(doctorList);
 	}
 
+//	@Override
+//	public ResponseEntity<?> saveResultByAppoitmentId(MedicalTestConfigWebModel medicalTestConfigWebModel) {
+//		Map<String, Object> response = new HashMap<>();
+//		try {
+//			ArrayList<FileInputWebModel> filesInputWebModel = medicalTestConfigWebModel.getFilesInputWebModel();
+//			ArrayList<MediaFile> uploadedDocuments = new ArrayList<>();
+//			Optional<User> userOptional = userRepository.findById(medicalTestConfigWebModel.getCreatedBy());
+//			if (!userOptional.isPresent()) {
+//				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(-1, "User not found", null));
+//			}
+//
+//			User user = userOptional.get();
+//
+//			if (filesInputWebModel != null && !filesInputWebModel.isEmpty()) {
+//				for (FileInputWebModel fileInput : filesInputWebModel) {
+//					if (fileInput.getFileData() != null) {
+//						MediaFile mediaFiles = new MediaFile();
+//
+//						String fileName = UUID.randomUUID().toString();
+//
+//						mediaFiles.setFileName(fileName);
+//						mediaFiles.setFileOriginalName(fileInput.getFileName());
+//						mediaFiles.setFileSize(fileInput.getFileSize());
+//						mediaFiles.setFileType(fileInput.getFileType());
+//						mediaFiles.setFileDomainId(HealthCareConstant.resultDocument);
+//						mediaFiles.setUser(user);
+//
+//						// Assuming restaurant object is already defined and represents the appointment
+//						mediaFiles.setFileDomainReferenceId(medicalTestConfigWebModel.getId());
+//						mediaFiles.setFileIsActive(true);
+//						mediaFiles.setCategory(MediaFileCategory.resutDocument);
+//
+//						mediaFiles.setFileCreatedBy(medicalTestConfigWebModel.getCreatedBy());
+//
+//						mediaFiles = mediaFilesRepository.save(mediaFiles);
+//						uploadedDocuments.add(mediaFiles);
+//
+//						// Save the file to disk
+//						Base64FileUpload.saveFile(imageLocation + "/healthCare", fileInput.getFileData(), fileName);
+//					}
+//				}
+//			}
+//
+//			response.put("uploadedDocuments", uploadedDocuments);
+//			return ResponseEntity.ok(new Response(1, "Files saved successfully", response));
+//
+//		} catch (Exception e) {
+//			log.error("Error at saveResultByAppoitmentId() -> {}", e.getMessage());
+//			e.printStackTrace();
+//			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//					.body(new Response(-1, "Error occurred while saving results", null));
+//		}
+//	}
 	@Override
 	public ResponseEntity<?> saveResultByAppoitmentId(MedicalTestConfigWebModel medicalTestConfigWebModel) {
-		Map<String, Object> response = new HashMap<>();
-		try {
-			ArrayList<FileInputWebModel> filesInputWebModel = medicalTestConfigWebModel.getFilesInputWebModel();
-			ArrayList<MediaFile> uploadedDocuments = new ArrayList<>();
-			Optional<User> userOptional = userRepository.findById(medicalTestConfigWebModel.getCreatedBy());
-			if (!userOptional.isPresent()) {
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(-1, "User not found", null));
-			}
+	    Map<String, Object> response = new HashMap<>();
+	    try {
+	        ArrayList<FileInputWebModel> filesInputWebModel = medicalTestConfigWebModel.getFilesInputWebModel();
+	        ArrayList<MediaFile> uploadedDocuments = new ArrayList<>();
+	        Optional<User> userOptional = userRepository.findById(medicalTestConfigWebModel.getCreatedBy());
 
-			User user = userOptional.get();
+	        if (!userOptional.isPresent()) {
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response(-1, "User not found", null));
+	        }
 
-			if (filesInputWebModel != null && !filesInputWebModel.isEmpty()) {
-				for (FileInputWebModel fileInput : filesInputWebModel) {
-					if (fileInput.getFileData() != null) {
-						MediaFile mediaFiles = new MediaFile();
+	        User user = userOptional.get();
 
-						String fileName = UUID.randomUUID().toString();
+	        // Step 1: Set existing documents to inactive
+	        List<MediaFile> existingFiles = mediaFilesRepository
+	            .findByFileDomainReferenceIdAndFileDomainIdAndFileIsActiveTrue(
+	                medicalTestConfigWebModel.getId(), HealthCareConstant.resultDocument);
 
-						mediaFiles.setFileName(fileName);
-						mediaFiles.setFileOriginalName(fileInput.getFileName());
-						mediaFiles.setFileSize(fileInput.getFileSize());
-						mediaFiles.setFileType(fileInput.getFileType());
-						mediaFiles.setFileDomainId(HealthCareConstant.resultDocument);
-						mediaFiles.setUser(user);
+	        for (MediaFile existing : existingFiles) {
+	            existing.setFileIsActive(false);
+	        }
+	        mediaFilesRepository.saveAll(existingFiles);
 
-						// Assuming restaurant object is already defined and represents the appointment
-						mediaFiles.setFileDomainReferenceId(medicalTestConfigWebModel.getId());
-						mediaFiles.setFileIsActive(true);
-						mediaFiles.setCategory(MediaFileCategory.resutDocument);
+	        // Step 2: Save new files
+	        if (filesInputWebModel != null && !filesInputWebModel.isEmpty()) {
+	            for (FileInputWebModel fileInput : filesInputWebModel) {
+	                if (fileInput.getFileData() != null) {
+	                    MediaFile mediaFile = new MediaFile();
 
-						mediaFiles.setFileCreatedBy(medicalTestConfigWebModel.getCreatedBy());
+	                    String fileName = UUID.randomUUID().toString();
+	                    mediaFile.setFileName(fileName);
+	                    mediaFile.setFileOriginalName(fileInput.getFileName());
+	                    mediaFile.setFileSize(fileInput.getFileSize());
+	                    mediaFile.setFileType(fileInput.getFileType());
+	                    mediaFile.setFileDomainId(HealthCareConstant.resultDocument);
+	                    mediaFile.setUser(user);
+	                    mediaFile.setFileDomainReferenceId(medicalTestConfigWebModel.getId());
+	                    mediaFile.setFileIsActive(true);
+	                    mediaFile.setCategory(MediaFileCategory.resutDocument);
+	                    mediaFile.setFileCreatedBy(medicalTestConfigWebModel.getCreatedBy());
 
-						mediaFiles = mediaFilesRepository.save(mediaFiles);
-						uploadedDocuments.add(mediaFiles);
+	                    mediaFile = mediaFilesRepository.save(mediaFile);
+	                    uploadedDocuments.add(mediaFile);
 
-						// Save the file to disk
-						Base64FileUpload.saveFile(imageLocation + "/healthCare", fileInput.getFileData(), fileName);
-					}
-				}
-			}
+	                    // Save the file to disk
+	                    Base64FileUpload.saveFile(imageLocation + "/healthCare", fileInput.getFileData(), fileName);
+	                }
+	            }
+	        }
 
-			response.put("uploadedDocuments", uploadedDocuments);
-			return ResponseEntity.ok(new Response(1, "Files saved successfully", response));
+	        response.put("uploadedDocuments", uploadedDocuments);
+	        return ResponseEntity.ok(new Response(1, "Files saved successfully", response));
 
-		} catch (Exception e) {
-			log.error("Error at saveResultByAppoitmentId() -> {}", e.getMessage());
-			e.printStackTrace();
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-					.body(new Response(-1, "Error occurred while saving results", null));
-		}
+	    } catch (Exception e) {
+	        log.error("Error at saveResultByAppoitmentId() -> {}", e.getMessage());
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(new Response(-1, "Error occurred while saving results", null));
+	    }
 	}
+
 
 	@Override
 	public ResponseEntity<?> getResultByAppoitmentId(MedicalTestConfigWebModel medicalTestConfigWebModel) {
