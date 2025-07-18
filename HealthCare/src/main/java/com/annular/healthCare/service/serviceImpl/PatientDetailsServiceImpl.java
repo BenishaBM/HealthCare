@@ -1347,7 +1347,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 			PatientDetails db = patientDetailsRepository.findByIds(userWebModel.getPatientDetailsId());
 
 			// Book appointment
-			PatientAppointmentTable appointment = bookAppointment(userWebModel, db);
+			PatientAppointmentTable appointment = bookAppointments(userWebModel, db);
 			if (appointment == null) {
 				return ResponseEntity.badRequest().body(new Response(0, "Fail", "Slot already booked"));
 			}
@@ -1466,6 +1466,60 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 	    // If appointment is null, no SMS was sent
 	    return false;
 	}
+	
+	private PatientAppointmentTable bookAppointments(PatientDetailsWebModel userWebModel, PatientDetails savedPatient) {
+//        if (userWebModel.getDoctorId() == null || userWebModel.getAppointmentDate() == null) {
+//            throw new IllegalArgumentException("Doctor ID and Appointment Date are required.");
+//        }
+
+	// Fetch required entities
+	User doctor = userRepository.findById(userWebModel.getDoctorId())
+			.orElseThrow(() -> new RuntimeException("Doctor not found"));
+	PatientDetails patient = patientDetailsRepository.findById(savedPatient.getPatientDetailsId())
+			.orElseThrow(() -> new RuntimeException("Patient user not found"));
+
+	DoctorSlotTime doctorSlotTime = doctorSlotTimeRepository.findById(userWebModel.getTimeSlotId())
+			.orElseThrow(() -> new RuntimeException("Doctor slot time not found"));
+
+	// Validate input slot times
+	String inputSlotStartTime = userWebModel.getSlotStartTime();
+	String inputSlotEndTime = userWebModel.getSlotEndTime();
+
+	// First, check if the exact input slot is already booked
+	boolean isSlotAlreadyBooked = patientAppointmentRepository.isSlotBooked(userWebModel.getDoctorSlotId(),
+			userWebModel.getDaySlotId(), inputSlotStartTime, inputSlotEndTime);
+
+	if (isSlotAlreadyBooked) {
+		logger.warn("Slot is already booked: DoctorSlotId: {}, DaySlotId: {}, StartTime: {}, EndTime: {}",
+				userWebModel.getDoctorSlotId(), userWebModel.getDaySlotId(), inputSlotStartTime, inputSlotEndTime);
+
+		return null; // Slot is already booked
+	}
+	// Get the appointment type from the input
+	String appointmentType = userWebModel.getAppointmentType();
+
+	// Count existing appointments for the doctor on the same date with the given
+	// appointment type
+	int newToken = patientAppointmentRepository.countByAppointmentDateAndDoctorIdAndAppointmentType(
+			userWebModel.getAppointmentDate(), doctor.getUserId(), appointmentType) + 1;
+
+	// If not booked, proceed with creating the appointment
+	PatientAppointmentTable appointment = PatientAppointmentTable.builder().doctor(doctor)
+			.age(userWebModel.getAge()).dateOfBirth(userWebModel.getDateOfBirth())
+			.patientName(userWebModel.getPatientName()).relationShipType(userWebModel.getRelationshipType())
+			.patient(patient).doctorSlotId(userWebModel.getDoctorSlotId()).token(String.valueOf(newToken)) // Assigning
+																											// token
+             .doctorSlotSpiltTimeId(userWebModel.getDoctorSlotSpiltTimeId())																	// sequentially
+			.daySlotId(userWebModel.getDaySlotId()).timeSlotId(userWebModel.getTimeSlotId())
+			.appointmentDate(userWebModel.getAppointmentDate()).slotStartTime(inputSlotStartTime)
+			.slotEndTime(inputSlotEndTime).slotTime(userWebModel.getSlotTime()).isActive(true)
+			.doctorSlotStartTime(doctorSlotTime.getSlotStartTime())
+			.doctorSlotEndTime(doctorSlotTime.getSlotEndTime()).createdBy(userWebModel.getCreatedBy())
+			.appointmentStatus("SCHEDULED").appointmentType(userWebModel.getAppointmentType())
+			.patientNotes(userWebModel.getPatientNotes()).build();
+
+	return patientAppointmentRepository.save(appointment);
+}
 
 	@Override
 	public ResponseEntity<?> patientSubChildRegister(PatientDetailsWebModel userWebModel) {
