@@ -152,4 +152,13 @@ public class PatientAppointmentTable {
     @Column(name = "dischargeSummaryStatus")
     private Boolean dischargeSummaryStatus;
     
+    @Column(name = "transactionMedicalTestId")
+    private String transactionMedicalTestId;
+    
+    @Column(name = "transactionMedicineId")
+    private String transactionMedicineId;
+    
+    @Column(name = "transactionDoctorFeesId")
+    private String transactionDoctorFeesId;
+    
 }

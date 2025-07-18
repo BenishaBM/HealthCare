@@ -116,4 +116,6 @@ public class AppointmentMedicine {
     
     @Column(name = "dispensedTabletCount")
     private Integer dispensedTabletCount;
+    
+
 }

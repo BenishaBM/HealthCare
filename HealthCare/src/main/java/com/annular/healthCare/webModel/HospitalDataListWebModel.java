@@ -56,94 +56,87 @@ public class HospitalDataListWebModel {
 	private String dob;
 	private List<Integer> roles; // Add this field to hold the roles (e.g., ["ROLE_DOCTOR", "ROLE_ADMIN"])
 	private ArrayList<FileInputWebModel> filesInputWebModel;
-	 // For document uploads (Insurance card, Aadhaar, PAN etc.)
-    private List<MultipartFile> files;
-    private List<DoctorLeaveListWebModel> doctorLeaveList;
+	// For document uploads (Insurance card, Aadhaar, PAN etc.)
+	private List<MultipartFile> files;
+	private List<DoctorLeaveListWebModel> doctorLeaveList;
 	private List<DoctorDaySlotWebModel> doctorDaySlots;
 	private Integer doctorSlotId;
-    private String doctorPrescription;
-    private String medicineData;
-    private String token;
-    private Integer appointmentId;
-    private List<Integer> medicineIds;
+	private String doctorPrescription;
+	private String medicineData;
+	private String token;
+	private Integer appointmentId;
+	private List<Integer> medicineIds;
 	private String hospitalLink;
-	 private Integer dispensedTabletCount;
+	private Integer dispensedTabletCount;
 
-   
-    private Integer doctorId;
+	private Integer doctorId;
 
-    private Integer daySlotId;
-   
+	private Integer daySlotId;
 
-    private String appointmentDate;
-    private String slotStartTime;
-    private String slotEndTime;
-    private Integer bottleCount;
-    private String ml;
+	private String appointmentDate;
+	private String slotStartTime;
+	private String slotEndTime;
+	private Integer bottleCount;
+	private String ml;
 
-    
-    
-    private String name;
-    private String email;
-    private String mobileNumber;
-    private String subject;
-    private String message;
+	private String name;
+	private String email;
+	private String mobileNumber;
+	private String subject;
+	private String message;
 
-
-    
 	private Boolean linkstatus;
-    private List<Integer> medicalTestIds;
-    private List<AppointmentMedicalTestWebModel> medicalTests;
-    private List<MedicineDetail> medicineDetails;
-    private List<MedicineDetail> medicines;
-    private Integer morningBF;
-    private Integer morningAF;
-    private Integer afternoonBF;
-    private Integer afternoonAF;
-    private Integer id;
-    private Integer nightBF;
-    private Integer nightAF;
-    private Boolean every6Hours;
-    private Boolean every8Hours;
-    private Integer days;
-    private List<Integer> specialityIds;
-    private Integer patientId;
-    private Integer patientMedicineDays;
-    private Integer doctorFees;
-    private String doctorFeesStatus;
-    private String medicineStatus;
-    private String countryCode;
-    private String medicalTestStatus;
+	private List<Integer> medicalTestIds;
+	private List<AppointmentMedicalTestWebModel> medicalTests;
+	private List<MedicineDetail> medicineDetails;
+	private List<MedicineDetail> medicines;
+	private Integer morningBF;
+	private Integer morningAF;
+	private Integer afternoonBF;
+	private Integer afternoonAF;
+	private Integer id;
+	private Integer nightBF;
+	private Integer nightAF;
+	private Boolean every6Hours;
+	private Boolean every8Hours;
+	private Integer days;
+	private List<Integer> specialityIds;
+	private Integer patientId;
+	private Integer patientMedicineDays;
+	private Integer doctorFees;
+	private String doctorFeesStatus;
+	private String medicineStatus;
+	private String countryCode;
+	private String medicalTestStatus;
 	private String addressLine1;
 	private String addressLine2;
-    private float amount;
-    private Integer customizeDays;
+	private float amount;
+	private Integer customizeDays;
 	private Integer supportStaffId;
 	private Integer labMasterDataId;
 	private String followUpDate;
 	private Integer doctorSlotSpiltTimeId;
-    // Medicine Schedule
-    private List<MedicineScheduleWebModel> schedules;
-    
-    @Getter
-    @Setter
-    public static class MedicineDetail {
-        private Integer medicineId;
-        private Boolean patientStatus;
-        private Integer patientMedicineDays;
-        private float amount;
-        private Integer prescribedTotalAmount;
-        private Integer dispensedTabletCount;
-        
-        
-    }
-    
-    
-    // Fields for Forgot Password
-    private String newPassword;
-    private String confirmPassword;
+	// Medicine Schedule
+	private List<MedicineScheduleWebModel> schedules;
 
+	@Getter
+	@Setter
+	public static class MedicineDetail {
+		private Integer medicineId;
+		private Boolean patientStatus;
+		private Integer patientMedicineDays;
+		private float amount;
+		private Integer prescribedTotalAmount;
+		private Integer dispensedTabletCount;
 
+	}
 
+	// Fields for Forgot Password
+	private String newPassword;
+	private String confirmPassword;
+
+	private String transactionMedicalTestId;
+	private String transactionMedicineId;
+	private String transactionDoctorFeesId;
 
 }

@@ -71,6 +71,8 @@ public class AppointmentMedicalTest {
    
    @Column(name = "amount")
    private float amount;
+   
+
 	
 	
 }
