@@ -735,6 +735,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                 map.put("bloodGroup", patient.getBloodGroup());
 	                 map.put("mobileNumber", patient.getMobileNumber());
 	                 map.put("emailId", patient.getEmailId());
+	                 map.put("labStaus",app.getLabStatus());
 	                 map.put("address", patient.getAddress());
 	                 map.put("appointmentId", app.getAppointmentId());
 	                 return map;
