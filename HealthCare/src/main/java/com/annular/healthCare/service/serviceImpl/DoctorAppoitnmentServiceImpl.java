@@ -223,6 +223,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	         appointment.setDoctorPrescription(userWebModel.getDoctorPrescription());
 	         appointment.setFollowUpDate(userWebModel.getFollowUpDate());
 	         appointment.setPharmacyStatus("PENDING");
+	         appointment.setLabStatus("PENDING");
 
 	         Integer userId = userWebModel.getUserId(); // Who is saving this
 
