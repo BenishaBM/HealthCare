@@ -145,11 +145,11 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 	                    .body(new Response(0, "Fail", "mobile number are required"));
 	        }
 
-	        // Check if email already exists in the database
-	        Optional<PatientDetails> existingUsers = patientDetailsRepository.findByEmailId(userWebModel.getEmailId());
-	        if (existingUsers.isPresent()) {
-	            return ResponseEntity.badRequest().body(new Response(0, "Fail", "Email already exists"));
-	        }
+//	        // Check if email already exists in the database
+//	        Optional<PatientDetails> existingUsers = patientDetailsRepository.findByEmailId(userWebModel.getEmailId());
+//	        if (existingUsers.isPresent()) {
+//	            return ResponseEntity.badRequest().body(new Response(0, "Fail", "Email already exists"));
+//	        }
 
 	        // Check if the patient already exists
 	        Optional<PatientDetails> existingUser = patientDetailsRepository
