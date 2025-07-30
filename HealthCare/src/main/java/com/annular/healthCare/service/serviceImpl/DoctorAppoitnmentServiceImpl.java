@@ -1228,13 +1228,81 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                .body("Error while saving doctor fees: " + e.getMessage());
 	    }
 	}
+//	@Override
+//	public ResponseEntity<?> updateFeesStatus(HospitalDataListWebModel userWebModel) {
+//	    try {
+//	        Integer appointmentId = userWebModel.getAppointmentId();
+//
+//	        Optional<PatientAppointmentTable> optionalAppointment = patientAppointmentRepository.findById(appointmentId);
+//	        if (optionalAppointment.isPresent()) {
+//	            PatientAppointmentTable appointment = optionalAppointment.get();
+//
+//	            // Update doctor fees status
+//	            if (userWebModel.getDoctorFeesStatus() != null) {
+//	                appointment.setDoctorFeesStatus(userWebModel.getDoctorFeesStatus());
+//	            }
+//
+//	            // Logic for pharmacyStatus based on dispensedTabletCount vs totalTabletCount
+//	            if (userWebModel.getMedicineStatus() != null) {
+//	                List<AppointmentMedicine> medicineList = appointmentMedicineRepository.findByAppointmentIds(appointmentId);
+//	               
+//	                boolean allPaid = true;
+//
+//	                for (AppointmentMedicine med : medicineList) {
+//	                    Integer dispensed = med.getDispensedTabletCount() != null ? med.getDispensedTabletCount() : 0;
+//	                    Integer total = med.getTotalTabletCount() != null ? med.getTotalTabletCount() : 0;
+//
+//	                    if (!dispensed.equals(total)) {
+//	                        allPaid = false;
+//	                        break;
+//	                    }
+//	                }
+//
+//	                if (!medicineList.isEmpty()) {
+//	                    if (allPaid) {
+//	                        appointment.setPharmacyStatus("Paid");
+//	                    } else {
+//	                        appointment.setPharmacyStatus("PartiallyPaid");
+//	                    }
+//	                }
+//	            }
+//
+//	            // Lab status
+//	            if (userWebModel.getMedicalTestStatus() != null) {
+//	                appointment.setLabStatus(userWebModel.getMedicalTestStatus());
+//	            }
+//
+//	            // Transaction IDs
+//	            if (userWebModel.getTransactionMedicalTestId() != null) {
+//	                appointment.setTransactionMedicalTestId(userWebModel.getTransactionMedicalTestId());
+//	            }
+//	            if (userWebModel.getTransactionMedicineId() != null) {
+//	                appointment.setTransactionMedicineId(userWebModel.getTransactionMedicineId());
+//	            }
+//	            if (userWebModel.getTransactionDoctorFeesId() != null) {
+//	                appointment.setTransactionDoctorFeesId(userWebModel.getTransactionDoctorFeesId());
+//	            }
+//
+//	            // Timestamp
+//	            appointment.setUpdatedOn(new Date());
+//	            patientAppointmentRepository.save(appointment);
+//
+//	            return ResponseEntity.ok(new Response(1, "Appointment status updated successfully.", appointment.getDoctorFees()));
+//	        } else {
+//	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Appointment not found.");
+//	        }
+//
+//	    } catch (Exception e) {
+//	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//	                .body("Error while updating status: " + e.getMessage());
+//	    }
+//	}
 	@Override
 	public ResponseEntity<?> updateFeesStatus(HospitalDataListWebModel userWebModel) {
 	    try {
 	        Integer appointmentId = userWebModel.getAppointmentId();
 
 	        Optional<PatientAppointmentTable> optionalAppointment = patientAppointmentRepository.findById(appointmentId);
-
 	        if (optionalAppointment.isPresent()) {
 	            PatientAppointmentTable appointment = optionalAppointment.get();
 
@@ -1243,37 +1311,38 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                appointment.setDoctorFeesStatus(userWebModel.getDoctorFeesStatus());
 	            }
 
-	            // Logic for pharmacyStatus based on dispensedTabletCount vs totalTabletCount
-	            if (userWebModel.getMedicineStatus() != null) {
-	                List<AppointmentMedicine> medicineList = appointmentMedicineRepository.findByAppointmentIds(appointmentId);
-	               
-	                boolean allPaid = true;
+	            // Corrected pharmacyStatus logic
+	            List<AppointmentMedicine> medicineList = appointmentMedicineRepository.findByAppointmentIds(appointmentId);
+	            boolean allMatched = true;
+	            boolean atLeastOneValid = false;
 
-	                for (AppointmentMedicine med : medicineList) {
-	                    Integer dispensed = med.getDispensedTabletCount() != null ? med.getDispensedTabletCount() : 0;
-	                    Integer total = med.getTotalTabletCount() != null ? med.getTotalTabletCount() : 0;
+	            for (AppointmentMedicine med : medicineList) {
+	                Integer dispensed = med.getDispensedTabletCount() != null ? med.getDispensedTabletCount() : 0;
+	                Integer total = med.getTotalTabletCount() != null ? med.getTotalTabletCount() : 0;
 
+	                if (total > 0) {
+	                    atLeastOneValid = true;
 	                    if (!dispensed.equals(total)) {
-	                        allPaid = false;
+	                        allMatched = false;
 	                        break;
-	                    }
-	                }
-
-	                if (!medicineList.isEmpty()) {
-	                    if (allPaid) {
-	                        appointment.setPharmacyStatus("Paid");
-	                    } else {
-	                        appointment.setPharmacyStatus("PartiallyPaid");
 	                    }
 	                }
 	            }
 
-	            // Lab status
+	            if (atLeastOneValid) {
+	                if (allMatched) {
+	                    appointment.setPharmacyStatus("Paid");
+	                } else {
+	                    appointment.setPharmacyStatus("PartiallyPaid");
+	                }
+	            }
+
+	            // Update lab status
 	            if (userWebModel.getMedicalTestStatus() != null) {
 	                appointment.setLabStatus(userWebModel.getMedicalTestStatus());
 	            }
 
-	            // Transaction IDs
+	            // Update transaction IDs
 	            if (userWebModel.getTransactionMedicalTestId() != null) {
 	                appointment.setTransactionMedicalTestId(userWebModel.getTransactionMedicalTestId());
 	            }
@@ -1284,7 +1353,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                appointment.setTransactionDoctorFeesId(userWebModel.getTransactionDoctorFeesId());
 	            }
 
-	            // Timestamp
+	            // Set updated timestamp
 	            appointment.setUpdatedOn(new Date());
 	            patientAppointmentRepository.save(appointment);
 
@@ -1298,6 +1367,7 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                .body("Error while updating status: " + e.getMessage());
 	    }
 	}
+
 
 
 	@Override
