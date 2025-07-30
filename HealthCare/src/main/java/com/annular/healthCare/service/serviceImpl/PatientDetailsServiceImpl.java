@@ -170,7 +170,8 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 	        if (hasAppointmentDetails) {
 	            boolean isSlotBooked = checkIfSlotIsBooked(userWebModel.getDoctorSlotId(), userWebModel.getDaySlotId(),
 	                    userWebModel.getSlotStartTime(),
-	                    userWebModel.getSlotEndTime()
+	                    userWebModel.getSlotEndTime(),
+	                    userWebModel.getDoctorSlotSpiltTimeId()
 	            );
 
 	            if (isSlotBooked) {
@@ -314,10 +315,10 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 	    }
 	}
 	public boolean checkIfSlotIsBooked(Integer doctorSlotId, Integer daySlotId, String slotStartTime,
-			String slotEndTime) {
+			String slotEndTime, Integer doctorSlotSpiltTimeId) {
 		try {
 			boolean isBooked = patientAppointmentRepository.isSlotBooked(doctorSlotId, daySlotId, slotStartTime,
-					slotEndTime);
+					slotEndTime,doctorSlotSpiltTimeId);
 
 			logger.info(
 					"Slot availability check - DoctorSlotId: {}, DaySlotId: {}, StartTime: {}, EndTime: {} - Status: {}",
@@ -386,7 +387,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 
 		// First, check if the exact input slot is already booked
 		boolean isSlotAlreadyBooked = patientAppointmentRepository.isSlotBooked(userWebModel.getDoctorSlotId(),
-				userWebModel.getDaySlotId(), inputSlotStartTime, inputSlotEndTime);
+				userWebModel.getDaySlotId(), inputSlotStartTime, inputSlotEndTime,userWebModel.getDoctorSlotSpiltTimeId());
 
 		if (isSlotAlreadyBooked) {
 			logger.warn("Slot is already booked: DoctorSlotId: {}, DaySlotId: {}, StartTime: {}, EndTime: {}",
@@ -1332,7 +1333,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 					&& userWebModel.getSlotStartTime() != null && userWebModel.getSlotEndTime() != null) {
 
 				boolean isSlotBooked = checkIfSlotIsBooked(userWebModel.getDoctorSlotId(), userWebModel.getDaySlotId(),
-						userWebModel.getSlotStartTime(), userWebModel.getSlotEndTime());
+						userWebModel.getSlotStartTime(), userWebModel.getSlotEndTime(),userWebModel.getDoctorSlotSpiltTimeId());
 
 				if (isSlotBooked) {
 					logger.warn("Slot is already booked for doctorId: {}, date: {}, time: {} - {}",
@@ -1487,7 +1488,7 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 
 	// First, check if the exact input slot is already booked
 	boolean isSlotAlreadyBooked = patientAppointmentRepository.isSlotBooked(userWebModel.getDoctorSlotId(),
-			userWebModel.getDaySlotId(), inputSlotStartTime, inputSlotEndTime);
+			userWebModel.getDaySlotId(), inputSlotStartTime, inputSlotEndTime,userWebModel.getDoctorSlotSpiltTimeId());
 
 	if (isSlotAlreadyBooked) {
 		logger.warn("Slot is already booked: DoctorSlotId: {}, DaySlotId: {}, StartTime: {}, EndTime: {}",

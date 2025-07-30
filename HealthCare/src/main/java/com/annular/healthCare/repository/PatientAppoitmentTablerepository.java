@@ -24,13 +24,27 @@ public interface PatientAppoitmentTablerepository extends JpaRepository<PatientA
 //		                     @Param("daySlotId") Integer daySlotId, 
 //		                     @Param("newSlotStartTime") String newSlotStartTime,
 //		                     @Param("newSlotEndTime") String newSlotEndTime);
-	@Query("SELECT COUNT(p) > 0 FROM PatientAppointmentTable p " + "WHERE p.doctorSlotId = :doctorSlotId "
-			+ "AND p.daySlotId = :daySlotId " + "AND p.isActive = true "
-			+ "AND (p.appointmentStatus IS NULL OR p.appointmentStatus != 'CANCELLED') " + // 🔥 Filter out cancelled
-																							// appointments
-			"AND (p.slotStartTime < :newSlotEndTime AND p.slotEndTime > :newSlotStartTime)")
-	boolean isSlotBooked(@Param("doctorSlotId") Integer doctorSlotId, @Param("daySlotId") Integer daySlotId,
-			@Param("newSlotStartTime") String newSlotStartTime, @Param("newSlotEndTime") String newSlotEndTime);
+//	@Query("SELECT COUNT(p) > 0 FROM PatientAppointmentTable p " + "WHERE p.doctorSlotId = :doctorSlotId "
+//			+ "AND p.daySlotId = :daySlotId " + "AND p.isActive = true "
+//			+ "AND (p.appointmentStatus IS NULL OR p.appointmentStatus != 'CANCELLED') " + // 🔥 Filter out cancelled
+//																							// appointments
+//			"AND (p.slotStartTime < :newSlotEndTime AND p.slotEndTime > :newSlotStartTime)")
+//	boolean isSlotBooked(@Param("doctorSlotId") Integer doctorSlotId, @Param("daySlotId") Integer daySlotId,
+//			@Param("newSlotStartTime") String newSlotStartTime, @Param("newSlotEndTime") String newSlotEndTime);
+	
+	@Query("SELECT COUNT(p) > 0 FROM PatientAppointmentTable p " +
+		       "WHERE p.doctorSlotId = :doctorSlotId " +
+		       "AND p.daySlotId = :daySlotId " +
+		       "AND p.doctorSlotSpiltTimeId = :doctorSlotSpiltTimeId " + // ✅ New condition
+		       "AND p.isActive = true " +
+		       "AND (p.appointmentStatus IS NULL OR p.appointmentStatus != 'CANCELLED') " +
+		       "AND (p.slotStartTime < :newSlotEndTime AND p.slotEndTime > :newSlotStartTime)")
+		boolean isSlotBooked(@Param("doctorSlotId") Integer doctorSlotId,
+		                     @Param("daySlotId") Integer daySlotId,
+		                     @Param("newSlotEndTime") String newSlotEndTime,
+		                     @Param("newSlotStartTime") String newSlotStartTime,
+		                     @Param("doctorSlotSpiltTimeId") Integer doctorSlotSpiltTimeId);
+
 
 	List<PatientAppointmentTable> findByPatient_PatientDetailsId(Integer patientDetailsID);
 
