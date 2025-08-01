@@ -332,10 +332,16 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 
 	private PatientDetails createPatientDetails(PatientDetailsWebModel userWebModel) {
 
+		String firstName = userWebModel.getFirstName();
+		String lastName = userWebModel.getLastNmae();
+		String patientName = (lastName != null && !lastName.trim().isEmpty())
+		        ? (firstName + " " + lastName).trim()
+		        : firstName;
 		// Save patient details first
 		PatientDetails savedPatient = patientDetailsRepository.save(PatientDetails.builder()
-				.firstName(userWebModel.getFirstName()).lastName(userWebModel.getLastNmae())
-				.patientName((userWebModel.getFirstName() + " " + userWebModel.getLastNmae()).trim())
+				.firstName(firstName)
+		        .lastName((lastName != null && !lastName.trim().isEmpty()) ? lastName : null)
+		        .patientName(patientName)
                 .dob(userWebModel.getDob()).age(userWebModel.getAge())
 				.otp(100).gender(userWebModel.getGender()).bloodGroup(userWebModel.getBloodGroup())
 				.countryCode(userWebModel.getCountryCode())
