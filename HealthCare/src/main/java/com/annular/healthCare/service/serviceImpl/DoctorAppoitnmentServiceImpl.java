@@ -218,7 +218,16 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	         PatientAppointmentTable appointment = optionalAppointment.get();
 
 	         // Update appointment details
-	         appointment.setAppointmentStatus("COMPLETED");
+//	         appointment.setAppointmentStatus("INPROGRESS");
+	        
+
+	         // Set appointment status based on whether medicines/tests are prescribed
+	         if ((userWebModel.getSchedules() == null || userWebModel.getSchedules().isEmpty()) &&
+	             (userWebModel.getMedicalTests() == null || userWebModel.getMedicalTests().isEmpty())) {
+	             appointment.setAppointmentStatus("COMPLETED");
+	         } else {
+	             appointment.setAppointmentStatus("INPROGRESS");
+	         }
 	         appointment.setDoctorFees(userWebModel.getDoctorFees());
 	         appointment.setDoctorPrescription(userWebModel.getDoctorPrescription());
 	         appointment.setFollowUpDate(userWebModel.getFollowUpDate());
@@ -454,7 +463,11 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	 public ResponseEntity<?> getAllPatientPharamcyByHospitalIdAndDate(Integer hospitalId, String currentDate) {
 	     try {
 	         // Fetch all appointments for the given date
-	         List<PatientAppointmentTable> appointments = patientAppointmentRepository.findByAppointmentDate(currentDate);
+	        // List<PatientAppointmentTable> appointments = patientAppointmentRepository.findByAppointmentDate(currentDate);
+
+	    	 // Get appointments matching hospitalId and date
+	         List<PatientAppointmentTable> appointments = patientAppointmentRepository
+	                 .findByHospitalIdAndAppointmentDate(hospitalId, currentDate);
 
 	         // Fetch all patient-hospital mappings for the given hospitalId
 	         List<PatientMappedHospitalId> mappings = patientMappedHospitalIdRepository.findByHospitalId(hospitalId);
@@ -717,7 +730,11 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	 public ResponseEntity<?> getAllPatientMedicalTestByHospitalIdAndDate(Integer hospitalId, String currentDate) {
 	     try {
 	         // Step 1: Get appointments by date
-	         List<PatientAppointmentTable> appointments = patientAppointmentRepository.findByAppointmentDate(currentDate);
+	      //   List<PatientAppointmentTable> appointments = patientAppointmentRepository.findByAppointmentDate(currentDate);
+
+	    	 // Get appointments matching hospitalId and date
+	         List<PatientAppointmentTable> appointments = patientAppointmentRepository
+	                 .findByHospitalIdAndAppointmentDate(hospitalId, currentDate);
 
 	         // Filter appointments where:
 	         // - Patient is not null
@@ -1351,6 +1368,20 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	            }
 	            if (userWebModel.getTransactionDoctorFeesId() != null) {
 	                appointment.setTransactionDoctorFeesId(userWebModel.getTransactionDoctorFeesId());
+	            }
+	            
+	            // --- Appointment Status Logic ---
+	            boolean hasMedicines = userWebModel.getSchedules() != null && !userWebModel.getSchedules().isEmpty();
+	            boolean hasMedicalTests = userWebModel.getMedicalTests() != null && !userWebModel.getMedicalTests().isEmpty();
+
+	            
+	            boolean isPharmacyPaid = "Paid".equalsIgnoreCase(appointment.getPharmacyStatus());
+	            boolean isLabPaid = "Paid".equalsIgnoreCase(appointment.getLabStatus());
+
+	            if ((!hasMedicines && !hasMedicalTests) || (isPharmacyPaid && isLabPaid)) {
+	                appointment.setAppointmentStatus("COMPLETED");
+	            } else {
+	                appointment.setAppointmentStatus("INPROGRESS");
 	            }
 
 	            // Set updated timestamp

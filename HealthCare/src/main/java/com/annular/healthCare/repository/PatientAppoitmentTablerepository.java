@@ -70,9 +70,18 @@ public interface PatientAppoitmentTablerepository extends JpaRepository<PatientA
 			+ "AND ((a.slotStartTime < :slotEndTime AND a.slotEndTime > :slotStartTime))")
 	boolean isSlotBookeds(@Param("timeSlotId") Integer timeSlotId, @Param("appointmentDate") String appointmentDate,
 			@Param("slotStartTime") String slotStartTime, @Param("slotEndTime") String slotEndTime);
+//
+//	@Query("SELECT a FROM PatientAppointmentTable a LEFT JOIN FETCH a.appointmentMedicalTests WHERE a.appointmentDate = :currentDate")
+//	List<PatientAppointmentTable> findByAppointmentDate(@Param("currentDate") String currentDate);
+	
+	@Query("SELECT a FROM PatientAppointmentTable a " +
+		       "JOIN FETCH a.doctor d " +
+		       "LEFT JOIN FETCH a.appointmentMedicalTests m " +
+		       "WHERE a.appointmentDate = :currentDate " +
+		       "AND d.hospitalId = :hospitalId")
+		List<PatientAppointmentTable> findByHospitalIdAndAppointmentDate(@Param("hospitalId") Integer hospitalId,
+		                                                                  @Param("currentDate") String currentDate);
 
-	@Query("SELECT a FROM PatientAppointmentTable a LEFT JOIN FETCH a.appointmentMedicalTests WHERE a.appointmentDate = :currentDate")
-	List<PatientAppointmentTable> findByAppointmentDate(@Param("currentDate") String currentDate);
 
 	List<PatientAppointmentTable> findByPatient_PatientDetailsIdAndAppointmentDate(Integer patientId,
 			String appointmentDate);
