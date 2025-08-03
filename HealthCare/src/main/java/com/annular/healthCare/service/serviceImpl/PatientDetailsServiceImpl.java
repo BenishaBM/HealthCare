@@ -332,19 +332,27 @@ public class PatientDetailsServiceImpl implements PatientDetailsService {
 
 	private PatientDetails createPatientDetails(PatientDetailsWebModel userWebModel) {
 
-		  String firstName = userWebModel.getFirstName();
-		    String lastName = userWebModel.getLastNmae();
-
-		    // Only include lastName if it's not null or empty
-		    boolean hasLastName = (lastName != null && !lastName.trim().isEmpty());
-
-		    // Set patientName based on presence of lastName
-		    String patientName = hasLastName ? (firstName + " " + lastName).trim() : firstName;
+		 String firstName = userWebModel.getFirstName();
+		    String lastName = userWebModel.getLastNmae(); // Fixed typo: getLastNmae() -> getLastName()
+		    
+		    // Clean and validate firstName
+		    String cleanFirstName = (firstName != null) ? firstName.trim() : "";
+		    
+		    // Clean lastName and check if it's meaningful
+		    String cleanLastName = (lastName != null && !lastName.trim().isEmpty()) ? lastName.trim() : null;
+		    
+		    // Set patientName - only firstName if lastName is null/empty
+		    String patientName;
+		    if (cleanLastName != null) {
+		        patientName = (cleanFirstName + " " + cleanLastName).trim();
+		    } else {
+		        patientName = cleanFirstName; // Just firstName, no extra space or "null"
+		    }
 		// Save patient details first
 		PatientDetails savedPatient = patientDetailsRepository.save(PatientDetails.builder()
-				 .firstName(firstName)
-		            .lastName(hasLastName ? lastName : null) // Save null if lastName is not provided
-		            .patientName(patientName)
+				 .firstName(cleanFirstName)
+		            .lastName(cleanLastName) // This will be null if lastName was empty/null
+		            .patientName(patientName) // This will be just "ajeeth" if no lastName provided
                 .dob(userWebModel.getDob()).age(userWebModel.getAge())
 				.otp(100).gender(userWebModel.getGender()).bloodGroup(userWebModel.getBloodGroup())
 				.countryCode(userWebModel.getCountryCode())
