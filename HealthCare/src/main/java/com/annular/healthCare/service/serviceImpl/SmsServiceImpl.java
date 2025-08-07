@@ -16,14 +16,29 @@ public class SmsServiceImpl implements SmsService {
 	 @Autowired
 	    private TwilioConfig twilioConfig;
 
-	    public void sendSms(String toPhoneNumber, String messageBody) {
-	        Message message = Message.creator(
-	                new PhoneNumber(toPhoneNumber),
-	                new PhoneNumber(twilioConfig.getFromPhoneNumber()),
-	                messageBody
-	        ).create();
+//	    public void sendSms(String toPhoneNumber, String messageBody) {
+//	        Message message = Message.creator(
+//	                new PhoneNumber(toPhoneNumber),
+//	                new PhoneNumber(twilioConfig.getFromPhoneNumber()),
+//	                messageBody
+//	        ).create();
+//
+//	        System.out.println("SMS sent with SID: " + message.getSid());
+//	    }
 
-	        System.out.println("SMS sent with SID: " + message.getSid());
-	    }
+	 public void sendSms(String toPhoneNumber, String messageBody) {
+		    // Add static +91 if not already present
+		    if (!toPhoneNumber.startsWith("+91")) {
+		        toPhoneNumber = "+91" + toPhoneNumber;
+		    }
+
+		    Message message = Message.creator(
+		            new PhoneNumber(toPhoneNumber),
+		            new PhoneNumber(twilioConfig.getFromPhoneNumber()),
+		            messageBody
+		    ).create();
+
+		    System.out.println("SMS sent with SID: " + message.getSid());
+		}
 
 }
