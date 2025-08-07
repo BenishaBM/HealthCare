@@ -1519,6 +1519,24 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	        slot.setUpdatedOn(new Date());
 
 	        doctorSlotSpiltTimeRepository.save(slot);
+	        Optional<PatientDetails> patientOpt = patientDetailsRepository.findById(appointment.getPatient().getPatientDetailsId());
+	        if (patientOpt.isPresent()) {
+	            PatientDetails patient = patientOpt.get();
+	            String mobileNumber = patient.getMobileNumber(); // Use as-is (no +91)
+	            String doctorName = appointment.getDoctor().getUserName();
+	            Integer hospitalId = appointment.getDoctor().getHospitalId();
+
+	            // Fetch hospital name from HospitalDataList
+	            Optional<HospitalDataList> hospitalDataOpt = hospitalDataListRepository.findById(hospitalId);
+	            String hospitalName = hospitalDataOpt.map(HospitalDataList::getHospitalName).orElse("Hospital");
+
+	            String smsMessage = String.format(
+	                "Your appointment with %s at %s has been cancelled. Wishing you good health!!",
+	                doctorName, hospitalName
+	            );
+
+	            smsService.sendSms(mobileNumber, smsMessage);
+	        }
 
 	        return ResponseEntity.ok(new Response(1, "Success", "Appointment cancelled and slot marked as Available"));
 	    } catch (Exception e) {
@@ -1575,6 +1593,23 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	            newSlot.setUpdatedOn(new Date());
 	            doctorSlotSplitTimeRepository.save(newSlot);
 	        }
+	        
+	     // Step 4: Send SMS to the patient
+	        Optional<PatientDetails> patientOpt = patientDetailsRepository.findById(appointment.getPatient().getPatientDetailsId());
+	        if (patientOpt.isPresent()) {
+	            PatientDetails patient = patientOpt.get();
+	            String toPhoneNumber = patient.getMobileNumber(); // Use number as-is
+
+	            String smsMessage = String.format(
+	                "Your appointment has been rescheduled to %s (%s - %s). Thanks for your understanding.",
+	                userWebModel.getAppointmentDate().toString(),
+	                userWebModel.getSlotStartTime(),
+	                userWebModel.getSlotEndTime()
+	            );
+
+	            smsService.sendSms(toPhoneNumber, smsMessage);
+	        }
+
 
 	        return ResponseEntity.ok(new Response(1, "Success", "Appointment rescheduled successfully"));
 
