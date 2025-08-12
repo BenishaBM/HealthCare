@@ -1543,35 +1543,125 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	        return ResponseEntity.internalServerError().body(new Response(-1, "Fail", "Error occurred while cancelling appointment"));
 	    }
 	}
+//	@Override
+//	public ResponseEntity<?> rescheduleAppointmentOnlineAndOffline(HospitalDataListWebModel userWebModel) {
+//	    try {
+//	        Optional<PatientAppointmentTable> optionalAppointment = patientAppointmentRepository.findById(userWebModel.getId());
+//
+//	        if (!optionalAppointment.isPresent()) {
+//	            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Appointment not found"));
+//	        }
+//
+//	        // Get the existing appointment
+//	        PatientAppointmentTable appointment = optionalAppointment.get();
+//
+//	        // Step 1: Free the old slot
+//	        Integer oldSlotId = appointment.getDoctorSlotSpiltTimeId();
+//	        if (oldSlotId != null) {
+//	            Optional<DoctorSlotSpiltTime> oldSlotOpt = doctorSlotSplitTimeRepository.findById(oldSlotId);
+//	            if (oldSlotOpt.isPresent()) {
+//	                DoctorSlotSpiltTime oldSlot = oldSlotOpt.get();
+//	                oldSlot.setSlotStatus("Available");
+//	                oldSlot.setUpdatedBy(userWebModel.getUserUpdatedBy());
+//	                oldSlot.setUpdatedOn(new Date());
+//	                doctorSlotSplitTimeRepository.save(oldSlot);
+//	            }
+//	        }
+//
+//	        // Step 2: Update appointment with new details
+//	        appointment.setAppointmentStatus("RESCHEDULED");
+//	        Optional<User> db  = userRepository.findById(userWebModel.getUserId());
+//	        appointment.setDoctor(db.get());
+//	        appointment.setDoctorSlotId(userWebModel.getDoctorSlotId());
+//	        appointment.setDaySlotId(userWebModel.getDaySlotId());
+//	        appointment.setDoctorSlotSpiltTimeId(userWebModel.getDoctorSlotSpiltTimeId());
+//	        appointment.setAppointmentDate(userWebModel.getAppointmentDate());
+//	        appointment.setSlotStartTime(userWebModel.getSlotStartTime());
+//	        appointment.setSlotEndTime(userWebModel.getSlotEndTime());
+//	        appointment.setUpdatedOn(new Date());
+//	        appointment.setUpdatedBy(userWebModel.getUserUpdatedBy());
+//	        appointment.setIsActive(true);
+//
+//	        patientAppointmentRepository.save(appointment);
+//
+//	        // Step 3: Mark new slot as booked
+//	        Optional<DoctorSlotSpiltTime> newSlotOpt = doctorSlotSplitTimeRepository.findById(userWebModel.getDoctorSlotSpiltTimeId());
+//	        if (newSlotOpt.isPresent()) {
+//	            DoctorSlotSpiltTime newSlot = newSlotOpt.get();
+//	            newSlot.setSlotStatus("Booked");
+//	            newSlot.setUpdatedBy(userWebModel.getUserUpdatedBy());
+//	            newSlot.setUpdatedOn(new Date());
+//	            doctorSlotSplitTimeRepository.save(newSlot);
+//	        }
+//	        
+//	     // Step 4: Send SMS to the patient
+//	        Optional<PatientDetails> patientOpt = patientDetailsRepository.findById(appointment.getPatient().getPatientDetailsId());
+//	        if (patientOpt.isPresent()) {
+//	            PatientDetails patient = patientOpt.get();
+//	            String toPhoneNumber = patient.getMobileNumber(); // Use number as-is
+//
+//	            String smsMessage = String.format(
+//	                "Your appointment has been rescheduled to %s (%s - %s). Thanks for your understanding.",
+//	                userWebModel.getAppointmentDate().toString(),
+//	                userWebModel.getSlotStartTime(),
+//	                userWebModel.getSlotEndTime()
+//	            );
+//
+//	            smsService.sendSms(toPhoneNumber, smsMessage);
+//	        }
+//
+//
+//	        return ResponseEntity.ok(new Response(1, "Success", "Appointment rescheduled successfully"));
+//
+//	    } catch (Exception e) {
+//	        return ResponseEntity.internalServerError().body(new Response(-1, "Fail", "Error occurred while rescheduling appointment"));
+//	    }
+//	}
+//	
 	@Override
 	public ResponseEntity<?> rescheduleAppointmentOnlineAndOffline(HospitalDataListWebModel userWebModel) {
 	    try {
-	        Optional<PatientAppointmentTable> optionalAppointment = patientAppointmentRepository.findById(userWebModel.getId());
-
-	        if (!optionalAppointment.isPresent()) {
-	            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Appointment not found"));
+	        // ✅ Step 0: Validate required input fields
+	        if (userWebModel.getId() == null ||
+	            userWebModel.getUserId() == null ||
+	            userWebModel.getDoctorSlotId() == null ||
+	            userWebModel.getDaySlotId() == null ||
+	            userWebModel.getDoctorSlotSpiltTimeId() == null ||
+	            userWebModel.getAppointmentDate() == null ||
+	            userWebModel.getSlotStartTime() == null ||
+	            userWebModel.getSlotEndTime() == null) {
+	            return ResponseEntity.badRequest()
+	                    .body(new Response(-1, "Fail", "Missing required fields"));
 	        }
 
-	        // Get the existing appointment
+	        // ✅ Step 1: Fetch appointment
+	        Optional<PatientAppointmentTable> optionalAppointment = patientAppointmentRepository.findById(userWebModel.getId());
+	        if (!optionalAppointment.isPresent()) {
+	            return ResponseEntity.badRequest()
+	                    .body(new Response(-1, "Fail", "Appointment not found"));
+	        }
 	        PatientAppointmentTable appointment = optionalAppointment.get();
 
-	        // Step 1: Free the old slot
+	        // ✅ Step 2: Free the old slot
 	        Integer oldSlotId = appointment.getDoctorSlotSpiltTimeId();
 	        if (oldSlotId != null) {
-	            Optional<DoctorSlotSpiltTime> oldSlotOpt = doctorSlotSplitTimeRepository.findById(oldSlotId);
-	            if (oldSlotOpt.isPresent()) {
-	                DoctorSlotSpiltTime oldSlot = oldSlotOpt.get();
+	            doctorSlotSplitTimeRepository.findById(oldSlotId).ifPresent(oldSlot -> {
 	                oldSlot.setSlotStatus("Available");
 	                oldSlot.setUpdatedBy(userWebModel.getUserUpdatedBy());
 	                oldSlot.setUpdatedOn(new Date());
 	                doctorSlotSplitTimeRepository.save(oldSlot);
-	            }
+	            });
 	        }
 
-	        // Step 2: Update appointment with new details
+	        // ✅ Step 3: Fetch doctor and update appointment details
+	        Optional<User> doctorOpt = userRepository.findById(userWebModel.getUserId());
+	        if (!doctorOpt.isPresent()) {
+	            return ResponseEntity.badRequest()
+	                    .body(new Response(-1, "Fail", "Doctor not found"));
+	        }
+
 	        appointment.setAppointmentStatus("RESCHEDULED");
-	        Optional<User> db  = userRepository.findById(userWebModel.getUserId());
-	        appointment.setDoctor(db.get());
+	        appointment.setDoctor(doctorOpt.get());
 	        appointment.setDoctorSlotId(userWebModel.getDoctorSlotId());
 	        appointment.setDaySlotId(userWebModel.getDaySlotId());
 	        appointment.setDoctorSlotSpiltTimeId(userWebModel.getDoctorSlotSpiltTimeId());
@@ -1584,41 +1674,44 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 
 	        patientAppointmentRepository.save(appointment);
 
-	        // Step 3: Mark new slot as booked
-	        Optional<DoctorSlotSpiltTime> newSlotOpt = doctorSlotSplitTimeRepository.findById(userWebModel.getDoctorSlotSpiltTimeId());
-	        if (newSlotOpt.isPresent()) {
-	            DoctorSlotSpiltTime newSlot = newSlotOpt.get();
-	            newSlot.setSlotStatus("Booked");
-	            newSlot.setUpdatedBy(userWebModel.getUserUpdatedBy());
-	            newSlot.setUpdatedOn(new Date());
-	            doctorSlotSplitTimeRepository.save(newSlot);
+	        // ✅ Step 4: Mark new slot as booked
+	        doctorSlotSplitTimeRepository.findById(userWebModel.getDoctorSlotSpiltTimeId())
+	                .ifPresent(newSlot -> {
+	                    newSlot.setSlotStatus("Booked");
+	                    newSlot.setUpdatedBy(userWebModel.getUserUpdatedBy());
+	                    newSlot.setUpdatedOn(new Date());
+	                    doctorSlotSplitTimeRepository.save(newSlot);
+	                });
+
+	        // ✅ Step 5: Send SMS (do not fail if SMS fails)
+	        if (appointment.getPatient() != null && appointment.getPatient().getPatientDetailsId() != null) {
+	            patientDetailsRepository.findById(appointment.getPatient().getPatientDetailsId())
+	                    .ifPresent(patient -> {
+	                        try {
+	                            String toPhoneNumber = patient.getMobileNumber();
+	                            String smsMessage = String.format(
+	                                    "Your appointment has been rescheduled to %s (%s - %s). Thanks for your understanding.",
+	                                    userWebModel.getAppointmentDate(),
+	                                    userWebModel.getSlotStartTime(),
+	                                    userWebModel.getSlotEndTime()
+	                            );
+	                            smsService.sendSms(toPhoneNumber, smsMessage);
+	                        } catch (Exception smsEx) {
+	                            // Log SMS failure but don't stop the process
+	                            System.err.println("SMS sending failed: " + smsEx.getMessage());
+	                        }
+	                    });
 	        }
-	        
-	     // Step 4: Send SMS to the patient
-	        Optional<PatientDetails> patientOpt = patientDetailsRepository.findById(appointment.getPatient().getPatientDetailsId());
-	        if (patientOpt.isPresent()) {
-	            PatientDetails patient = patientOpt.get();
-	            String toPhoneNumber = patient.getMobileNumber(); // Use number as-is
-
-	            String smsMessage = String.format(
-	                "Your appointment has been rescheduled to %s (%s - %s). Thanks for your understanding.",
-	                userWebModel.getAppointmentDate().toString(),
-	                userWebModel.getSlotStartTime(),
-	                userWebModel.getSlotEndTime()
-	            );
-
-	            smsService.sendSms(toPhoneNumber, smsMessage);
-	        }
-
 
 	        return ResponseEntity.ok(new Response(1, "Success", "Appointment rescheduled successfully"));
 
 	    } catch (Exception e) {
-	        return ResponseEntity.internalServerError().body(new Response(-1, "Fail", "Error occurred while rescheduling appointment"));
+	        e.printStackTrace();
+	        return ResponseEntity.internalServerError()
+	                .body(new Response(-1, "Fail", "Error occurred while rescheduling appointment: " + e.getMessage()));
 	    }
 	}
-	
-	
+
 	@Override
 	public ResponseEntity<?> addDischargeSummaryByAppointmentId(PatientAppointmentWebModel userWebModel) {
 	    try {
