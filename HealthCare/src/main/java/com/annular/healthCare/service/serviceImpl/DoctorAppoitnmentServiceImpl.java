@@ -1489,135 +1489,150 @@ public class DoctorAppoitnmentServiceImpl implements DoctorAppoitmentService{
 	                .body(new Response(0, "Failure", "An error occurred while fetching doctor data"));
 	    }
 	}
-	@Override
-	public ResponseEntity<?> cancelAppointmentOnlineAndOffline(HospitalDataListWebModel userWebModel) {
-	    try {
-	        Optional<PatientAppointmentTable> optionalAppointment = patientAppointmentRepository.findById(userWebModel.getId());
-	        Optional<DoctorSlotSpiltTime> optionalSlot = doctorSlotSpiltTimeRepository.findById(userWebModel.getDoctorSlotSpiltTimeId());
-
-	        if (!optionalAppointment.isPresent()) {
-	            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Appointment not found"));
-	        }
-
-	        if (!optionalSlot.isPresent()) {
-	            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Slot not found"));
-	        }
-
-	        // Cancel the appointment
-	        PatientAppointmentTable appointment = optionalAppointment.get();
-	        appointment.setAppointmentStatus("CANCELLED");
-	        appointment.setIsActive(true);
-	        appointment.setUpdatedOn(new Date());
-	        appointment.setUpdatedBy(userWebModel.getUserUpdatedBy());
-
-	        patientAppointmentRepository.save(appointment);
-
-	        // Update slot status to "Available"
-	        DoctorSlotSpiltTime slot = optionalSlot.get();
-	        slot.setSlotStatus("Available");
-	        slot.setUpdatedBy(userWebModel.getUserUpdatedBy());
-	        slot.setUpdatedOn(new Date());
-
-	        doctorSlotSpiltTimeRepository.save(slot);
-	        Optional<PatientDetails> patientOpt = patientDetailsRepository.findById(appointment.getPatient().getPatientDetailsId());
-	        if (patientOpt.isPresent()) {
-	            PatientDetails patient = patientOpt.get();
-	            String mobileNumber = patient.getMobileNumber(); // Use as-is (no +91)
-	            String doctorName = appointment.getDoctor().getUserName();
-	            Integer hospitalId = appointment.getDoctor().getHospitalId();
-
-	            // Fetch hospital name from HospitalDataList
-	            Optional<HospitalDataList> hospitalDataOpt = hospitalDataListRepository.findById(hospitalId);
-	            String hospitalName = hospitalDataOpt.map(HospitalDataList::getHospitalName).orElse("Hospital");
-
-	            String smsMessage = String.format(
-	                "Your appointment with %s at %s has been cancelled. Wishing you good health!!",
-	                doctorName, hospitalName
-	            );
-
-	            smsService.sendSms(mobileNumber, smsMessage);
-	        }
-
-	        return ResponseEntity.ok(new Response(1, "Success", "Appointment cancelled and slot marked as Available"));
-	    } catch (Exception e) {
-	        return ResponseEntity.internalServerError().body(new Response(-1, "Fail", "Error occurred while cancelling appointment"));
-	    }
-	}
 //	@Override
-//	public ResponseEntity<?> rescheduleAppointmentOnlineAndOffline(HospitalDataListWebModel userWebModel) {
+//	public ResponseEntity<?> cancelAppointmentOnlineAndOffline(HospitalDataListWebModel userWebModel) {
 //	    try {
 //	        Optional<PatientAppointmentTable> optionalAppointment = patientAppointmentRepository.findById(userWebModel.getId());
+//	        Optional<DoctorSlotSpiltTime> optionalSlot = doctorSlotSpiltTimeRepository.findById(userWebModel.getDoctorSlotSpiltTimeId());
 //
 //	        if (!optionalAppointment.isPresent()) {
 //	            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Appointment not found"));
 //	        }
 //
-//	        // Get the existing appointment
-//	        PatientAppointmentTable appointment = optionalAppointment.get();
-//
-//	        // Step 1: Free the old slot
-//	        Integer oldSlotId = appointment.getDoctorSlotSpiltTimeId();
-//	        if (oldSlotId != null) {
-//	            Optional<DoctorSlotSpiltTime> oldSlotOpt = doctorSlotSplitTimeRepository.findById(oldSlotId);
-//	            if (oldSlotOpt.isPresent()) {
-//	                DoctorSlotSpiltTime oldSlot = oldSlotOpt.get();
-//	                oldSlot.setSlotStatus("Available");
-//	                oldSlot.setUpdatedBy(userWebModel.getUserUpdatedBy());
-//	                oldSlot.setUpdatedOn(new Date());
-//	                doctorSlotSplitTimeRepository.save(oldSlot);
-//	            }
+//	        if (!optionalSlot.isPresent()) {
+//	            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Slot not found"));
 //	        }
 //
-//	        // Step 2: Update appointment with new details
-//	        appointment.setAppointmentStatus("RESCHEDULED");
-//	        Optional<User> db  = userRepository.findById(userWebModel.getUserId());
-//	        appointment.setDoctor(db.get());
-//	        appointment.setDoctorSlotId(userWebModel.getDoctorSlotId());
-//	        appointment.setDaySlotId(userWebModel.getDaySlotId());
-//	        appointment.setDoctorSlotSpiltTimeId(userWebModel.getDoctorSlotSpiltTimeId());
-//	        appointment.setAppointmentDate(userWebModel.getAppointmentDate());
-//	        appointment.setSlotStartTime(userWebModel.getSlotStartTime());
-//	        appointment.setSlotEndTime(userWebModel.getSlotEndTime());
+//	        // Cancel the appointment
+//	        PatientAppointmentTable appointment = optionalAppointment.get();
+//	        appointment.setAppointmentStatus("CANCELLED");
+//	        appointment.setIsActive(true);
 //	        appointment.setUpdatedOn(new Date());
 //	        appointment.setUpdatedBy(userWebModel.getUserUpdatedBy());
-//	        appointment.setIsActive(true);
 //
 //	        patientAppointmentRepository.save(appointment);
 //
-//	        // Step 3: Mark new slot as booked
-//	        Optional<DoctorSlotSpiltTime> newSlotOpt = doctorSlotSplitTimeRepository.findById(userWebModel.getDoctorSlotSpiltTimeId());
-//	        if (newSlotOpt.isPresent()) {
-//	            DoctorSlotSpiltTime newSlot = newSlotOpt.get();
-//	            newSlot.setSlotStatus("Booked");
-//	            newSlot.setUpdatedBy(userWebModel.getUserUpdatedBy());
-//	            newSlot.setUpdatedOn(new Date());
-//	            doctorSlotSplitTimeRepository.save(newSlot);
-//	        }
-//	        
-//	     // Step 4: Send SMS to the patient
+//	        // Update slot status to "Available"
+//	        DoctorSlotSpiltTime slot = optionalSlot.get();
+//	        slot.setSlotStatus("Available");
+//	        slot.setUpdatedBy(userWebModel.getUserUpdatedBy());
+//	        slot.setUpdatedOn(new Date());
+//
+//	        doctorSlotSpiltTimeRepository.save(slot);
 //	        Optional<PatientDetails> patientOpt = patientDetailsRepository.findById(appointment.getPatient().getPatientDetailsId());
 //	        if (patientOpt.isPresent()) {
 //	            PatientDetails patient = patientOpt.get();
-//	            String toPhoneNumber = patient.getMobileNumber(); // Use number as-is
+//	            String mobileNumber = patient.getMobileNumber(); // Use as-is (no +91)
+//	            String doctorName = appointment.getDoctor().getUserName();
+//	            Integer hospitalId = appointment.getDoctor().getHospitalId();
+//
+//	            // Fetch hospital name from HospitalDataList
+//	            Optional<HospitalDataList> hospitalDataOpt = hospitalDataListRepository.findById(hospitalId);
+//	            String hospitalName = hospitalDataOpt.map(HospitalDataList::getHospitalName).orElse("Hospital");
 //
 //	            String smsMessage = String.format(
-//	                "Your appointment has been rescheduled to %s (%s - %s). Thanks for your understanding.",
-//	                userWebModel.getAppointmentDate().toString(),
-//	                userWebModel.getSlotStartTime(),
-//	                userWebModel.getSlotEndTime()
+//	                "Your appointment with %s at %s has been cancelled. Wishing you good health!!",
+//	                doctorName, hospitalName
 //	            );
 //
-//	            smsService.sendSms(toPhoneNumber, smsMessage);
+//	            smsService.sendSms(mobileNumber, smsMessage);
 //	        }
 //
-//
-//	        return ResponseEntity.ok(new Response(1, "Success", "Appointment rescheduled successfully"));
-//
+//	        return ResponseEntity.ok(new Response(1, "Success", "Appointment cancelled and slot marked as Available"));
 //	    } catch (Exception e) {
-//	        return ResponseEntity.internalServerError().body(new Response(-1, "Fail", "Error occurred while rescheduling appointment"));
+//	        return ResponseEntity.internalServerError().body(new Response(-1, "Fail", "Error occurred while cancelling appointment"));
 //	    }
 //	}
-//	
+	
+	@Override
+	public ResponseEntity<?> cancelAppointmentOnlineAndOffline(HospitalDataListWebModel userWebModel) {
+	    try {
+	        // Validate input
+	        if (userWebModel.getId() == null || userWebModel.getDoctorSlotSpiltTimeId() == null) {
+	            return ResponseEntity.badRequest()
+	                    .body(new Response(-1, "Fail", "Appointment ID and Slot ID are required"));
+	        }
+
+	        // Fetch appointment
+	        Optional<PatientAppointmentTable> optionalAppointment =
+	                patientAppointmentRepository.findById(userWebModel.getId());
+	        if (!optionalAppointment.isPresent()) {
+	            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Appointment not found"));
+	        }
+	        PatientAppointmentTable appointment = optionalAppointment.get();
+
+	        // Fetch slot
+	        Optional<DoctorSlotSpiltTime> optionalSlot =
+	                doctorSlotSpiltTimeRepository.findById(userWebModel.getDoctorSlotSpiltTimeId());
+	        if (!optionalSlot.isPresent()) {
+	            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Slot not found"));
+	        }
+	        DoctorSlotSpiltTime slot = optionalSlot.get();
+
+	        // Cancel appointment
+	        appointment.setAppointmentStatus("CANCELLED");
+	        appointment.setIsActive(true);
+	        appointment.setUpdatedOn(new Date());
+	        appointment.setUpdatedBy(userWebModel.getUserUpdatedBy());
+	        patientAppointmentRepository.save(appointment);
+
+	        // Update slot to Available
+	        slot.setSlotStatus("Available");
+	        slot.setUpdatedBy(userWebModel.getUserUpdatedBy());
+	        slot.setUpdatedOn(new Date());
+	        doctorSlotSpiltTimeRepository.save(slot);
+
+	        // Validate patient
+	        if (appointment.getPatient() == null || appointment.getPatient().getPatientDetailsId() == null) {
+	            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Patient details missing for appointment"));
+	        }
+	        Optional<PatientDetails> patientOpt =
+	                patientDetailsRepository.findById(appointment.getPatient().getPatientDetailsId());
+	        if (!patientOpt.isPresent()) {
+	            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Patient record not found"));
+	        }
+	        PatientDetails patient = patientOpt.get();
+	        String mobileNumber = patient.getMobileNumber();
+
+	        // Validate doctor
+	        if (appointment.getDoctor() == null) {
+	            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Doctor details missing for appointment"));
+	        }
+	        String doctorName = appointment.getDoctor().getUserName();
+	        Integer hospitalId = appointment.getDoctor().getHospitalId();
+	        if (hospitalId == null) {
+	            return ResponseEntity.badRequest().body(new Response(-1, "Fail", "Hospital ID missing for doctor"));
+	        }
+
+	        // Fetch hospital name
+	        Optional<HospitalDataList> hospitalDataOpt = hospitalDataListRepository.findById(hospitalId);
+	        String hospitalName = hospitalDataOpt.map(HospitalDataList::getHospitalName).orElse("Hospital");
+
+	        // Prepare SMS
+	        String smsMessage = String.format(
+	                "Your appointment with %s at %s has been cancelled. Wishing you good health!!",
+	                doctorName, hospitalName
+	        );
+
+	        // Try sending SMS, but don't fail if Twilio limit exceeded
+	        try {
+	            smsService.sendSms(mobileNumber, smsMessage);
+	        } catch (com.twilio.exception.ApiException twilioEx) {
+	           // logger.error("SMS sending failed: {}", twilioEx.getMessage());
+	        } catch (Exception ex) {
+	           // logger.error("Unexpected error while sending SMS: {}", ex.getMessage());
+	        }
+
+	        return ResponseEntity.ok(new Response(1, "Success", "Appointment cancelled and slot marked as Available"));
+
+	    } catch (Exception e) {
+	        //logger.error("Error occurred while cancelling appointment", e);
+	        return ResponseEntity.internalServerError()
+	                .body(new Response(-1, "Fail", "Error occurred while cancelling appointment: " + e.getMessage()));
+	    }
+	}
+
+
 	@Override
 	public ResponseEntity<?> rescheduleAppointmentOnlineAndOffline(HospitalDataListWebModel userWebModel) {
 	    try {
