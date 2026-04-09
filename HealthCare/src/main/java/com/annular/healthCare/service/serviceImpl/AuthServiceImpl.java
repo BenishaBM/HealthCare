@@ -226,7 +226,12 @@ public class AuthServiceImpl implements AuthService {
 			saveUserRoles(savedUser, userWebModel.getRoleIds());
 
 			// Process doctor-specific data if user is a doctor
-			if (userWebModel.getUserType().equalsIgnoreCase("DOCTOR")) {
+			//if (userWebModel.getUserType().equalsIgnoreCase("DOCTOR")) {
+			if ("DOCTOR".equalsIgnoreCase(userWebModel.getUserType()) ||
+				    "PSYCHIATRIST".equalsIgnoreCase(userWebModel.getUserType()) ||
+				    "PHYSIOTHERAPIST".equalsIgnoreCase(userWebModel.getUserType())) {
+				    
+
 				processDoctorData(savedUser, userWebModel);
 			}
 
@@ -1676,7 +1681,8 @@ public class AuthServiceImpl implements AuthService {
 			data.put("profilePhotos", filesInputWebModel);
 
 			// Doctor-specific data
-			if ("DOCTOR".equalsIgnoreCase(user.getUserType())) {
+			if ("DOCTOR".equalsIgnoreCase(user.getUserType()) 
+				    || "Psychiatrist".equalsIgnoreCase(user.getUserType())) {
 				// Get doctor leaves and create a set of leave dates for quick lookup
 				List<DoctorLeaveList> doctorLeaves = doctorLeaveListRepository.findByUser(user);
 				Set<String> leaveDatesAsStrings = new HashSet<>();
